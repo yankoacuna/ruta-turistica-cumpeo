@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel Admin — Cumpeo Turismo</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .admin-sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 240px;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      padding: var(--space-6) var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      z-index: 100;
+      transform: translateX(-100%);
+      transition: transform var(--transition-base);
+    }
+    .admin-sidebar.open { transform: translateX(0); }
+    .admin-main {
+      padding: var(--space-6) var(--space-4);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+      .admin-sidebar { transform: translateX(0); }
+      .admin-main    { padding-left: 260px; }
+    }
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      transition: var(--transition-base);
+    }
+    .admin-nav-item:hover, .admin-nav-item.active {
+      background: rgba(139,94,60,0.15);
+      color: var(--color-tierra-light);
+    }
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+    .login-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-8);
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .stat-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      text-align: center;
+    }
+    .stat-number { font-size: var(--text-3xl); font-weight: 800; }
+    .stat-label  { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: var(--space-1); }
+  </style>
+</head>
+
+<body>
+<div id="login-screen" class="login-container">
+  <div class="login-card">
+    <div class="condorito-avatar-badge" style="width:64px;height:64px;margin:0 auto var(--space-4) auto">
+      <img src="assets/images/condorito-oficial.png" alt="Condorito Logo" onerror="this.src='assets/images/condorito-oficial.png'">
+    </div>
+    <h1 class="h2 mb-2">Panel Admin</h1>
+    <p class="text-muted text-sm mb-6">Cumpeo Turismo — Pueblo de Condorito</p>
+
+    <div class="form-group">
+      <label class="form-label" for="admin-password">Contraseña</label>
+      <input type="password"
+             class="form-input"
+             id="admin-password"
+             placeholder="Ingresa tu contraseña"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" onclick="doLogin()">
+      Ingresar
+    </button>
+    <div id="login-error" class="form-error mt-2" style="display:none">
+      Contraseña incorrecta. Intenta de nuevo.
+    </div>
+    <div style="margin-top:var(--space-6);font-size:var(--text-xs);color:var(--color-text-muted)">
+      Contraseña por defecto: <code style="background:var(--color-surface-soft);padding:2px 6px;border-radius:4px">cumpeo2024</code><br>
+      <span style="color:var(--color-rojo-light)">⚠️ Cámbiala en api/auth.php antes de publicar</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── PANEL PRINCIPAL (oculto hasta login) ──────────────── -->
+<div id="admin-panel" style="display:none">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="Menú de administración">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-4)">
+      <div class="condorito-avatar-badge" style="width:36px;height:36px">
+        <img src="assets/images/condorito-oficial.png" alt="Condorito Logo" onerror="this.src='assets/images/condorito-oficial.png'">
+      </div>
+      <div>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--color-rojo);line-height:1">Cumpeo Admin</div>
+        <div style="font-size:0.7rem;color:var(--color-text-muted)">Condorito Pueblo</div>
+      </div>
+    </div>
+    <button class="admin-nav-item active" data-section="dashboard" onclick="showSection('dashboard',this)">
+      📊 Dashboard
+    </button>
+    <button class="admin-nav-item" data-section="destinos" onclick="showSection('destinos',this)">
+      🗺️ Destinos
+    </button>
+    <button class="admin-nav-item" data-section="restaurantes" onclick="showSection('restaurantes',this)">
+      🍽️ Restaurantes
+    </button>
+    <button class="admin-nav-item" data-section="alojamientos" onclick="showSection('alojamientos',this)">
+      🛏️ Alojamientos
+    </button>
+    <button class="admin-nav-item" data-section="config" onclick="showSection('config',this)">
+      ⚙️ Configuración
+    </button>
+    <div style="margin-top:auto">
+      <a href="index.html" class="admin-nav-item">🏠 Ver sitio</a>
+      <button class="admin-nav-item" onclick="doLogout()">🚪 Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <!-- Header mobile con botón menú -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6)">
+      <button class="icon-btn" id="sidebar-toggle" onclick="document.getElementById('admin-sidebar').classList.toggle('open')" aria-label="Menú">
+        ☰
+      </button>
+      <h2 class="h3" id="section-heading">Dashboard</h2>
+      <div></div>
+    </div>
+
+    <!-- ── DASHBOARD ─────────────────────────────────── -->
+    <div id="section-dashboard" class="admin-section">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-4);margin-bottom:var(--space-6)">
+        <div class="stat-card">
+          <div class="stat-number text-tierra" id="stat-destinos">—</div>
+          <div class="stat-label">Destinos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number text-rojo" id="stat-restaurantes">—</div>
+          <div class="stat-label">Restaurantes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number text-cielo" id="stat-alojamientos">—</div>
+          <div class="stat-label">Alojamientos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number text-verde" id="stat-version">1.0</div>
+          <div class="stat-label">Versión</div>
+        </div>
+      </div>
+      <div class="stat-card" style="text-align:left">
+        <h3 class="h4 mb-3">🔗 Accesos rápidos</h3>
+        <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+          <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">🏠 Ver sitio web</a>
+          <a href="mapa.html" target="_blank" class="btn btn-secondary btn-sm">🗺️ Ver mapa</a>
+          <button class="btn btn-outline btn-sm" onclick="showSection('destinos',null)">➕ Añadir destino</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GESTIÓN DE DESTINOS ────────────────────────── -->
+    <div id="section-destinos" class="admin-section" style="display:none">
+      <div class="flex-between mb-4">
+        <h3 class="h3">🗺️ Destinos Turísticos</h3>
+        <button class="btn btn-primary btn-sm" onclick="openDestinationForm(null)">+ Añadir</button>
+      </div>
+      <div id="destinos-table" class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Destacado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="destinos-tbody">
+            <tr><td colspan="4" style="text-align:center;padding:var(--space-6);color:var(--color-text-muted)">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── GESTIÓN DE RESTAURANTES ────────────────────── -->
+    <div id="section-restaurantes" class="admin-section" style="display:none">
+      <div class="flex-between mb-4">
+        <h3 class="h3">🍽️ Restaurantes</h3>
+        <button class="btn btn-primary btn-sm" onclick="openRestaurantForm(null)">+ Añadir</button>
+      </div>
+      <div id="restaurantes-table" class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="restaurantes-tbody">
+            <tr><td colspan="4" style="text-align:center;padding:var(--space-6);color:var(--color-text-muted)">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── GESTIÓN DE ALOJAMIENTOS ────────────────────── -->
+    <div id="section-alojamientos" class="admin-section" style="display:none">
+      <div class="flex-between mb-4">
+        <h3 class="h3">🛏️ Alojamientos</h3>
+        <button class="btn btn-primary btn-sm" onclick="openAccommForm(null)">+ Añadir</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Nombre</th><th>Tipo</th><th>Precio Min</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="alojamientos-tbody">
+            <tr><td colspan="4" style="text-align:center;padding:var(--space-6);color:var(--color-text-muted)">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CONFIGURACIÓN ──────────────────────────────── -->
+    <div id="section-config" class="admin-section" style="display:none">
+      <h3 class="h3 mb-4">⚙️ Configuración</h3>
+      <div class="stat-card">
+        <form id="config-form" style="display:flex;flex-direction:column;gap:var(--space-4)">
+          <div class="form-group">
+            <label class="form-label">API Key de Google Maps</label>
+            <input type="text" class="form-input" id="config-apikey" placeholder="AIza…">
+            <div class="form-hint">Obtén una en console.cloud.google.com</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre de la App</label>
+            <input type="text" class="form-input" id="config-appname" value="Cumpeo Turismo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Slogan</label>
+            <input type="text" class="form-input" id="config-slogan">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Centro del mapa (lat)</label>
+            <input type="number" step="0.0001" class="form-input" id="config-lat">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Centro del mapa (lng)</label>
+            <input type="number" step="0.0001" class="form-input" id="config-lng">
+          </div>
+          <button type="button" class="btn btn-primary" onclick="saveConfig()">💾 Guardar configuración</button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /admin-panel -->
+
+<!-- ── Modal Formulario Destino ──────────────────────────── -->
+<div id="dest-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Formulario de destino">
+  <div class="modal" style="max-width:480px;border-radius:var(--radius-2xl)">
+    <div class="modal-header">
+      <h3 class="modal-title" id="dest-modal-title">Nuevo Destino</h3>
+      <button class="icon-btn" onclick="closeModal('dest-modal')" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="dest-form" style="display:flex;flex-direction:column;gap:var(--space-4)">
+        <input type="hidden" id="dest-id">
+        <div class="form-group">
+          <label class="form-label">Nombre *</label>
+          <input type="text" class="form-input" id="dest-nombre" required placeholder="Nombre del destino">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría *</label>
+          <select class="form-select" id="dest-categoria" required>
+            <option value="">Selecciona una categoría</option>
+            <option value="cultural">🎨 Cultural</option>
+            <option value="historico">🏛️ Histórico</option>
+            <option value="naturaleza">🌿 Naturaleza</option>
+            <option value="gastronomia">🍽️ Gastronomía</option>
+            <option value="patrimonio">🏺 Patrimonio</option>
+            <option value="entretencion">🎉 Entretención</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción corta *</label>
+          <textarea class="form-textarea" id="dest-desc-corta" required placeholder="Máximo 160 caracteres" style="min-height:70px"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción larga</label>
+          <textarea class="form-textarea" id="dest-desc-larga" placeholder="Descripción detallada…" style="min-height:120px"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Historia</label>
+          <textarea class="form-textarea" id="dest-historia" placeholder="Contexto histórico…" style="min-height:100px"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+          <div class="form-group">
+            <label class="form-label">Latitud *</label>
+            <input type="number" step="0.00001" class="form-input" id="dest-lat" required placeholder="-35.3456">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Longitud *</label>
+            <input type="number" step="0.00001" class="form-input" id="dest-lng" required placeholder="-71.4123">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dirección</label>
+          <input type="text" class="form-input" id="dest-direccion" placeholder="Calle Principal s/n, Cumpeo">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+          <div class="form-group">
+            <label class="form-label">Horario</label>
+            <input type="text" class="form-input" id="dest-horario" placeholder="Todo el día">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Precio</label>
+            <input type="text" class="form-input" id="dest-precio" placeholder="Gratuito">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duración visita</label>
+          <input type="text" class="form-input" id="dest-duracion" placeholder="2-3 horas">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cómo llegar</label>
+          <textarea class="form-textarea" id="dest-llegar" placeholder="Instrucciones para llegar…" style="min-height:70px"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags (separados por coma)</label>
+          <input type="text" class="form-input" id="dest-tags" placeholder="murales, familia, gratuito">
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:center">
+          <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-size:var(--text-sm)">
+            <input type="checkbox" id="dest-destacado"> Destacado
+          </label>
+        </div>
+        <div class="flex gap-3" style="margin-top:var(--space-2)">
+          <button type="button" class="btn btn-secondary flex-1" onclick="closeModal('dest-modal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary flex-1">💾 Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ───────────────────────────────────────────── -->
+<div id="toast-container" class="toast-container"></div>
+
+<script type="module">
+  import { showToast } from './js/ui.js';
+
+  // ── Autenticación simple ───────────────────────────────
+  const ADMIN_PASS = 'cumpeo2024'; // CAMBIAR en producción
+  let isAuthenticated = false;
+
+  // Verificar sesión guardada
+  if (sessionStorage.getItem('cumpeo_admin') === '1') {
+    authenticate();
+  }
+
+  window.doLogin = function() {
+    const pass = document.getElementById('admin-password').value;
+    if (pass === ADMIN_PASS) {
+      sessionStorage.setItem('cumpeo_admin', '1');
+      authenticate();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      document.getElementById('admin-password').focus();
+    }
+  };
+
+  function authenticate() {
+    isAuthenticated = true;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display  = '';
+    loadAllData();
+  }
+
+  window.doLogout = function() {
+    sessionStorage.removeItem('cumpeo_admin');
+    window.location.reload();
+  };
+
+  // ── Carga de datos ─────────────────────────────────────
+  let destinos     = [];
+  let restaurantes = [];
+  let alojamientos = [];
+
+  async function loadAllData() {
+    try {
+      const [dData, rData, aData, cData] = await Promise.all([
+        fetch('./data/destinations.json').then(r => r.json()),
+        fetch('./data/restaurants.json').then(r => r.json()),
+        fetch('./data/accommodations.json').then(r => r.json()),
+        fetch('./data/config.json').then(r => r.json())
+      ]);
+
+      destinos     = dData.destinos     || [];
+      restaurantes = rData.restaurantes || [];
+      alojamientos = aData.alojamientos || [];
+
+      // Stats
+      document.getElementById('stat-destinos').textContent     = destinos.length;
+      document.getElementById('stat-restaurantes').textContent = restaurantes.length;
+      document.getElementById('stat-alojamientos').textContent = alojamientos.length;
+
+      // Config form
+      document.getElementById('config-apikey').value  = cData.mapa?.apiKey || '';
+      document.getElementById('config-appname').value = cData.app?.nombre  || '';
+      document.getElementById('config-slogan').value  = cData.app?.slogan  || '';
+      document.getElementById('config-lat').value     = cData.mapa?.centroDefault?.lat || '';
+      document.getElementById('config-lng').value     = cData.mapa?.centroDefault?.lng || '';
+
+      renderDestinosTable();
+      renderRestaurantesTable();
+      renderAlojamientosTable();
+
+    } catch(err) {
+      console.error('[Admin] Error cargando datos:', err);
+      showToast('Error cargando los datos', 'error');
+    }
+  }
+
+  // ── Tablas ─────────────────────────────────────────────
+  function renderDestinosTable() {
+    document.getElementById('destinos-tbody').innerHTML = destinos.map(d => `
+      <tr>
+        <td><strong style="color:var(--color-text-primary)">${d.nombre}</strong></td>
+        <td><span class="badge badge-gray">${d.categoria}</span></td>
+        <td>${d.destacado ? '⭐' : '—'}</td>
+        <td>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="openDestinationForm('${d.id}')">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm"    onclick="deleteDestino('${d.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted);padding:var(--space-6)">Sin destinos</td></tr>';
+  }
+
+  function renderRestaurantesTable() {
+    document.getElementById('restaurantes-tbody').innerHTML = restaurantes.map(r => `
+      <tr>
+        <td><strong style="color:var(--color-text-primary)">${r.nombre}</strong></td>
+        <td><span class="badge badge-rojo">${r.tipo}</span></td>
+        <td>${r.precio?.rango || '—'}</td>
+        <td>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="editItem('restaurante','${r.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm"    onclick="deleteItem('restaurante','${r.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted);padding:var(--space-6)">Sin restaurantes</td></tr>';
+  }
+
+  function renderAlojamientosTable() {
+    document.getElementById('alojamientos-tbody').innerHTML = alojamientos.map(a => `
+      <tr>
+        <td><strong style="color:var(--color-text-primary)">${a.nombre}</strong></td>
+        <td><span class="badge badge-cielo">${a.tipo}</span></td>
+        <td>${a.precio?.min ? `$${a.precio.min.toLocaleString('es-CL')}` : '—'}</td>
+        <td>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="editItem('alojamiento','${a.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm"    onclick="deleteItem('alojamiento','${a.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted);padding:var(--space-6)">Sin alojamientos</td></tr>';
+  }
+
+  // ── Formulario Destino ─────────────────────────────────
+  window.openDestinationForm = function(id) {
+    const dest = id ? destinos.find(d => d.id === id) : null;
+    document.getElementById('dest-modal-title').textContent = dest ? 'Editar Destino' : 'Nuevo Destino';
+    document.getElementById('dest-id').value          = dest?.id || '';
+    document.getElementById('dest-nombre').value      = dest?.nombre || '';
+    document.getElementById('dest-categoria').value   = dest?.categoria || '';
+    document.getElementById('dest-desc-corta').value  = dest?.descripcionCorta || '';
+    document.getElementById('dest-desc-larga').value  = dest?.descripcionLarga || '';
+    document.getElementById('dest-historia').value    = dest?.historia || '';
+    document.getElementById('dest-lat').value         = dest?.coordenadas?.lat || '';
+    document.getElementById('dest-lng').value         = dest?.coordenadas?.lng || '';
+    document.getElementById('dest-direccion').value   = dest?.direccion || '';
+    document.getElementById('dest-horario').value     = dest?.horario || '';
+    document.getElementById('dest-precio').value      = dest?.precio || '';
+    document.getElementById('dest-duracion').value    = dest?.duracionVisita || '';
+    document.getElementById('dest-llegar').value      = dest?.comoLlegar || '';
+    document.getElementById('dest-tags').value        = (dest?.tags || []).join(', ');
+    document.getElementById('dest-destacado').checked = dest?.destacado || false;
+    document.getElementById('dest-modal').classList.add('active');
+  };
+
+  document.getElementById('dest-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id  = document.getElementById('dest-id').value;
+    const slug = document.getElementById('dest-nombre').value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const newDest = {
+      id:   id || slug,
+      slug,
+      nombre:          document.getElementById('dest-nombre').value,
+      categoria:       document.getElementById('dest-categoria').value,
+      descripcionCorta:document.getElementById('dest-desc-corta').value,
+      descripcionLarga:document.getElementById('dest-desc-larga').value,
+      historia:        document.getElementById('dest-historia').value,
+      coordenadas: {
+        lat: parseFloat(document.getElementById('dest-lat').value),
+        lng: parseFloat(document.getElementById('dest-lng').value)
+      },
+      direccion:    document.getElementById('dest-direccion').value,
+      horario:      document.getElementById('dest-horario').value,
+      precio:       document.getElementById('dest-precio').value,
+      duracionVisita: document.getElementById('dest-duracion').value,
+      comoLlegar:   document.getElementById('dest-llegar').value,
+      tags:         document.getElementById('dest-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+      destacado:    document.getElementById('dest-destacado').checked,
+      imagenPrincipal: null,
+      galeria: [],
+      infoUtil: {}
+    };
+
+    if (id) {
+      const idx = destinos.findIndex(d => d.id === id);
+      if (idx !== -1) destinos[idx] = { ...destinos[idx], ...newDest };
+    } else {
+      destinos.push(newDest);
+    }
+
+    await saveToServer('destinations', { destinos });
+    renderDestinosTable();
+    document.getElementById('stat-destinos').textContent = destinos.length;
+    closeModal('dest-modal');
+    showToast('✅ Destino guardado exitosamente', 'success');
+  });
+
+  window.deleteDestino = async function(id) {
+    if (!confirm('¿Eliminar este destino? Esta acción no se puede deshacer.')) return;
+    destinos = destinos.filter(d => d.id !== id);
+    await saveToServer('destinations', { destinos });
+    renderDestinosTable();
+    document.getElementById('stat-destinos').textContent = destinos.length;
+    showToast('Destino eliminado', 'info');
+  };
+
+  // ── Guardar en servidor vía PHP ────────────────────────
+  async function saveToServer(dataType, data) {
+    try {
+      const res = await fetch('./api/save.php', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ type: dataType, data, token: ADMIN_PASS })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[Admin] No se pudo guardar en servidor (PHP):', err.message);
+      // Fallback: descargar como archivo JSON
+      downloadJSON(data, `${dataType}.json`);
+      showToast('⚠️ Guardado localmente. Sube el archivo al servidor.', 'info', 6000);
+    }
+  }
+
+  function downloadJSON(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Guardar configuración ──────────────────────────────
+  window.saveConfig = async function() {
+    showToast('Función de guardar config disponible con PHP en el servidor', 'info');
+  };
+
+  // ── Secciones ──────────────────────────────────────────
+  window.showSection = function(name, btn) {
+    document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+    document.getElementById(`section-${name}`).style.display = '';
+    document.querySelectorAll('.admin-nav-item').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('section-heading').textContent = {
+      dashboard:'Dashboard', destinos:'Destinos', restaurantes:'Restaurantes',
+      alojamientos:'Alojamientos', config:'Configuración'
+    }[name] || name;
+    document.getElementById('admin-sidebar').classList.remove('open');
+  };
+
+  // ── Modal helpers ──────────────────────────────────────
+  window.closeModal = function(id) {
+    document.getElementById(id)?.classList.remove('active');
+  };
+
+  // Cerrar modal al hacer click en overlay
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('active');
+    });
+  });
+
+  // Stubs para editar/eliminar restaurantes y alojamientos
+  window.editItem = function(type, id) {
+    showToast(`Editar ${type} ${id} — Formulario en desarrollo`, 'info');
+  };
+  window.deleteItem = function(type, id) {
+    showToast(`Eliminar ${type} ${id} — Confirmar en producción`, 'info');
+  };
+  window.openRestaurantForm = function() { showToast('Formulario de restaurante en desarrollo', 'info'); };
+  window.openAccommForm     = function() { showToast('Formulario de alojamiento en desarrollo', 'info'); };
+</script>
+
+</body>
+</html>

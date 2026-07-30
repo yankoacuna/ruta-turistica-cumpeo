@@ -1,0 +1,70 @@
+{
+  "app": {
+    "nombre": "Cumpeo Turismo",
+    "slogan": "El pueblo de Condorito te espera",
+    "version": "1.0.0",
+    "descripcion": "Guía turística oficial de Cumpeo, Región del Maule, Chile.",
+    "idioma": "es-CL",
+    "moneda": "CLP",
+    "zonaHoraria": "America/Santiago"
+  },
+  "categorias": [
+    { "id": "cultural",      "nombre": "Cultural",     "emoji": "🎨", "color": "#E8A020" },
+    { "id": "historico",     "nombre": "Histórico",    "emoji": "🏛️", "color": "#8B5E3C" },
+    { "id": "naturaleza",    "nombre": "Naturaleza",   "emoji": "🌿", "color": "#4A7C59" },
+    { "id": "gastronomia",   "nombre": "Gastronomía",  "emoji": "🍽️", "color": "#C0392B" },
+    { "id": "patrimonio",    "nombre": "Patrimonio",   "emoji": "🏺", "color": "#2C6E9E" },
+    { "id": "entretencion",  "nombre": "Entretención", "emoji": "🎉", "color": "#9B59B6" }
+  ],
+  "mapa": {
+    "apiKey": "TU_API_KEY_GOOGLE_MAPS_AQUI",
+    "centroDefault": {
+      "lat": -35.3456,
+      "lng": -71.4123
+    },
+    "zoomDefault": 15,
+    "zoomDetalle": 17,
+    "zoomRuta": 13,
+    "estiloOscuro": true,
+    "mapId": "cumpeo-turismo-map"
+  },
+  "contacto": {
+    "municipioRioClaro": {
+      "nombre": "Municipalidad de Río Claro",
+      "telefono": "+56 71 XXX XXXX",
+      "email": "turismo@rioclaro.cl",
+      "sitioWeb": "https://www.rioclaro.cl",
+      "direccion": "Av. Arturo Prat s/n, Río Claro"
+    },
+    "infoTurismo": {
+      "telefono": "+56 9 XXXX XXXX",
+      "email": "turismo@cumpeo.cl"
+    }
+  },
+  "redesSociales": {
+    "instagram": "https://instagram.com/cumpeoturismo",
+    "facebook": "https://facebook.com/cumpeoturismo"
+  },
+  "emergencias": {
+    "carabineros": "133",
+    "bomberos": "132",
+    "ambulancia": "131",
+    "postaleta": "+56 71 XXX XXXX"
+  },
+  "transporte": {
+    "busesDesde": "Terminal Rodoviario Talca",
+    "empresa": "Buses Hernández / Rurales del Maule",
+    "frecuencia": "Cada 60-90 min aprox.",
+    "distanciaTalca": "50 km (~45 min en auto)"
+  },
+  "clima": {
+    "descripcion": "Clima mediterráneo con veranos secos y cálidos e inviernos lluviosos.",
+    "tempVerano": "25-34°C",
+    "tempInvierno": "4-14°C",
+    "mejorEpoca": "Octubre–Abril"
+  },
+  "seo": {
+    "keywords": ["Cumpeo", "turismo Cumpeo", "pueblo Condorito", "Río Claro", "Maule", "Chile rural", "Condorito Chile"],
+    "ogImage": "assets/images/og-image.webp"
+  }
+}

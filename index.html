@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1A1A2E">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cumpeo Turismo">
+
+  <title>Cumpeo Turismo — El Pueblo de Condorito, Maule, Chile</title>
+  <meta name="description" content="Descubre Cumpeo, el pueblo de Condorito en el corazón del Maule. Historia, naturaleza, gastronomía y rutas interactivas con GPS.">
+  <meta name="keywords" content="Cumpeo, turismo, Condorito, Maule, Chile, Río Claro, pueblo temático">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Cumpeo Turismo — El Pueblo de Condorito">
+  <meta property="og:description" content="Guía turística interactiva de Cumpeo, Región del Maule. Mapa GPS, destinos, gastronomía y más.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/images/og-image.webp">
+  <meta property="og:locale" content="es_CL">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/main.css?v=2">
+  <link rel="stylesheet" href="css/components.css?v=2">
+</head>
+
+<body>
+<div class="app-container">
+
+<!-- ── DESKTOP TOP NAV (Condorito Pueblo Temático) ─────── -->
+<nav class="desktop-nav" role="navigation" aria-label="Navegación desktop">
+  <div class="desktop-nav-container">
+    <!-- Brand Logo Condorito -->
+    <a href="index.html" class="brand-logo-link" title="Inicio Cumpeo Turismo">
+      <div class="condorito-avatar-badge">
+        <img src="assets/images/condorito-oficial.png" alt="Condorito Logo" onerror="this.src='assets/images/condorito-oficial.png'">
+      </div>
+      <div class="brand-text-block">
+        <div class="brand-main-title">Cumpeo Turismo</div>
+        <div class="brand-sub-title">
+          <span>El Pueblo de Condorito</span>
+          <span class="condorito-tag-pill">¡PLOP!</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Navigation Menu Links -->
+    <div class="desktop-nav-menu">
+
+      <!-- Inicio -->
+      <a href="index.html" class="nav-link-item active">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path data-fill d="M3 11L12 3L21 11V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V11Z" fill="#FFD60A" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect data-fill x="9" y="15.5" width="6" height="5.5" rx="1" fill="#E63946" stroke="#1E1E24" stroke-width="1.8"/>
+          </svg>
+        </span> Inicio
+      </a>
+
+      <!-- Mapa GPS -->
+      <a href="mapa.html" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path data-fill d="M9 4L3 7V20L9 17L15 20L21 17V4L15 7L9 4Z" fill="#00B4D8" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 4V17" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <path d="M15 7V20" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <path d="M5 10L8 8.5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+            <path d="M5 13.5L8 12" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+            <circle cx="17" cy="11" r="2" fill="#E63946" stroke="#1E1E24" stroke-width="1.5"/>
+          </svg>
+        </span> Mapa GPS
+      </a>
+
+      <!-- Cerca de mí -->
+      <a href="index.html#section-nearby" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path data-fill d="M12 2C8.7 2 6 4.7 6 8C6 12.5 12 21 12 21C12 21 18 12.5 18 8C18 4.7 15.3 2 12 2Z" fill="#E63946" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="8" r="2.8" fill="white" stroke="#1E1E24" stroke-width="1.8"/>
+          </svg>
+        </span> Cerca de mí
+      </a>
+
+      <!-- Destinos -->
+      <a href="index.html#section-destinos" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle data-fill cx="12" cy="12" r="9.5" fill="#8338EC" stroke="#1E1E24" stroke-width="2"/>
+            <circle data-fill cx="12" cy="12" r="5.5" fill="#FFD60A" stroke="#1E1E24" stroke-width="2"/>
+            <circle data-fill cx="12" cy="12" r="2.3" fill="#E63946" stroke="#1E1E24" stroke-width="1.5"/>
+          </svg>
+        </span> Destinos
+      </a>
+
+      <!-- Gastronomía -->
+      <a href="index.html#section-gastronomia" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 2V6.5C4 7.9 5 9 6 9C7 9 8 7.9 8 6.5V2" fill="#2DC653" stroke="none"/>
+            <line x1="4" y1="2" x2="4" y2="9" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <line x1="6" y1="2" x2="6" y2="22" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <line x1="8" y1="2" x2="8" y2="9" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 9C4 9 6 10.5 8 9" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M18 2C18 2 20 5 20 9C20 11 18.5 12.5 17 13V22" fill="#FB5607" stroke="none"/>
+            <path d="M18 2C18 2 20 5 20 9C20 11 18.5 12.5 17 13V22" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </span> Gastronomía
+      </a>
+
+    </div>
+
+    <!-- Actions / CTAs -->
+    <div class="desktop-nav-cta">
+      <a href="mapa.html" class="btn-nav-map" title="Abrir Mapa GPS de Condorito">
+        <span>🗺️</span> Abrir Mapa GPS
+      </a>
+      <a href="admin.html" class="btn-nav-icon" title="Panel Admin" aria-label="Admin">
+        ⚙️
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MOBILE SLIDE-OVER DRAWER MENU ────────────────────── -->
+<div class="mobile-drawer-overlay" id="mobile-drawer-overlay" onclick="closeMobileDrawer()">
+  <div class="mobile-drawer-content" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="condorito-avatar-badge" style="width:42px;height:42px">
+          <img src="assets/images/condorito-oficial.png" alt="Condorito" onerror="this.src='assets/images/condorito-oficial.png'">
+        </div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.15rem;font-weight:900;color:var(--color-sol)">Cumpeo Turismo</div>
+          <div style="font-size:0.75rem;color:#D1D5DB;font-weight:600">Pelotillehue Real</div>
+        </div>
+      </div>
+      <button onclick="closeMobileDrawer()" style="background:none;border:none;color:white;font-size:1.6rem;cursor:pointer;padding:4px">&times;</button>
+    </div>
+    
+    <div class="drawer-body">
+      <a href="index.html" class="drawer-nav-item active" onclick="closeMobileDrawer()">
+        <span>🏠</span> Inicio
+      </a>
+      <a href="mapa.html" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>🗺️</span> Mapa GPS Condorito
+      </a>
+      <a href="index.html#section-nearby" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>📍</span> Cerca de mí
+      </a>
+      <a href="index.html#section-destinos" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>🎯</span> Destinos Turísticos
+      </a>
+      <a href="index.html#section-gastronomia" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>🍽️</span> Gastronomía Maulina
+      </a>
+
+      <a href="admin.html" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>⚙️</span> Panel de Administración
+      </a>
+
+      <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--color-border);display:flex;flex-direction:column;gap:10px">
+        <a href="mapa.html" class="btn-nav-map" style="justify-content:center;width:100%" onclick="closeMobileDrawer()">
+          🗺️ Abrir Mapa GPS
+        </a>
+        <div style="text-align:center;font-size:0.75rem;color:var(--color-text-muted);margin-top:8px">
+          <em>"¡Exijo una explicación! — Ven a Cumpeo"</em> 🚩
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- ── HERO ───────────────────────────────────────────── -->
+  <section class="hero" aria-label="Bienvenida a Cumpeo">
+    <!-- Header sobre el hero para móvil -->
+    <header class="app-header" role="banner">
+      <a href="index.html" class="brand-logo-link" style="gap:8px">
+        <div class="condorito-avatar-badge" style="width:40px;height:40px">
+          <img src="assets/images/condorito-oficial.png" alt="Condorito Logo" onerror="this.src='assets/images/condorito-oficial.png'">
+        </div>
+        <div class="brand-text-block">
+          <div class="brand-main-title" style="font-size:1.15rem">Cumpeo Turismo</div>
+          <div class="brand-sub-title" style="font-size:0.72rem">El Pueblo de Condorito</div>
+        </div>
+      </a>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="mobile-menu-btn" onclick="toggleMobileDrawer()" aria-label="Abrir menú">
+          ☰ Menú
+        </button>
+      </div>
+    </header>
+
+    <img class="hero-img"
+         src="assets/images/hero-cumpeo.webp"
+         alt="Paisaje rural de Cumpeo, Región del Maule"
+         fetchpriority="high">
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          <img src="assets/images/condorito-oficial.png" style="width:20px;height:20px;border-radius:50%" alt="Condorito" onerror="this.src='assets/images/condorito-oficial.png'">
+          ¡Bienvenidos a Pelotillehue Real!
+        </span>
+      </div>
+      <h1 class="hero-title font-display">Cumpeo,<br><span>el Pueblo de Condorito</span></h1>
+      <p class="hero-desc">Recorre el único pueblo real de la historieta chilena más famosa del mundo. Murales, estatuas, gastronomía y patrimonio maulino.</p>
+      <!-- ── BUSCADOR INTEGRADO (Floating Search Pill) ─────────── -->
+      <div class="search-bar-wrapper">
+        <div class="search-bar" role="search">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input type="search"
+                 class="search-input"
+                 id="search-input"
+                 placeholder="Buscar atracciones, restaurantes, viñedos en Cumpeo..."
+                 autocomplete="off"
+                 aria-label="Buscar destinos">
+          <!-- Resultados de búsqueda -->
+          <div id="search-results" class="hidden" role="listbox" aria-label="Resultados de búsqueda"
+               style="position:absolute;top:100%;left:0;right:0;margin-top:12px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);z-index:50;overflow:hidden;max-height:300px;overflow-y:auto;box-shadow:var(--shadow-xl);">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-3">
+        <a href="mapa.html" class="btn btn-primary btn-lg">
+          🗺️ Mapa GPS Condorito
+        </a>
+        <button class="btn btn-secondary btn-lg" id="btn-near-me">
+          📍 Cerca de mí
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── MAIN CONTENT ────────────────────────────────────── -->
+  <main class="page-content" id="main-content">
+
+    <!-- ── CATEGORÍAS ──────────────────────────────────── -->
+    <section class="section container" aria-label="Categorías de interés">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">✨ Categorías</h2>
+          <div class="section-subtitle">Explora Cumpeo según tus intereses turísticos</div>
+        </div>
+        <a href="mapa.html" class="section-link">Ver en mapa →</a>
+      </div>
+      <div class="categories-grid" id="categories-grid" role="navigation" aria-label="Categorías turísticas">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── DESTACADOS ──────────────────────────────────── -->
+    <section class="section container" aria-label="Destinos destacados">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">⭐ Imperdibles de Cumpeo</h2>
+          <div class="section-subtitle">Los lugares más icónicos que debes visitar</div>
+        </div>
+        <a href="mapa.html" class="section-link">Ver mapa completo →</a>
+      </div>
+      <div id="featured-scroll"
+           role="list"
+           aria-label="Destinos destacados"
+           class="scroll-x desktop-grid">
+        <!-- Skeletons -->
+      </div>
+    </section>
+
+    <!-- ── CTA MAPA ─────────────────────────────────────── -->
+    <div class="container">
+      <div class="cta-strip" role="complementary" aria-label="Ir al mapa interactivo">
+        <div class="cta-strip-content">
+          <div class="cta-strip-title">Navegación GPS Interactiva 🧭</div>
+          <div class="cta-strip-desc">Explora todos los rincones de Cumpeo en tiempo real con geolocalización y rutas paso a paso.</div>
+          <a href="mapa.html" class="btn btn-primary" style="margin-top:var(--space-3)">
+            📍 Abrir Mapa en Vivo
+          </a>
+        </div>
+        <div class="cta-strip-icon">🗺️</div>
+      </div>
+    </div>
+
+    <!-- ── CERCA DE TI (Fix Container alignment & tight layout) ───── -->
+    <section class="section container" id="section-nearby" aria-label="Destinos cercanos a tu ubicación">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">📍 Cerca de ti</h2>
+          <div class="section-subtitle">Encuentra los atractivos más próximos a tu ubicación actual</div>
+        </div>
+        <button class="section-link" id="btn-refresh-nearby" aria-label="Actualizar ubicación">Actualizar 🔄</button>
+      </div>
+      <div id="nearby-container">
+        <!-- Estado inicial: pedir GPS -->
+        <div class="gps-permission-card" id="gps-card">
+          <div class="gps-icon">📡</div>
+          <h3>¿Dónde estás parado?</h3>
+          <p>Activa tu GPS para mostrarte la distancia a cada monumento y local temático.</p>
+          <button class="btn btn-primary btn-block" id="btn-enable-gps">
+            📍 Activar Geolocalización GPS
+          </button>
+        </div>
+        <!-- Los resultados cercanos se renderizan aquí -->
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── TODOS LOS DESTINOS ──────────────────────────── -->
+    <section class="section container" id="section-destinos" aria-label="Todos los destinos turísticos">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🗺️ Todos los Destinos</h2>
+          <div class="section-subtitle">Patrimonio, historia, viñedos y la ruta temática</div>
+        </div>
+        <span class="text-muted text-sm" id="dest-count"></span>
+      </div>
+      <!-- Filtros chip -->
+      <div id="filter-chips" role="group" aria-label="Filtrar por categoría" style="display:flex;gap:var(--space-2);overflow-x:auto;padding-bottom:var(--space-4);margin-bottom:var(--space-2)">
+        <button class="chip active" data-cat="todos" aria-pressed="true">🗺️ Todos</button>
+        <button class="chip" data-cat="cultural" aria-pressed="false">🎨 Cultural</button>
+        <button class="chip" data-cat="historico" aria-pressed="false">🏛️ Histórico</button>
+        <button class="chip" data-cat="naturaleza" aria-pressed="false">🌿 Naturaleza</button>
+        <button class="chip" data-cat="patrimonio" aria-pressed="false">🏺 Patrimonio</button>
+      </div>
+      <!-- Grid de cards -->
+      <div id="destinations-grid"
+           class="destinations-grid-container"
+           role="list"
+           aria-label="Lista de destinos turísticos">
+        <!-- Cards -->
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── GASTRONOMÍA ──────────────────────────────────── -->
+    <section class="section container" id="section-gastronomia" aria-label="Restaurantes y gastronomía">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🍽️ Gastronomía Típica</h2>
+          <div class="section-subtitle">Donde comer y disfrutar los sabores del Maule</div>
+        </div>
+        <span class="text-muted text-sm" id="rest-count"></span>
+      </div>
+      <div id="restaurants-list"
+           class="list-two-col"
+           role="list"
+           aria-label="Lista de restaurantes">
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── ALOJAMIENTOS ─────────────────────────────────── -->
+    <section class="section container" id="section-alojamientos" aria-label="Alojamientos en Cumpeo">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🛏️ Alojamientos</h2>
+          <div class="section-subtitle">Hospedajes y cabañas para descansar</div>
+        </div>
+        <span class="text-muted text-sm" id="accomm-count"></span>
+      </div>
+      <div id="accommodations-list"
+           class="list-two-col"
+           role="list"
+           aria-label="Lista de alojamientos">
+      </div>
+  </main><!-- /page-content -->
+
+  <!-- ── FOOTER INSTITUCIONAL COMPLETO (Info Útil + Contacto) ── -->
+  <footer class="main-footer" role="contentinfo" id="section-info">
+    <div class="container">
+      <div class="footer-grid">
+
+        <!-- Columna 1: Marca & Municipio -->
+        <div>
+          <div class="footer-col-title">
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <img src="assets/images/condorito-oficial.png" style="width:24px;height:24px;border-radius:50%" alt="Condorito" onerror="this.src='assets/images/condorito-oficial.png'">
+              Cumpeo Turismo
+            </span>
+          </div>
+          <p class="footer-text mb-3">
+            El Pueblo Temático de Condorito · Región del Maule.<br>
+            Municipalidad de Río Claro. Guía turística interactiva con geolocalización GPS.
+          </p>
+          <div class="badge badge-rojo">¡Reflauta! Bienvenid@s</div>
+        </div>
+
+        <!-- Columna 2: Info Útil -->
+        <div>
+          <div class="footer-col-title">
+            <span>ℹ️ Info Útil del Visitante</span>
+          </div>
+          <div class="footer-item">
+            <div class="footer-item-label">🚌 Cómo llegar</div>
+            <div class="footer-item-value">Desde Talca: Ruta 5 Sur, ~50 km (45 min). Buses desde Terminal Rodoviario Talca.</div>
+          </div>
+          <div class="footer-item">
+            <div class="footer-item-label">📅 Mejor época</div>
+            <div class="footer-item-value">Octubre–Abril. Vendimia recomendada en Marzo–Abril.</div>
+          </div>
+          <div class="footer-item">
+            <div class="footer-item-label">🌡️ Clima</div>
+            <div class="footer-item-value">Mediterráneo. Veranos 25–34°C, Inviernos 4–14°C.</div>
+          </div>
+        </div>
+
+        <!-- Columna 3: Contacto & Emergencias -->
+        <div>
+          <div class="footer-col-title">
+            <span>📞 Contacto & Emergencias</span>
+          </div>
+          <div class="mb-3">
+            <div class="footer-item-label mb-2">🚨 Teléfonos de Emergencia</div>
+            <div>
+              <span class="footer-emergency-pill">🚓 Carabineros: 133</span>
+              <span class="footer-emergency-pill">🚒 Bomberos: 132</span>
+              <span class="footer-emergency-pill">🚑 SAMU: 131</span>
+            </div>
+          </div>
+          <div class="footer-item">
+            <div class="footer-item-label">🏢 Municipalidad de Río Claro</div>
+            <div class="footer-item-value">Teléfono: +56 71 254 1200</div>
+            <div class="footer-item-value">Email: turismo@rioclaro.cl</div>
+          </div>
+        </div>
+
+        <!-- Columna 4: Enlaces Rápidos -->
+        <div>
+          <div class="footer-col-title">
+            <span>🔗 Navegación</span>
+          </div>
+          <ul class="footer-links-list">
+            <li><a href="index.html">🏠 Inicio</a></li>
+            <li><a href="mapa.html">🗺️ Mapa Interactivo GPS</a></li>
+            <li><a href="index.html#section-destinos">🎯 Destinos Turísticos</a></li>
+            <li><a href="index.html#section-gastronomia">🍽️ Gastronomía Típica</a></li>
+            <li><a href="index.html#section-alojamientos">🛏️ Alojamientos</a></li>
+            <li><a href="admin.html">⚙️ Administración</a></li>
+          </ul>
+        </div>
+
+      </div><!-- /footer-grid -->
+
+      <!-- Bar inferior copyright -->
+      <div class="footer-bottom-bar">
+        <div>
+          © 2026 <strong>Cumpeo Turismo</strong> · Municipalidad de Río Claro, Maule, Chile.
+        </div>
+        <div>
+          v1.0.0 · PWA Offline Ready 📱
+        </div>
+      </div>
+
+    </div><!-- /container -->
+  </footer>
+
+  </main><!-- /page-content -->
+
+</div><!-- /app-container -->
+
+<!-- ── Bottom Navigation ────────────────────────────────── -->
+<nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+  <a href="index.html" class="bottom-nav-item active" id="nav-home" aria-label="Inicio" aria-current="page">
+    <img src="assets/images/condorito-oficial.png" class="bottom-nav-condorito-avatar" alt="Condorito" onerror="this.src='assets/images/condorito-oficial.png'">
+    <span>Inicio</span>
+  </a>
+  <a href="mapa.html" class="bottom-nav-item" id="nav-map" aria-label="Mapa">
+    <span class="nav-icon">🗺️</span>
+    <span>Mapa</span>
+  </a>
+  <a href="index.html#section-nearby" class="bottom-nav-item" id="nav-nearby" aria-label="Cerca de mí">
+    <span class="nav-icon">📍</span>
+    <span>Cercano</span>
+  </a>
+  <a href="index.html#section-info" class="bottom-nav-item" id="nav-info" aria-label="Información">
+    <span class="nav-icon">ℹ️</span>
+    <span>Info</span>
+  </a>
+</nav>
+
+<!-- ── Toast Container ─────────────────────────────────── -->
+<div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
+<!-- ── Scripts ─────────────────────────────────────────── -->
+<script type="module">
+  import {
+    getConfig, getDestinations, getFeaturedDestinations,
+    getAccommodations, getRestaurants, getDestinationsByCategory,
+    sortByDistance, formatDistance
+  } from './js/data.js';
+
+  import {
+    renderDestinationCard, renderCardCompact, renderCardHorizontal,
+    renderCategories, showToast, toggleFav, isFav, navigateTo
+  } from './js/ui.js';
+
+  // ── Exponer funciones globales necesarias en HTML ──────
+  window.navigateTo   = navigateTo;
+  window.toggleFav    = toggleFav;
+
+  // ── Estado local ──────────────────────────────────────
+  let allDestinations = [];
+  let userCoords      = null;
+  let activeFilter    = 'todos';
+
+  // ── Inicialización ────────────────────────────────────
+  async function init() {
+    try {
+      const [config, dests, rests, accomm] = await Promise.all([
+        getConfig(),
+        getDestinations(),
+        getRestaurants(),
+        getAccommodations()
+      ]);
+
+      allDestinations = dests;
+
+      // Renderizar categorías
+      const cats = config.categorias;
+      document.getElementById('categories-grid').innerHTML =
+        renderCategories(cats);
+
+      // Renderizar destacados en scroll horizontal
+      const featured = await getFeaturedDestinations();
+      document.getElementById('featured-scroll').innerHTML =
+        featured.map(d => renderCardCompact(d)).join('');
+
+      // Renderizar todos los destinos (grid 2 col)
+      renderDestGrid(dests);
+      document.getElementById('dest-count').textContent = `${dests.length} lugares`;
+
+      // Restaurantes
+      document.getElementById('restaurants-list').innerHTML =
+        rests.map(r => renderCardHorizontal({
+          id: r.id,
+          nombre: r.nombre,
+          categoria: 'gastronomia',
+          descripcionCorta: r.descripcion,
+          imagenPrincipal: r.imagenPrincipal,
+          precio: r.precio?.rango
+        })).join('');
+      document.getElementById('rest-count').textContent = `${rests.length} locales`;
+
+      // Alojamientos
+      document.getElementById('accommodations-list').innerHTML =
+        accomm.map(a => renderCardHorizontal({
+          id: a.id,
+          nombre: a.nombre,
+          categoria: 'alojamiento',
+          descripcionCorta: a.descripcion,
+          imagenPrincipal: a.imagenPrincipal,
+          precio: a.precio ? `Desde $${a.precio.min?.toLocaleString('es-CL')}` : null
+        })).join('');
+      document.getElementById('accomm-count').textContent = `${accomm.length} opciones`;
+
+      // Inicializar favoritos en las cards
+      document.querySelectorAll('.card-fav-btn').forEach(btn => {
+        const id = btn.closest('[data-id]')?.dataset.id;
+        if (id && isFav(id)) {
+          btn.textContent = '♥';
+          btn.classList.add('active');
+        }
+      });
+
+    } catch(err) {
+      console.error('[Home] Error cargando datos:', err);
+      showToast('Error cargando datos. Verifica tu conexión.', 'error');
+    }
+  }
+
+  // ── Renderizar grid de destinos ────────────────────────
+  function renderDestGrid(dests) {
+    document.getElementById('destinations-grid').innerHTML =
+      dests.map(d => renderDestinationCard(d, userCoords
+        ? calcDist(userCoords, d.coordenadas)
+        : null
+      )).join('');
+  }
+
+  function calcDist(a, b) {
+    const R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180;
+    const x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+  }
+
+  // ── Filtros por categoría ──────────────────────────────
+  window.filterByCategory = function(catId) {
+    activeFilter = catId;
+    // Navegar al mapa con filtro
+    window.location.href = `mapa.html?filter=${catId}`;
+  };
+
+  document.getElementById('filter-chips').addEventListener('click', async (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const cat = chip.dataset.cat;
+    document.querySelectorAll('#filter-chips .chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.cat === cat);
+      c.setAttribute('aria-pressed', c.dataset.cat === cat);
+    });
+    const filtered = cat === 'todos' ? allDestinations :
+      allDestinations.filter(d => d.categoria === cat);
+    renderDestGrid(filtered);
+  });
+
+  // ── GPS / Cerca de mí ──────────────────────────────────
+  function requestNearby() {
+    const card = document.getElementById('gps-card');
+    if (!navigator.geolocation) {
+      showToast('Tu navegador no soporta GPS', 'error');
+      return;
+    }
+    if (card) card.innerHTML = `
+      <div class="gps-icon" style="animation:pulse 1s infinite">📡</div>
+      <h3>Localizando…</h3>
+      <p>Buscando tu posición GPS.</p>`;
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const sorted = sortByDistance(allDestinations, userCoords);
+        const nearby = sorted.slice(0, 5);
+
+        document.getElementById('nearby-container').innerHTML =
+          `<div style="display:flex;flex-direction:column;gap:var(--space-3)">
+            ${nearby.map(d => renderCardHorizontal(d, d.distanciaKm)).join('')}
+          </div>`;
+
+        renderDestGrid(sorted); // Reordenar grid por distancia
+        showToast(`📍 Mostrando destinos más cercanos`, 'success', 3000);
+      },
+      err => {
+        const card = document.getElementById('gps-card');
+        if (card) card.innerHTML = `
+          <div class="gps-icon">❌</div>
+          <h3>GPS no disponible</h3>
+          <p>Activa el permiso de ubicación en tu navegador.</p>
+          <button class="btn btn-outline btn-block" onclick="requestNearby()">Intentar de nuevo</button>`;
+        showToast('No se pudo obtener la ubicación', 'error');
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
+
+  window.requestNearby = requestNearby;
+  document.getElementById('btn-enable-gps')?.addEventListener('click', requestNearby);
+  document.getElementById('btn-near-me')?.addEventListener('click', requestNearby);
+  document.getElementById('btn-refresh-nearby')?.addEventListener('click', requestNearby);
+
+  // ── Búsqueda ───────────────────────────────────────────
+  const searchInput   = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+
+  searchInput?.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (q.length < 2) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+    const matches = allDestinations.filter(d =>
+      d.nombre.toLowerCase().includes(q) ||
+      d.descripcionCorta?.toLowerCase().includes(q) ||
+      d.categoria?.toLowerCase().includes(q) ||
+      d.tags?.some(t => t.toLowerCase().includes(q))
+    ).slice(0, 6);
+
+    if (!matches.length) {
+      searchResults.innerHTML = `<div style="padding:var(--space-4);text-align:center;color:var(--color-text-muted);font-size:var(--text-sm)">Sin resultados para "${q}"</div>`;
+    } else {
+      searchResults.innerHTML = matches.map(d => `
+        <div role="option" onclick="navigateTo('destino.html?id=${d.id}')"
+             style="padding:var(--space-3) var(--space-4);cursor:pointer;border-bottom:1px solid var(--color-border-soft);display:flex;align-items:center;gap:var(--space-3)">
+          <span style="font-size:1.2rem">${getCatEmoji(d.categoria)}</span>
+          <div>
+            <div style="font-size:var(--text-sm);font-weight:600;color:var(--color-text-primary)">${d.nombre}</div>
+            <div style="font-size:var(--text-xs);color:var(--color-text-muted)">${d.categoria}</div>
+          </div>
+        </div>`).join('');
+    }
+    searchResults.classList.remove('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-bar')) searchResults.classList.add('hidden');
+  });
+
+  function getCatEmoji(cat) {
+    const m = { cultural:'🎨', historico:'🏛️', naturaleza:'🌿', gastronomia:'🍽️', patrimonio:'🏺' };
+    return m[cat] || '📍';
+  }
+
+  // ── Web Share API ──────────────────────────────────────
+  document.getElementById('btn-share')?.addEventListener('click', async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Cumpeo Turismo',
+          text: 'Descubre Cumpeo, el Pueblo de Condorito en el Maule, Chile 🐦',
+          url:  window.location.href
+        });
+      } catch {}
+    } else {
+      await navigator.clipboard?.writeText(window.location.href);
+      showToast('🔗 Enlace copiado', 'success', 2000);
+    }
+  });
+
+  // ── PWA: Service Worker ────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[SW] Registrado:', reg.scope))
+      .catch(err => console.warn('[SW] Error:', err));
+  }
+
+  // ── Iniciar ────────────────────────────────────────────
+  init();
+</script>
+
+</body>
+</html>

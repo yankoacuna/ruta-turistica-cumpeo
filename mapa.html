@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1A1A2E">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>Mapa Interactivo — Cumpeo Turismo</title>
+  <meta name="description" content="Mapa interactivo de Cumpeo con todos los puntos de interés, tu ubicación GPS y navegación en tiempo real.">
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/map.css">
+
+  <style>
+    /* El mapa ocupa toda la pantalla excepto el bottom nav */
+    body, html { height: 100%; overflow: hidden; }
+    .app-container { height: 100dvh; }
+    @media (min-width: 768px) {
+      .app-container { height: calc(100dvh - 64px); }
+      #map-page { height: calc(100dvh - 64px); }
+    }
+  </style>
+</head>
+
+<body>
+<!-- ── DESKTOP TOP NAV (Condorito Pueblo Temático) ─────── -->
+<nav class="desktop-nav" role="navigation" aria-label="Navegación desktop">
+  <div class="desktop-nav-container">
+    <!-- Brand Logo Condorito -->
+    <a href="index.html" class="brand-logo-link" title="Inicio Cumpeo Turismo">
+      <div class="condorito-avatar-badge">
+        <img src="assets/images/condorito-oficial.png" alt="Condorito Logo" onerror="this.src='assets/images/condorito-oficial.png'">
+      </div>
+      <div class="brand-text-block">
+        <div class="brand-main-title">Cumpeo Turismo</div>
+        <div class="brand-sub-title">
+          <span>El Pueblo de Condorito</span>
+          <span class="condorito-tag-pill">¡PLOP!</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Navigation Menu Links -->
+    <div class="desktop-nav-menu">
+
+      <!-- Inicio -->
+      <a href="index.html" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path data-fill d="M3 11L12 3L21 11V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V11Z" fill="#FFD60A" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect data-fill x="9" y="15.5" width="6" height="5.5" rx="1" fill="#E63946" stroke="#1E1E24" stroke-width="1.8"/>
+          </svg>
+        </span> Inicio
+      </a>
+
+      <!-- Mapa GPS -->
+      <a href="mapa.html" class="nav-link-item active">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path data-fill d="M9 4L3 7V20L9 17L15 20L21 17V4L15 7L9 4Z" fill="#00B4D8" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 4V17" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <path d="M15 7V20" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <path d="M5 10L8 8.5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+            <path d="M5 13.5L8 12" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+            <circle cx="17" cy="11" r="2" fill="#E63946" stroke="#1E1E24" stroke-width="1.5"/>
+          </svg>
+        </span> Mapa GPS
+      </a>
+
+      <!-- Cerca de mí -->
+      <a href="index.html#section-nearby" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path data-fill d="M12 2C8.7 2 6 4.7 6 8C6 12.5 12 21 12 21C12 21 18 12.5 18 8C18 4.7 15.3 2 12 2Z" fill="#E63946" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="8" r="2.8" fill="white" stroke="#1E1E24" stroke-width="1.8"/>
+          </svg>
+        </span> Cerca de mí
+      </a>
+
+      <!-- Destinos -->
+      <a href="index.html#section-destinos" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle data-fill cx="12" cy="12" r="9.5" fill="#8338EC" stroke="#1E1E24" stroke-width="2"/>
+            <circle data-fill cx="12" cy="12" r="5.5" fill="#FFD60A" stroke="#1E1E24" stroke-width="2"/>
+            <circle data-fill cx="12" cy="12" r="2.3" fill="#E63946" stroke="#1E1E24" stroke-width="1.5"/>
+          </svg>
+        </span> Destinos
+      </a>
+
+      <!-- Gastronomía -->
+      <a href="index.html#section-gastronomia" class="nav-link-item">
+        <span class="nav-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 2V6.5C4 7.9 5 9 6 9C7 9 8 7.9 8 6.5V2" fill="#2DC653" stroke="none"/>
+            <line x1="4" y1="2" x2="4" y2="9" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <line x1="6" y1="2" x2="6" y2="22" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <line x1="8" y1="2" x2="8" y2="9" stroke="#1E1E24" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 9C4 9 6 10.5 8 9" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M18 2C18 2 20 5 20 9C20 11 18.5 12.5 17 13V22" fill="#FB5607" stroke="none"/>
+            <path d="M18 2C18 2 20 5 20 9C20 11 18.5 12.5 17 13V22" stroke="#1E1E24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </span> Gastronomía
+      </a>
+
+    </div>
+
+    <!-- Actions / CTAs -->
+    <div class="desktop-nav-cta">
+      <a href="mapa.html" class="btn-nav-map" title="Mapa GPS Interactivo">
+        <span>🗺️</span> Mapa GPS Active
+      </a>
+      <a href="admin.html" class="btn-nav-icon" title="Panel Admin" aria-label="Admin">
+        ⚙️
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MOBILE SLIDE-OVER DRAWER MENU ────────────────────── -->
+<div class="mobile-drawer-overlay" id="mobile-drawer-overlay" onclick="closeMobileDrawer()">
+  <div class="mobile-drawer-content" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="condorito-avatar-badge" style="width:42px;height:42px">
+          <img src="assets/images/condorito-oficial.png" alt="Condorito" onerror="this.src='assets/images/condorito-oficial.png'">
+        </div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.15rem;font-weight:900;color:var(--color-sol)">Cumpeo Turismo</div>
+          <div style="font-size:0.75rem;color:#D1D5DB;font-weight:600">Pelotillehue Real</div>
+        </div>
+      </div>
+      <button onclick="closeMobileDrawer()" style="background:none;border:none;color:white;font-size:1.6rem;cursor:pointer;padding:4px">&times;</button>
+    </div>
+    
+    <div class="drawer-body">
+      <a href="index.html" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>🏠</span> Inicio
+      </a>
+      <a href="mapa.html" class="drawer-nav-item active" onclick="closeMobileDrawer()">
+        <span>🗺️</span> Mapa GPS Condorito
+      </a>
+      <a href="index.html#section-nearby" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>📍</span> Cerca de mí
+      </a>
+      <a href="index.html#section-destinos" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>🎯</span> Destinos Turísticos
+      </a>
+      <a href="index.html#section-gastronomia" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>🍽️</span> Gastronomía Maulina
+      </a>
+
+      <a href="admin.html" class="drawer-nav-item" onclick="closeMobileDrawer()">
+        <span>⚙️</span> Panel de Administración
+      </a>
+
+      <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--color-border);display:flex;flex-direction:column;gap:10px">
+        <div style="text-align:center;font-size:0.75rem;color:var(--color-text-muted);margin-top:8px">
+          <em>"¡Exijo una explicación! — Ven a Cumpeo"</em> 🚩
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app-container">
+  <!-- Mobile Header for Map Page -->
+  <header class="app-header" role="banner" style="display:flex;">
+    <a href="index.html" class="brand-logo-link" style="gap:8px">
+      <div class="condorito-avatar-badge" style="width:38px;height:38px">
+        <img src="assets/images/condorito-oficial.png" alt="Condorito Logo" onerror="this.src='assets/images/condorito-oficial.png'">
+      </div>
+      <div class="brand-text-block">
+        <div class="brand-main-title" style="font-size:1.1rem">Mapa Condorito</div>
+        <div class="brand-sub-title" style="font-size:0.7rem">Cumpeo, Maule</div>
+      </div>
+    </a>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="mobile-menu-btn" onclick="toggleMobileDrawer()" aria-label="Abrir menú">
+        ☰ Menú
+      </button>
+    </div>
+  </header>
+<div id="map-page">
+
+  <!-- ── FILTROS (sticky top) ────────────────────────────── -->
+  <div class="map-filters" role="navigation" aria-label="Filtrar destinos">
+    <div class="map-filters-scroll" id="map-filter-chips" role="group" aria-label="Categorías de filtro">
+      <button class="chip active" data-categoria="todos" onclick="setMapFilter('todos',this)" aria-pressed="true">🗺️ Todos</button>
+      <button class="chip" data-categoria="cultural"    onclick="setMapFilter('cultural',this)"    aria-pressed="false">🎨 Cultural</button>
+      <button class="chip" data-categoria="historico"   onclick="setMapFilter('historico',this)"   aria-pressed="false">🏛️ Histórico</button>
+      <button class="chip" data-categoria="naturaleza"  onclick="setMapFilter('naturaleza',this)"  aria-pressed="false">🌿 Naturaleza</button>
+      <button class="chip" data-categoria="gastronomia" onclick="setMapFilter('gastronomia',this)" aria-pressed="false">🍽️ Gastronomía</button>
+      <button class="chip" data-categoria="alojamiento" onclick="setMapFilter('alojamiento',this)" aria-pressed="false">🛏️ Alojamiento</button>
+      <button class="chip" data-categoria="patrimonio"  onclick="setMapFilter('patrimonio',this)"  aria-pressed="false">🏺 Patrimonio</button>
+    </div>
+  </div>
+
+  <!-- ── Panel de Ruta Activa ─────────────────────────────── -->
+  <div class="directions-panel" id="directions-panel" role="status" aria-live="polite">
+    <div style="font-size:20px">🧭</div>
+    <div class="directions-info">
+      <div class="directions-dest" id="dir-dest">Destino</div>
+      <div class="directions-meta" id="dir-meta">Calculando…</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="clearDirections()" aria-label="Cancelar ruta">✕ Cancelar</button>
+  </div>
+
+  <!-- ── Estado del mapa (cargando, error) ───────────────── -->
+  <div class="map-status" id="map-status" role="status" aria-live="assertive">
+    <div class="map-status-dot"></div>
+    <span class="map-status-text">Cargando mapa…</span>
+  </div>
+
+  <!-- ── Contenedor del Mapa ──────────────────────────────── -->
+  <div id="map" role="application" aria-label="Mapa interactivo de Cumpeo">
+    <!-- El mapa de Google se renderiza aquí -->
+    <!-- Estado inicial mientras carga -->
+    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--color-bg);">
+      <div style="text-align:center;opacity:0.5">
+        <div style="font-size:3rem;margin-bottom:1rem">🗺️</div>
+        <div style="color:var(--color-text-secondary)">Cargando mapa…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Botones Flotantes del Mapa ───────────────────────── -->
+  <div class="map-fab-group" role="group" aria-label="Controles del mapa">
+    <!-- GPS -->
+    <button class="map-fab map-fab-gps"
+            id="btn-gps"
+            onclick="centerOnUser()"
+            title="Mi ubicación"
+            aria-label="Centrar en mi ubicación">
+      📍
+    </button>
+    <!-- Zoom In -->
+    <button class="map-fab map-fab-zoom-in"
+            onclick="mapZoomIn()"
+            title="Acercar"
+            aria-label="Acercar mapa">
+      ＋
+    </button>
+    <!-- Zoom Out -->
+    <button class="map-fab map-fab-zoom-out"
+            onclick="mapZoomOut()"
+            title="Alejar"
+            aria-label="Alejar mapa">
+      −
+    </button>
+  </div>
+
+  <!-- ── Mini Panel POI (aparece al seleccionar marcador) ── -->
+  <div class="poi-mini-panel" id="poi-mini-panel" role="dialog" aria-label="Información del lugar seleccionado" aria-modal="false">
+    <!-- Contenido renderizado dinámicamente por map.js -->
+  </div>
+
+</div><!-- /map-page -->
+</div><!-- /app-container -->
+
+<!-- ── Bottom Navigation ────────────────────────────────── -->
+<nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+  <a href="index.html" class="bottom-nav-item" id="nav-home" aria-label="Inicio">
+    <img src="assets/images/condorito-oficial.png" class="bottom-nav-condorito-avatar" alt="Condorito" onerror="this.src='assets/images/condorito-oficial.png'">
+    <span>Inicio</span>
+  </a>
+  <a href="mapa.html" class="bottom-nav-item active" id="nav-map" aria-label="Mapa" aria-current="page">
+    <span class="nav-icon">🗺️</span>
+    <span>Mapa</span>
+  </a>
+  <a href="index.html#section-nearby" class="bottom-nav-item" id="nav-nearby" aria-label="Cerca de mí">
+    <span class="nav-icon">📍</span>
+    <span>Cercano</span>
+  </a>
+  <a href="index.html#section-info" class="bottom-nav-item" id="nav-info" aria-label="Información">
+    <span class="nav-icon">ℹ️</span>
+    <span>Info</span>
+  </a>
+</nav>
+
+<!-- ── Toast Container ─────────────────────────────────── -->
+<div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
+<!-- ── Scripts ─────────────────────────────────────────── -->
+<script type="module">
+  import { initMap, stopGPS } from './js/map.js';
+  import { navigateTo } from './js/ui.js';
+
+  window.navigateTo = navigateTo;
+
+  // Limpiar dirección activa
+  window.clearDirections = function() {
+    document.getElementById('directions-panel')?.classList.remove('active');
+    // El DirectionsRenderer se limpia desde map.js
+    if (window._mapState?.directionsRenderer) {
+      window._mapState.directionsRenderer.setDirections({ routes: [] });
+    }
+  };
+
+  // Limpiar GPS al salir de la página
+  window.addEventListener('pagehide', stopGPS);
+
+  // Leer filtro de la URL (ej: mapa.html?filter=cultural)
+  const urlParams = new URLSearchParams(window.location.search);
+  const filterParam = urlParams.get('filter');
+
+  // initMap se llama como callback de Google Maps API
+  // pero exportamos para que también funcione si la API ya cargó
+  window.initMapCallback = initMap;
+
+  if (filterParam && filterParam !== 'todos') {
+    // Aplicar filtro una vez que el mapa haya inicializado
+    window.addEventListener('mapReady', () => {
+      window.setMapFilter(filterParam, document.querySelector(`[data-categoria="${filterParam}"]`));
+    });
+  }
+</script>
+
+<!--
+  INSTRUCCIONES: Reemplaza TU_API_KEY con tu API Key de Google Maps.
+  Obtén una en: https://console.cloud.google.com/apis/credentials
+  Habilita: Maps JavaScript API, Directions API, Geolocation API
+-->
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY_AQUI&libraries=places,geometry&callback=initMap&language=es&region=CL"
+  async defer>
+</script>
+
+</body>
+</html>
