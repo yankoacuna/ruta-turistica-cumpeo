@@ -1,0 +1,138 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2024-07-26",
+  "restaurantes": [
+    {
+      "id": "el-pollo-farsante",
+      "nombre": "El Pollo Farsante",
+      "tipo": "restaurante-tematico",
+      "descripcion": "Restaurante temático con el ambiente vibrante de Condorito. Cocina chilena tradicional con preparaciones típicas del Maule: cazuela de vacuno, empanadas de pino y asado a la parrilla.",
+      "especialidad": "Cocina chilena tradicional del Maule",
+      "coordenadas": { "lat": -35.3460, "lng": -71.4130 },
+      "horario": {
+        "apertura": "12:00",
+        "cierre": "22:00",
+        "diasCierre": ["lunes"],
+        "descripcion": "Mar a Dom 12:00–22:00, cerrado lunes"
+      },
+      "precio": {
+        "rango": "$$",
+        "min": 5000,
+        "max": 15000,
+        "moneda": "CLP",
+        "descripcion": "Almuerzo ~$6.000, plato de fondo ~$9.000"
+      },
+      "telefono": "+56 9 XXXX XXXX",
+      "email": null,
+      "imagenPrincipal": "assets/images/el-pollo-farsante.webp",
+      "galeria": ["assets/images/pollo-farsante-interior.webp"],
+      "menuUrl": null,
+      "reserva": false,
+      "vegano": false,
+      "vegetariano": true,
+      "sinGluten": false,
+      "alcohol": true,
+      "wifi": true,
+      "distanciaCentroKm": 0.2
+    },
+    {
+      "id": "farmacia-sin-remedio-cafe",
+      "nombre": "Café Sin Remedio",
+      "tipo": "cafeteria",
+      "descripcion": "Cafetería temática inspirada en la famosa Farmacia Sin Remedio de Condorito. Ideal para un café de grano, empanadas fritas y tortilla de rescoldo mientras admiras el arte del pueblo.",
+      "especialidad": "Café y pastelería artesanal",
+      "coordenadas": { "lat": -35.3452, "lng": -71.4120 },
+      "horario": {
+        "apertura": "09:00",
+        "cierre": "19:00",
+        "diasCierre": [],
+        "descripcion": "Todos los días 09:00–19:00"
+      },
+      "precio": {
+        "rango": "$",
+        "min": 1500,
+        "max": 6000,
+        "moneda": "CLP",
+        "descripcion": "Café ~$2.500, empanada ~$1.800"
+      },
+      "telefono": "+56 9 XXXX XXXX",
+      "email": null,
+      "imagenPrincipal": "assets/images/cafe-sin-remedio.webp",
+      "galeria": [],
+      "menuUrl": null,
+      "reserva": false,
+      "vegano": false,
+      "vegetariano": true,
+      "sinGluten": false,
+      "alcohol": false,
+      "wifi": true,
+      "distanciaCentroKm": 0.1
+    },
+    {
+      "id": "quincho-don-chuma",
+      "nombre": "Quincho Don Chuma",
+      "tipo": "parrilla",
+      "descripcion": "Tradicional quincho maulino con parrilladas a leña, cordero al palo los fines de semana y la mejor chicha de la zona. Ambiente familiar y rústico bajo los álamos.",
+      "especialidad": "Parrillada a leña, cordero al palo (fines de semana)",
+      "coordenadas": { "lat": -35.3470, "lng": -71.4145 },
+      "horario": {
+        "apertura": "12:30",
+        "cierre": "21:00",
+        "diasCierre": ["lunes", "martes"],
+        "descripcion": "Mié a Dom 12:30–21:00. Cordero al palo: solo sáb y dom"
+      },
+      "precio": {
+        "rango": "$$",
+        "min": 7000,
+        "max": 18000,
+        "moneda": "CLP",
+        "descripcion": "Parrillada ~$12.000 por persona"
+      },
+      "telefono": "+56 9 XXXX XXXX",
+      "email": null,
+      "imagenPrincipal": "assets/images/quincho-don-chuma.webp",
+      "galeria": ["assets/images/parrilla-1.webp"],
+      "menuUrl": null,
+      "reserva": true,
+      "vegano": false,
+      "vegetariano": false,
+      "sinGluten": true,
+      "alcohol": true,
+      "wifi": false,
+      "distanciaCentroKm": 0.4
+    },
+    {
+      "id": "mini-market-cone",
+      "nombre": "Minimarket Coné",
+      "tipo": "minimarket",
+      "descripcion": "El minimarket del pueblo, perfecto para abastecerse antes de salir a recorrer. Vende sándwiches, bebidas, snacks y productos locales como mermeladas y conservas artesanales.",
+      "especialidad": "Abarrotes, sándwiches y productos locales",
+      "coordenadas": { "lat": -35.3448, "lng": -71.4112 },
+      "horario": {
+        "apertura": "08:00",
+        "cierre": "21:00",
+        "diasCierre": [],
+        "descripcion": "Todos los días 08:00–21:00"
+      },
+      "precio": {
+        "rango": "$",
+        "min": 500,
+        "max": 5000,
+        "moneda": "CLP",
+        "descripcion": "Sándwich ~$2.500, bebida ~$1.200"
+      },
+      "telefono": null,
+      "email": null,
+      "imagenPrincipal": "assets/images/minimarket-cone.webp",
+      "galeria": [],
+      "menuUrl": null,
+      "reserva": false,
+      "vegano": false,
+      "vegetariano": true,
+      "sinGluten": false,
+      "alcohol": true,
+      "wifi": false,
+      "distanciaCentroKm": 0.05
+    }
+  ]
+}
