@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getDestinationByIdOrSlug, getDestinations, getCategoryEmoji, getCategoryColorClass } from '@/lib/data';
+import { getDestinationByIdOrSlug, getDestinations, getCategoryEmoji, getCategoryColorClass, formatImgUrl } from '@/lib/data';
 
 export async function generateStaticParams() {
   const dests = await getDestinations();
@@ -24,7 +24,11 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
     <div style={{ paddingBottom: '60px' }}>
       {/* ── HEADER COVER HERO ─────── */}
       <div className="destino-hero">
-        <img src={destination.imagenPrincipal || '/assets/images/placeholder.webp'} alt={destination.nombre} className="destino-hero-img" />
+        <img
+          src={formatImgUrl(destination.imagenPrincipal)}
+          alt={destination.nombre}
+          className="destino-hero-img"
+        />
         <div className="destino-hero-overlay" />
         <div className="container destino-hero-content">
           <Link href="/" className="btn btn-secondary btn-sm mb-4" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -111,7 +115,11 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
                   {destination.galeria.map((imgUrl, idx) => (
                     <div key={idx} style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', height: '160px' }}>
-                      <img src={imgUrl} alt={`${destination.nombre} ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img
+                        src={formatImgUrl(imgUrl)}
+                        alt={`${destination.nombre} ${idx + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -144,7 +152,10 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
                   {related.map((r) => (
                     <div key={r.id} className="card card-destination">
                       <div className="card-img-wrapper">
-                        <img src={r.imagenPrincipal || '/assets/images/placeholder.webp'} alt={r.nombre} />
+                        <img
+                          src={formatImgUrl(r.imagenPrincipal)}
+                          alt={r.nombre}
+                        />
                       </div>
                       <div className="card-body">
                         <h4 className="card-title mb-1">{r.nombre}</h4>
