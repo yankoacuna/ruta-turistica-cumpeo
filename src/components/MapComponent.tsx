@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { POI } from '@/lib/types';
 import { getCategoryEmoji } from '@/lib/data';
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 
 interface MapComponentProps {
   pois: POI[];
@@ -13,6 +14,20 @@ interface MapComponentProps {
   initialZoom?: number;
 }
 
+// Componente interno para controlar el "fly to" (centrar mapa al seleccionar)
+const MapController = ({ selectedPoi }: { selectedPoi: POI | null }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (map && selectedPoi?.coordenadas) {
+      map.panTo(selectedPoi.coordenadas);
+      map.setZoom(16);
+    }
+  }, [map, selectedPoi]);
+
+  return null;
+};
+
 export default function MapComponent({
   pois,
   selectedPoi,
@@ -21,116 +36,82 @@ export default function MapComponent({
   initialCenter = { lat: -35.267, lng: -71.250 },
   initialZoom = 14,
 }: MapComponentProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const leafletMapRef = useRef<any>(null);
-  const markersRef = useRef<{ [id: string]: any }>({});
-  const userMarkerRef = useRef<any>(null);
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || !mapRef.current) return;
-
-    let isMounted = true;
-
-    // Dynamically import Leaflet client-side
-    import('leaflet').then((L) => {
-      if (!isMounted || !mapRef.current) return;
-
-      if (!leafletMapRef.current) {
-        const map = L.map(mapRef.current, {
-          center: [initialCenter.lat, initialCenter.lng],
-          zoom: initialZoom,
-          zoomControl: false,
-        });
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors | Cumpeo Turismo',
-        }).addTo(map);
-
-        leafletMapRef.current = map;
-      }
-
-      const map = leafletMapRef.current;
-
-      // Clear existing markers
-      Object.values(markersRef.current).forEach((m) => m.remove());
-      markersRef.current = {};
-
-      // Add markers for POIs
-      pois.forEach((poi) => {
-        if (!poi.coordenadas?.lat || !poi.coordenadas?.lng) return;
-
-        const emoji = getCategoryEmoji(poi.categoria);
-
-        const customIcon = L.divIcon({
-          className: 'custom-leaflet-marker',
-          html: `<div style="
-            background: #E63946;
-            color: white;
-            border: 2px solid #1E1E24;
-            border-radius: 50%;
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
-          ">${emoji}</div>`,
-          iconSize: [38, 38],
-          iconAnchor: [19, 19],
-        });
-
-        const marker = L.marker([poi.coordenadas.lat, poi.coordenadas.lng], { icon: customIcon }).addTo(map);
-
-        marker.on('click', () => {
-          onSelectPoi(poi);
-        });
-
-        markersRef.current[poi.id] = marker;
-      });
-
-      // Update User Location Marker if available
-      if (userCoords) {
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setLatLng([userCoords.lat, userCoords.lng]);
-        } else {
-          const userIcon = L.divIcon({
-            className: 'user-gps-marker',
-            html: `<div style="
-              background: #FFC300;
-              border: 3px solid #1E1E24;
-              border-radius: 50%;
-              width: 24px;
-              height: 24px;
-              box-shadow: 0 0 12px #FFC300;
-              animation: pulse 1.5s infinite;
-            "></div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-          });
-          userMarkerRef.current = L.marker([userCoords.lat, userCoords.lng], { icon: userIcon }).addTo(map);
-        }
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [pois, userCoords]);
-
-  // Center map on selected POI
-  useEffect(() => {
-    if (selectedPoi && leafletMapRef.current && selectedPoi.coordenadas) {
-      leafletMapRef.current.flyTo([selectedPoi.coordenadas.lat, selectedPoi.coordenadas.lng], 16, {
-        duration: 1.2,
-      });
-    }
-  }, [selectedPoi]);
+  if (!apiKey || apiKey === "TU_API_KEY_DE_GOOGLE_AQUI") {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', background: 'var(--color-bg)', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>
+          <div style={{ fontSize: '3rem' }}>🗺️</div>
+          <h2 className="h3 mt-2">Mapa no disponible</h2>
+          <p className="text-muted mt-2">
+            Falta configurar la clave API de Google Maps en <strong>.env.local</strong>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div ref={mapRef} style={{ width: '100%', height: '100%', zIndex: 1 }} />
+      <APIProvider apiKey={apiKey}>
+        <Map
+          defaultCenter={initialCenter}
+          defaultZoom={initialZoom}
+          mapId="DEMO_MAP_ID" // Requerido para habilitar los AdvancedMarkers (puedes crear uno real en Google Cloud)
+          disableDefaultUI={true}
+          zoomControl={true}
+        >
+          <MapController selectedPoi={selectedPoi} />
+
+          {/* Marcadores de Puntos de Interés (POIs) */}
+          {pois.map((poi) => {
+            if (!poi.coordenadas) return null;
+            const isSelected = selectedPoi?.id === poi.id;
+            
+            return (
+              <AdvancedMarker
+                key={poi.id}
+                position={poi.coordenadas}
+                onClick={() => onSelectPoi(poi)}
+                zIndex={isSelected ? 1000 : 1}
+              >
+                <div style={{
+                  background: isSelected ? 'var(--color-tierra)' : 'var(--color-rojo)',
+                  color: 'white',
+                  border: '2px solid var(--color-text-primary)',
+                  borderRadius: '50%',
+                  width: isSelected ? '46px' : '38px',
+                  height: isSelected ? '46px' : '38px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: isSelected ? '1.5rem' : '1.2rem',
+                  boxShadow: 'var(--shadow-md)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}>
+                  {getCategoryEmoji(poi.categoria)}
+                </div>
+              </AdvancedMarker>
+            );
+          })}
+
+          {/* Marcador GPS del Usuario */}
+          {userCoords && (
+            <AdvancedMarker position={userCoords} zIndex={2000}>
+               <div style={{
+                  background: 'var(--color-sol)',
+                  border: '3px solid var(--color-text-primary)',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  boxShadow: '0 0 12px var(--color-sol)',
+                }} />
+            </AdvancedMarker>
+          )}
+        </Map>
+      </APIProvider>
     </div>
   );
 }
