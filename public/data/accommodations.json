@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2024-07-26",
+  "alojamientos": [
+    {
+      "id": "cabanas-del-maule",
+      "nombre": "Cabañas del Maule",
+      "tipo": "cabañas",
+      "estrellas": 3,
+      "descripcion": "Cabañas rurales en entorno natural con vista al paisaje maulino. Perfectas para familias y parejas que buscan tranquilidad y contacto con la naturaleza del Valle Central.",
+      "coordenadas": { "lat": -35.3480, "lng": -71.4200 },
+      "precio": {
+        "min": 45000,
+        "max": 90000,
+        "moneda": "CLP",
+        "descripcion": "Precio por noche"
+      },
+      "capacidad": 6,
+      "numCabanas": 5,
+      "servicios": ["WiFi", "Estacionamiento", "Cocina equipada", "Parrilla", "Ropa de cama", "Agua caliente"],
+      "telefono": "+56 9 XXXX XXXX",
+      "email": "contacto@cabanasdelmaule.cl",
+      "sitioWeb": null,
+      "imagenPrincipal": "assets/images/cabanas-maule.webp",
+      "reservaUrl": null,
+      "mascotasPermitidas": true,
+      "distanciaCentroKm": 1.5
+    },
+    {
+      "id": "hospedaje-cumpeo-center",
+      "nombre": "Hospedaje Cumpeo Center",
+      "tipo": "hospedaje",
+      "estrellas": 2,
+      "descripcion": "Hospedaje familiar en el centro del pueblo, a pasos de la Ruta de Condorito. Ambiente acogedor con desayuno incluido y atención personalizada.",
+      "coordenadas": { "lat": -35.3458, "lng": -71.4118 },
+      "precio": {
+        "min": 22000,
+        "max": 40000,
+        "moneda": "CLP",
+        "descripcion": "Por persona, desayuno incluido"
+      },
+      "capacidad": 12,
+      "numHabitaciones": 6,
+      "servicios": ["Desayuno incluido", "WiFi", "Estacionamiento", "Agua caliente", "TV"],
+      "telefono": "+56 9 XXXX XXXX",
+      "email": null,
+      "sitioWeb": null,
+      "imagenPrincipal": "assets/images/hospedaje-center.webp",
+      "reservaUrl": null,
+      "mascotasPermitidas": false,
+      "distanciaCentroKm": 0.1
+    },
+    {
+      "id": "camping-rio-claro",
+      "nombre": "Camping Río Claro Naturaleza",
+      "tipo": "camping",
+      "estrellas": null,
+      "descripcion": "Camping a orillas de un riachuelo en plena naturaleza, a 8 km de Cumpeo. Ideal para mochileros, scouts y amantes del aire libre. Cuenta con baños, duchas y zona de picnic.",
+      "coordenadas": { "lat": -35.3700, "lng": -71.3950 },
+      "precio": {
+        "min": 8000,
+        "max": 15000,
+        "moneda": "CLP",
+        "descripcion": "Por carpa/noche"
+      },
+      "capacidad": 60,
+      "numSitios": 20,
+      "servicios": ["Baños", "Duchas agua fría", "Zona picnic", "Fuego (zona habilitada)", "Agua potable"],
+      "telefono": "+56 9 XXXX XXXX",
+      "email": null,
+      "sitioWeb": null,
+      "imagenPrincipal": "assets/images/camping-rio.webp",
+      "reservaUrl": null,
+      "mascotasPermitidas": true,
+      "distanciaCentroKm": 8.0
+    }
+  ]
+}
