@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Map, Settings } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -84,10 +85,10 @@ export default function Navbar() {
           {/* Actions / CTAs */}
           <div className="desktop-nav-cta">
             <Link href="/mapa" className="btn-nav-map" title="Abrir Mapa GPS de Condorito">
-              <span>🗺️</span> Abrir Mapa GPS
+              <Map size={16} /> Abrir Mapa GPS
             </Link>
-            <Link href="/admin" className="btn-nav-icon" title="Panel Admin" aria-label="Admin">
-              ⚙️
+            <Link href="/admin" className="btn-nav-icon" title="Panel Admin" aria-label="Panel de Administración">
+              <Settings size={18} />
             </Link>
           </div>
         </div>

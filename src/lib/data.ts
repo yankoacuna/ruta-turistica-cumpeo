@@ -1,10 +1,10 @@
-import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates } from './types';
+import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates, TourRoute } from './types';
 
 import destinationsData from '../../public/data/destinations.json';
 import accommodationsData from '../../public/data/accommodations.json';
 import restaurantsData from '../../public/data/restaurants.json';
 import configData from '../../public/data/config.json';
-
+import routesData from '../../public/data/routes.json';
 export async function getConfig(): Promise<AppConfig> {
   return configData as unknown as AppConfig;
 }
@@ -150,4 +150,8 @@ export function formatImgUrl(url?: string | null): string {
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   if (url.startsWith('/')) return url;
   return `/${url}`;
+}
+
+export async function getTourRoutes(): Promise<TourRoute[]> {
+  return (routesData as unknown as TourRoute[]) || [];
 }

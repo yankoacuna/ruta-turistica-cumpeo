@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-const ADMIN_TOKEN = 'cumpeo2024';
 const ALLOWED_TYPES = ['destinations', 'restaurants', 'accommodations', 'config'];
 const FILE_MAP: Record<string, string> = {
   destinations: 'destinations.json',
@@ -12,6 +11,12 @@ const FILE_MAP: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  // Read secret from environment — never hardcode credentials in source code
+  const ADMIN_TOKEN = process.env.ADMIN_SECRET;
+  if (!ADMIN_TOKEN) {
+    return NextResponse.json({ error: 'Servidor no configurado correctamente (falta ADMIN_SECRET)' }, { status: 500 });
+  }
+
   try {
     const body = await req.json();
 
@@ -65,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     // Add metadata
     if (typeof data === 'object' && data !== null) {
-      data.lastUpdated = new Date().toISOString();
+      (data as Record<string, unknown>).lastUpdated = new Date().toISOString();
     }
 
     // Write file
@@ -78,8 +83,8 @@ export async function POST(req: NextRequest) {
       file: filename,
       updatedAt: new Date().toISOString(),
     });
-  } catch (err: any) {
-    console.error('[API Save Error]:', err);
-    return NextResponse.json({ error: err.message || 'Error al guardar archivo' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Error desconocido';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

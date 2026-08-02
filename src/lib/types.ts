@@ -103,3 +103,11 @@ export interface POI {
   distanciaKm?: number;
   _original?: Destination | Accommodation | Restaurant;
 }
+
+export interface TourRoute {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  color: string;
+  poiIds: string[];
+}

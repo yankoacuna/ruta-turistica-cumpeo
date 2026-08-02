@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Navigation, MapPin } from 'lucide-react';
 import { getDestinationByIdOrSlug, getDestinations, getCategoryEmoji, getCategoryColorClass, formatImgUrl } from '@/lib/data';
 
 export async function generateStaticParams() {
@@ -133,19 +134,32 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
 
           {/* Cómo Llegar */}
           <div className="card p-6">
-            <h2 className="h3 mb-2">🚗 Cómo Llegar</h2>
+            <h2 className="h3 mb-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Navigation size={22} /> Cómo Llegar
+            </h2>
             <p className="text-muted text-sm mb-4">{destination.comoLlegar || 'Acceso principal por la vía pública en el centro urbano de Cumpeo, comuna de Río Claro.'}</p>
 
             {destination.coordenadas && (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${destination.coordenadas.lat},${destination.coordenadas.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-primary btn-md"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-              >
-                🗺️ Abrir Ruta en Google Maps GPS
-              </a>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${destination.coordenadas.lat},${destination.coordenadas.lng}&travelmode=driving`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary btn-md"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Navigation size={16} /> Google Maps
+                </a>
+                <a
+                  href={`https://waze.com/ul?ll=${destination.coordenadas.lat},${destination.coordenadas.lng}&navigate=yes`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-outline btn-md"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', borderColor: 'var(--color-cielo)', color: 'var(--color-cielo)' }}
+                >
+                  <MapPin size={16} /> Waze
+                </a>
+              </div>
             )}
           </div>
 

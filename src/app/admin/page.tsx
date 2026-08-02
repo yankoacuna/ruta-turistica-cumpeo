@@ -4,6 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { getDestinations, getAccommodations, getRestaurants, getConfig } from '@/lib/data';
 import { Destination, Accommodation, Restaurant, AppConfig } from '@/lib/types';
 import { useToast } from '@/components/Toast';
+import {
+  Settings,
+  LayoutDashboard,
+  MapPin,
+  UtensilsCrossed,
+  BedDouble,
+  Save,
+  Plus,
+  Pencil,
+  Trash2,
+  LogOut,
+  X,
+  ShieldCheck,
+} from 'lucide-react';
+
+type AdminSection = 'dashboard' | 'destinos' | 'restaurantes' | 'alojamientos';
+type DestinationCategory = Destination['categoria'];
 
 export default function AdminPage() {
   const { showToast } = useToast();
@@ -11,7 +28,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
 
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'destinos' | 'restaurantes' | 'alojamientos' | 'config'>('dashboard');
+  const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
 
   const [destinos, setDestinos] = useState<Destination[]>([]);
   const [restaurantes, setRestaurantes] = useState<Restaurant[]>([]);
@@ -23,7 +40,10 @@ export default function AdminPage() {
   const [editingDest, setEditingDest] = useState<Partial<Destination> | null>(null);
 
   const handleLogin = () => {
-    if (password === 'cumpeo2024') {
+    // Token validated server-side — this check is just for UX gate.
+    // The real security is that saveToServer sends the token and the API
+    // validates it against process.env.ADMIN_SECRET.
+    if (password.trim().length > 0) {
       setIsAuthenticated(true);
       setLoginError(false);
       showToast('Bienvenido al Panel de Administración', 'success');
@@ -55,19 +75,20 @@ export default function AdminPage() {
     }
   }
 
-  const saveToServer = async (type: string, data: any) => {
+  const saveToServer = async (type: string, data: unknown) => {
     try {
       const res = await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, data, token: 'cumpeo2024' }),
+        body: JSON.stringify({ type, data, token: password }),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Error al guardar');
-      showToast('✅ Cambios guardados correctamente en el servidor', 'success');
+      showToast('Cambios guardados correctamente en el servidor', 'success');
       return true;
-    } catch (err: any) {
-      showToast(`Error al guardar: ${err.message}`, 'error');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      showToast(`Error al guardar: ${message}`, 'error');
       return false;
     }
   };
@@ -104,7 +125,7 @@ export default function AdminPage() {
       id: editingDest.id || slug,
       slug,
       nombre: editingDest.nombre || '',
-      categoria: (editingDest.categoria as any) || 'cultural',
+      categoria: (editingDest.categoria as DestinationCategory) || 'cultural',
       descripcionCorta: editingDest.descripcionCorta || '',
       descripcionLarga: editingDest.descripcionLarga || '',
       historia: editingDest.historia || '',
@@ -166,13 +187,13 @@ export default function AdminPage() {
             />
           </div>
 
-          <button className="btn btn-primary btn-block btn-lg" style={{ width: '100%' }} onClick={handleLogin}>
-            Ingresar
+          <button className="btn btn-primary btn-block btn-lg" style={{ width: '100%', display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }} onClick={handleLogin}>
+            <ShieldCheck size={18} /> Ingresar
           </button>
 
           {loginError && (
             <div style={{ color: 'var(--color-rojo)', fontSize: '0.85rem', marginTop: '12px' }}>
-              Contraseña incorrecta. Intenta con `cumpeo2024`.
+              Contraseña incorrecta.
             </div>
           )}
         </div>
@@ -180,32 +201,41 @@ export default function AdminPage() {
     );
   }
 
+  const navTabs: { id: AdminSection; label: string; icon: React.ReactNode }[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
+    { id: 'destinos', label: 'Destinos', icon: <MapPin size={16} /> },
+    { id: 'restaurantes', label: 'Restaurantes', icon: <UtensilsCrossed size={16} /> },
+    { id: 'alojamientos', label: 'Alojamientos', icon: <BedDouble size={16} /> },
+  ];
+
   return (
     <div style={{ padding: '24px 16px', maxWidth: '1100px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 className="h2">⚙️ Panel de Administración</h1>
+          <h1 className="h2" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Settings size={28} /> Panel de Administración
+          </h1>
           <p className="text-sm text-muted">Gestión de contenidos y base de datos turística de Cumpeo</p>
         </div>
-        <button className="btn btn-outline btn-sm" onClick={() => setIsAuthenticated(false)}>
-          Cerrar Sesión
+        <button
+          className="btn btn-outline btn-sm"
+          style={{ display: 'flex', gap: '6px', alignItems: 'center' }}
+          onClick={() => setIsAuthenticated(false)}
+        >
+          <LogOut size={15} /> Cerrar Sesión
         </button>
       </div>
 
       {/* Admin Navigation Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        {[
-          { id: 'dashboard', label: '📊 Dashboard' },
-          { id: 'destinos', label: '🎯 Destinos' },
-          { id: 'restaurantes', label: '🍽️ Restaurantes' },
-          { id: 'alojamientos', label: '🛏️ Alojamientos' },
-        ].map((tab) => (
+        {navTabs.map((tab) => (
           <button
             key={tab.id}
             className={`btn ${activeSection === tab.id ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-            onClick={() => setActiveSection(tab.id as any)}
+            style={{ display: 'flex', gap: '6px', alignItems: 'center' }}
+            onClick={() => setActiveSection(tab.id)}
           >
-            {tab.label}
+            {tab.icon} {tab.label}
           </button>
         ))}
       </div>
@@ -214,18 +244,21 @@ export default function AdminPage() {
       {activeSection === 'dashboard' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
           <div className="card p-6" style={{ textAlign: 'center' }}>
+            <MapPin size={32} color="var(--color-sol)" style={{ margin: '0 auto 8px' }} />
             <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-sol)' }}>{destinos.length}</div>
             <div style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginTop: '4px' }}>
               Destinos Turísticos
             </div>
           </div>
           <div className="card p-6" style={{ textAlign: 'center' }}>
+            <UtensilsCrossed size={32} color="var(--color-rojo)" style={{ margin: '0 auto 8px' }} />
             <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-rojo)' }}>{restaurantes.length}</div>
             <div style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginTop: '4px' }}>
               Restaurantes
             </div>
           </div>
           <div className="card p-6" style={{ textAlign: 'center' }}>
+            <BedDouble size={32} color="var(--color-cielo)" style={{ margin: '0 auto 8px' }} />
             <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-cielo)' }}>{alojamientos.length}</div>
             <div style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginTop: '4px' }}>
               Alojamientos
@@ -239,8 +272,12 @@ export default function AdminPage() {
         <div className="card p-6">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 className="h3">Destinos Turísticos registrados</h3>
-            <button className="btn btn-primary btn-sm" onClick={() => handleOpenDestModal()}>
-              + Agregar Destino
+            <button
+              className="btn btn-primary btn-sm"
+              style={{ display: 'flex', gap: '6px', alignItems: 'center' }}
+              onClick={() => handleOpenDestModal()}
+            >
+              <Plus size={15} /> Agregar Destino
             </button>
           </div>
 
@@ -261,11 +298,19 @@ export default function AdminPage() {
                     <td style={{ padding: '12px' }}>{d.categoria}</td>
                     <td style={{ padding: '12px' }}>{d.precio || 'Gratuito'}</td>
                     <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDestModal(d)}>
-                        Editar
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ display: 'flex', gap: '4px', alignItems: 'center' }}
+                        onClick={() => handleOpenDestModal(d)}
+                      >
+                        <Pencil size={13} /> Editar
                       </button>
-                      <button className="btn btn-outline btn-sm" style={{ borderColor: 'var(--color-rojo)', color: 'var(--color-rojo)' }} onClick={() => handleDeleteDestino(d.id)}>
-                        Eliminar
+                      <button
+                        className="btn btn-outline btn-sm"
+                        style={{ borderColor: 'var(--color-rojo)', color: 'var(--color-rojo)', display: 'flex', gap: '4px', alignItems: 'center' }}
+                        onClick={() => handleDeleteDestino(d.id)}
+                      >
+                        <Trash2 size={13} /> Eliminar
                       </button>
                     </td>
                   </tr>
@@ -279,7 +324,9 @@ export default function AdminPage() {
       {/* RESTAURANTES SECTION */}
       {activeSection === 'restaurantes' && (
         <div className="card p-6">
-          <h3 className="h3 mb-4">🍽️ Gastronomía y Locales</h3>
+          <h3 className="h3 mb-4" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <UtensilsCrossed size={22} /> Gastronomía y Locales
+          </h3>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left' }}>
@@ -302,7 +349,9 @@ export default function AdminPage() {
       {/* ALOJAMIENTOS SECTION */}
       {activeSection === 'alojamientos' && (
         <div className="card p-6">
-          <h3 className="h3 mb-4">🛏️ Alojamientos</h3>
+          <h3 className="h3 mb-4" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <BedDouble size={22} /> Alojamientos
+          </h3>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left' }}>
@@ -340,7 +389,16 @@ export default function AdminPage() {
           }}
         >
           <div className="card p-6" style={{ maxWidth: '500px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 className="h2 mb-4">{editingDest.id ? 'Editar Destino' : 'Nuevo Destino'}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 className="h2">{editingDest.id ? 'Editar Destino' : 'Nuevo Destino'}</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
+                aria-label="Cerrar modal"
+              >
+                <X size={22} />
+              </button>
+            </div>
             <form onSubmit={handleSaveDestino} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '4px' }}>Nombre *</label>
@@ -360,14 +418,14 @@ export default function AdminPage() {
                   className="form-select"
                   style={{ width: '100%', padding: '8px 12px' }}
                   value={editingDest.categoria || 'cultural'}
-                  onChange={(e) => setEditingDest({ ...editingDest, categoria: e.target.value as any })}
+                  onChange={(e) => setEditingDest({ ...editingDest, categoria: e.target.value as DestinationCategory })}
                 >
-                  <option value="cultural">🎨 Cultural</option>
-                  <option value="historico">🏛️ Histórico</option>
-                  <option value="naturaleza">🌿 Naturaleza</option>
-                  <option value="gastronomia">🍽️ Gastronomía</option>
-                  <option value="patrimonio">🏺 Patrimonio</option>
-                  <option value="entretencion">🎉 Entretención</option>
+                  <option value="cultural">Cultural</option>
+                  <option value="historico">Histórico</option>
+                  <option value="naturaleza">Naturaleza</option>
+                  <option value="gastronomia">Gastronomía</option>
+                  <option value="patrimonio">Patrimonio</option>
+                  <option value="entretencion">Entretención</option>
                 </select>
               </div>
 
@@ -418,8 +476,12 @@ export default function AdminPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-                <button type="submit" className="btn btn-primary flex-1">
-                  💾 Guardar
+                <button
+                  type="submit"
+                  className="btn btn-primary flex-1"
+                  style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Save size={16} /> Guardar
                 </button>
                 <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>
                   Cancelar

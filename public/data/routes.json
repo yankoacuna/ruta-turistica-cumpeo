@@ -1,0 +1,24 @@
+[
+  {
+    "id": "ruta-historica",
+    "nombre": "Ruta Histórica de Condorito",
+    "descripcion": "Recorre los hitos más emblemáticos que conectan la historia de Cumpeo con la famosa historieta de Condorito, desde el corazón del pueblo hasta los sectores rurales.",
+    "color": "#E63946",
+    "poiIds": [
+      "ruta-condorito",
+      "plaza-cumpeo",
+      "batalla-vegas-cumpeo"
+    ]
+  },
+  {
+    "id": "ruta-naturaleza",
+    "nombre": "Ruta Naturaleza y Patrimonio",
+    "descripcion": "Un recorrido por el patrimonio agrícola e hídrico de Cumpeo: desde las viñas locales hasta el canal histórico de 1870.",
+    "color": "#2A9D8F",
+    "poiIds": [
+      "viñas-locales",
+      "ruta-condorito",
+      "canal-cumpeo"
+    ]
+  }
+]
