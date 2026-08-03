@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -37,6 +38,11 @@ export default function RootLayout({
             <Navbar />
             <main className="page-content">{children}</main>
             <Footer />
+            
+            {/* Floating Action Button for Map */}
+            <Link href="/mapa" className="fab-map-btn" title="Abrir Mapa Interactivo">
+              🗺️
+            </Link>
           </div>
         </ToastProvider>
       </body>

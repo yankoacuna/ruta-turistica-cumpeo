@@ -204,8 +204,6 @@ p        { color: var(--color-text-secondary); line-height: 1.6; }
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-4);
-  padding-left: var(--space-3);
-  border-left: 5px solid var(--color-rojo);
 }
 
 .section-title {
@@ -216,6 +214,20 @@ p        { color: var(--color-text-secondary); line-height: 1.6; }
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  height: 4px;
+  background: var(--color-rojo);
+  border-radius: 2px;
 }
 
 .section-subtitle {
@@ -373,6 +385,128 @@ p        { color: var(--color-text-secondary); line-height: 1.6; }
   gap: var(--space-3);
 }
 
+.destinations-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+
+.gps-permission-card {
+  padding: var(--space-6);
+  background: linear-gradient(135deg, var(--color-surface), var(--color-surface-soft));
+  border: 3px dashed var(--color-cielo);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 119, 182, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.gps-permission-card::after {
+  content: '¡PLOP!';
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background: var(--color-sol);
+  color: #1E1E24;
+  font-family: var(--font-display);
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 2px solid #1E1E24;
+  transform: rotate(10deg);
+  font-size: 0.9rem;
+}
+
+.gps-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-2);
+  display: inline-block;
+}
+
+.gps-permission-card h3 {
+  font-size: var(--text-lg);
+  font-weight: 900;
+  font-family: var(--font-display);
+  color: #1E1E24;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.gps-permission-card p {
+  font-size: var(--text-sm);
+  color: #4A4E69;
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+}
+
+/* ── ESTILOS DEL BANNER GPS (CÓMIC) ──────────────────────────── */
+.cta-strip {
+  background: var(--grad-rojo);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 24px rgba(230, 57, 70, 0.3);
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #1E1E24; /* Comic style border */
+}
+
+.cta-strip::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.2) 3px, transparent 3px);
+  background-size: 16px 16px;
+  pointer-events: none;
+}
+
+.cta-strip-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.cta-strip-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 2px 2px 0px #1E1E24;
+}
+
+.cta-strip-desc {
+  font-size: 0.95rem;
+  opacity: 0.95;
+  max-width: 80%;
+  margin-bottom: 16px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.cta-strip-icon {
+  font-size: 5rem;
+  opacity: 0.9;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%) rotate(15deg);
+  filter: drop-shadow(4px 4px 0px #1E1E24);
+  z-index: 1;
+}
+@media (max-width: 768px) {
+  .cta-strip-icon {
+    font-size: 4rem;
+    right: -10px;
+    opacity: 0.3;
+  }
+  .cta-strip-desc {
+    max-width: 100%;
+  }
+}
+
 .destinations-grid-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -386,7 +520,7 @@ p        { color: var(--color-text-secondary); line-height: 1.6; }
 }
 
 /* ── CTA Strip ───────────────────────────────────────────────── */
-.cta-strip {
+.cta-strip-legacy {
   background: linear-gradient(135deg, #E63946, #C1121F);
   border-radius: var(--radius-xl);
   padding: var(--space-5) var(--space-6);
@@ -845,49 +979,80 @@ p        { color: var(--color-text-secondary); line-height: 1.6; }
 }
 
 /* ── Categorías Grid Condorito Theme ───────────────────────── */
-.category-item {
+.category-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: var(--space-3) var(--space-2);
-  background: #FFFFFF;
-  border: 1.5px solid #E2E0D8;
+  justify-content: flex-start;
+  align-items: flex-start;
+  height: 180px;
+  padding: var(--space-4);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
   box-shadow: var(--shadow-sm);
+  border: 2px solid transparent;
 }
 
-.category-item:hover {
+.category-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 100%);
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+.category-card:hover .category-card-overlay {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 100%);
+}
+
+.category-card.active {
   border-color: var(--color-rojo);
-  background: #FFF0F1;
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.2);
 }
 
-.category-emoji {
-  font-size: 2rem;
-  line-height: 1;
-  transition: transform 0.2s ease;
+.category-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
 }
 
-.category-item:hover .category-emoji {
-  transform: scale(1.15);
+.category-card-title {
+  color: #FFFFFF;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  margin: 0;
+  letter-spacing: 0.5px;
 }
 
-.category-name {
-  font-size: var(--text-xs);
-  font-weight: 800;
+.category-card-btn {
+  background-color: var(--color-rojo);
+  color: #FFFFFF;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #1E1E24;
+  border-radius: 4px;
+  cursor: pointer;
+  width: fit-content;
+  transition: all 0.2s ease;
 }
 
-.category-item:hover .category-name {
-  color: var(--color-rojo);
+.category-card:hover .category-card-btn {
+  background-color: #a02c21; /* Un rojo más oscuro para el hover */
+  border-color: rgba(255,255,255,0.5);
 }
 
 /* ── GPS Permission Card COMPACTA ────────────────────────────── */
@@ -2314,3 +2479,70 @@ p        { color: var(--color-text-secondary); line-height: 1.6; }
 }
 
 .map-error-icon { font-size: 3rem; opacity: 0.5; }
+
+/* ── UX IMPROVEMENTS (Condorito Theme) ───────────────────── */
+.horizontal-scroll-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+.horizontal-scroll-container::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+.horizontal-scroll-container > * {
+  scroll-snap-align: start;
+  flex: 0 0 calc(85% - var(--space-4));
+  min-width: 280px;
+}
+@media (min-width: 768px) {
+  .horizontal-scroll-container > * {
+    flex: 0 0 calc(50% - var(--space-4));
+  }
+}
+@media (min-width: 1024px) {
+  .horizontal-scroll-container > * {
+    flex: 0 0 calc(33.333% - var(--space-4));
+  }
+}
+
+.weather-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 2px solid var(--color-sol);
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.fab-map-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 64px;
+  height: 64px;
+  background-color: var(--color-rojo);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
+  z-index: 100;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+  border: 3px solid var(--color-surface);
+}
+.fab-map-btn:hover, .fab-map-btn:active {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(230, 57, 70, 0.6);
+}
