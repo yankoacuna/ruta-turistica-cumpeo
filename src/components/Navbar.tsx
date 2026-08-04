@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Map, Settings } from 'lucide-react';
@@ -8,6 +8,27 @@ import { Map, Settings } from 'lucide-react';
 export default function Navbar() {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [weather, setWeather] = useState<{temp: number, icon: string} | null>(null);
+
+  useEffect(() => {
+    // Fetch clima real de Cumpeo usando Open-Meteo (Sin API Key)
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-35.3456&longitude=-71.4123&current_weather=true')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.current_weather) {
+          const temp = Math.round(data.current_weather.temperature);
+          const code = data.current_weather.weathercode;
+          // Mapeo básico de códigos WMO a emojis
+          let icon = '☁️';
+          if (code === 0 || code === 1) icon = '☀️';
+          else if (code === 2 || code === 3) icon = '⛅';
+          else if (code >= 60 && code <= 69) icon = '🌧️';
+          
+          setWeather({ temp, icon });
+        }
+      })
+      .catch(err => console.error("Error al obtener clima:", err));
+  }, []);
 
   const isActive = (path: string) => pathname === path;
 
@@ -48,26 +69,9 @@ export default function Navbar() {
               Inicio
             </Link>
 
-            <Link href="/mapa" className={`nav-link-item ${isActive('/mapa') ? 'active' : ''}`}>
-              <span className="nav-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 4L3 7V20L9 17L15 20L21 17V4L15 7L9 4Z" fill="#00B4D8" stroke="#1E1E24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M9 4V17" stroke="#1E1E24" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M15 7V20" stroke="#1E1E24" strokeWidth="2" strokeLinecap="round"/>
-                  <circle cx="17" cy="11" r="2" fill="#E63946" stroke="#1E1E24" strokeWidth="1.5"/>
-                </svg>
-              </span>
-              Mapa GPS
-            </Link>
-
-            <Link href="/#section-nearby" className="nav-link-item">
-              <span className="nav-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C8.7 2 6 4.7 6 8C6 12.5 12 21 12 21C12 21 18 12.5 18 8C18 4.7 15.3 2 12 2Z" fill="#E63946" stroke="#1E1E24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="12" cy="8" r="2.8" fill="white" stroke="#1E1E24" strokeWidth="1.8"/>
-                </svg>
-              </span>
-              Cerca de mí
+            <Link href="/historia" className={`nav-link-item ${isActive('/historia') ? 'active' : ''}`}>
+              <span className="nav-icon" style={{ fontSize: '1.2rem' }}>📜</span>
+              Historia
             </Link>
 
             <Link href="/#section-destinos" className="nav-link-item">
@@ -78,12 +82,20 @@ export default function Navbar() {
                   <circle cx="12" cy="12" r="2.3" fill="#E63946" stroke="#1E1E24" strokeWidth="1.5"/>
                 </svg>
               </span>
-              Destinos
+              Destino
+            </Link>
+
+            <Link href="/contacto" className={`nav-link-item ${isActive('/contacto') ? 'active' : ''}`}>
+              <span className="nav-icon" style={{ fontSize: '1.2rem' }}>📞</span>
+              Contactanos
             </Link>
           </div>
 
           {/* Actions / CTAs */}
           <div className="desktop-nav-cta">
+            <div className="weather-pill" title="Clima actual en Cumpeo">
+              {weather ? `${weather.icon} ${weather.temp}°C Cumpeo` : 'Cargando clima...'}
+            </div>
             <Link href="/mapa" className="btn-nav-map" title="Abrir Mapa GPS de Condorito">
               <Map size={16} /> Abrir Mapa GPS
             </Link>
@@ -135,17 +147,22 @@ export default function Navbar() {
             </div>
 
             <div className="drawer-body">
+              <div style={{ padding: '0 16px 16px' }}>
+                <div className="weather-pill" style={{ width: '100%', justifyContent: 'center' }}>
+                  {weather ? `${weather.icon} ${weather.temp}°C Cumpeo` : 'Cargando clima...'}
+                </div>
+              </div>
               <Link href="/" className={`drawer-nav-item ${isActive('/') ? 'active' : ''}`} onClick={() => setDrawerOpen(false)}>
                 <span>🏠</span> Inicio
               </Link>
-              <Link href="/mapa" className={`drawer-nav-item ${isActive('/mapa') ? 'active' : ''}`} onClick={() => setDrawerOpen(false)}>
-                <span>🗺️</span> Mapa GPS Condorito
-              </Link>
-              <Link href="/#section-nearby" className="drawer-nav-item" onClick={() => setDrawerOpen(false)}>
-                <span>📍</span> Cerca de mí
+              <Link href="/historia" className={`drawer-nav-item ${isActive('/historia') ? 'active' : ''}`} onClick={() => setDrawerOpen(false)}>
+                <span>📜</span> Historia
               </Link>
               <Link href="/#section-destinos" className="drawer-nav-item" onClick={() => setDrawerOpen(false)}>
-                <span>🎯</span> Destinos Turísticos
+                <span>🎯</span> Destino
+              </Link>
+              <Link href="/contacto" className={`drawer-nav-item ${isActive('/contacto') ? 'active' : ''}`} onClick={() => setDrawerOpen(false)}>
+                <span>📞</span> Contactanos
               </Link>
               <Link href="/admin" className={`drawer-nav-item ${isActive('/admin') ? 'active' : ''}`} onClick={() => setDrawerOpen(false)}>
                 <span>⚙️</span> Panel de Administración

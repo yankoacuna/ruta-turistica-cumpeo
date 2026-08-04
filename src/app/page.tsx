@@ -78,10 +78,21 @@ export default function HomePage() {
 
   const handleCategoryFilter = (catId: string) => {
     setActiveCategory(catId);
+    
+    if (catId === 'gastronomia') {
+      document.getElementById('section-gastronomia')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    if (catId === 'alojamiento') {
+      document.getElementById('section-alojamientos')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
     if (catId === 'todos') {
       setFilteredDestinations(destinations);
     } else {
       setFilteredDestinations(destinations.filter((d) => d.categoria === catId));
+      document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -109,6 +120,9 @@ export default function HomePage() {
         setNearbyList(sorted.slice(0, 5) as any);
         setFilteredDestinations(sorted as any);
         showToast('📍 Destinos más cercanos actualizados con tu GPS', 'success');
+        setTimeout(() => {
+          document.getElementById('section-nearby')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       },
       (err) => {
         setIsLocating(false);
@@ -226,6 +240,57 @@ export default function HomePage() {
       </section>
 
       <main className="page-content" id="main-content">
+        {/* ── CERCA DE TI (Visible solo con GPS) ─────── */}
+        {hasGPS && (
+          <>
+            <section className="section container" id="section-nearby" aria-label="Destinos cercanos a tu ubicación">
+              <div className="section-header">
+                <div>
+                  <h2 className="section-title">📍 Cerca de ti</h2>
+                  <div className="section-subtitle">Tus lugares más próximos en Cumpeo</div>
+                </div>
+                <button className="section-link" onClick={handleGPSLocation} aria-label="Actualizar ubicación">
+                  Actualizar 🔄
+                </button>
+              </div>
+
+              <div id="nearby-container" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                {nearbyList.map((item) => (
+                  <article key={item.id} className="card-horizontal">
+                    <Link href={`/destino/${item.slug}`} style={{ display: 'flex', width: '100%', textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ width: '130px', minWidth: '130px', minHeight: '110px', background: 'var(--color-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                        <img
+                          className="card-h-img"
+                          src={formatImgUrl(item.imagenPrincipal)}
+                          alt={item.nombre}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/assets/images/placeholder.webp';
+                          }}
+                        />
+                      </div>
+                      <div className="card-h-body">
+                        <span className={`badge badge-${getCategoryColorClass(item.categoria)}`} style={{ fontSize: '0.6rem', padding: '2px 8px', marginBottom: '4px', alignSelf: 'flex-start' }}>
+                          {getCategoryEmoji(item.categoria)} {item.categoria}
+                        </span>
+                        <div className="card-h-title">{item.nombre}</div>
+                        <div className="card-h-subtitle line-clamp-2">{item.descripcionCorta || ''}</div>
+                        <div className="card-h-meta">
+                          <span className="text-muted" style={{ fontSize: '0.7rem' }}>📍 {formatDistance((item as any).distanciaKm || 0)}</span>
+                          {item.precio && <span className="text-muted" style={{ fontSize: '0.7rem' }}>· {item.precio}</span>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', padding: '0 var(--space-3)' }}>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '18px' }}>›</span>
+                      </div>
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <div className="divider"></div>
+          </>
+        )}
+
         {/* ── CATEGORÍAS GRID ─────── */}
         <section className="section container" aria-label="Categorías de interés">
           <div className="section-header">
@@ -240,15 +305,18 @@ export default function HomePage() {
 
           <div className="categories-grid" role="navigation" aria-label="Categorías turísticas">
             {categories.map((cat) => (
-              <div
+              <Link
+                href={`/categoria/${cat.id}`}
                 key={cat.id}
-                className={`category-item ${activeCategory === cat.id ? 'active' : ''}`}
-                role="button"
-                onClick={() => handleCategoryFilter(cat.id)}
+                className="category-card"
+                style={{ backgroundImage: `url(${cat.imagen || '/assets/images/placeholder.webp'})`, textDecoration: 'none' }}
               >
-                <div className="category-emoji">{cat.emoji}</div>
-                <div className="category-name">{cat.nombre}</div>
-              </div>
+                <div className="category-card-overlay"></div>
+                <div className="category-card-content">
+                  <h3 className="category-card-title">{cat.nombre}</h3>
+                  <button className="category-card-btn" tabIndex={-1}>{cat.botonTexto || 'VER'}</button>
+                </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -267,7 +335,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="scroll-x desktop-grid">
+          <div className="horizontal-scroll-container">
             {featured.map((item) => (
               <article
                 key={item.id}
@@ -301,166 +369,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── CTA MAPA STRIP ─────── */}
-        <div className="container" style={{ margin: '24px auto' }}>
-          <div className="cta-strip" role="complementary" aria-label="Ir al mapa interactivo">
-            <div className="cta-strip-content">
-              <div className="cta-strip-title">Navegación GPS Interactiva 🧭</div>
-              <div className="cta-strip-desc">Explora todos los rincones de Cumpeo en tiempo real con geolocalización y rutas paso a paso.</div>
-              <Link href="/mapa" className="btn btn-primary" style={{ marginTop: 'var(--space-3)' }}>
-                📍 Abrir Mapa en Vivo
-              </Link>
-            </div>
-            <div className="cta-strip-icon">🗺️</div>
-          </div>
-        </div>
 
-        {/* ── CERCA DE TI ─────── */}
-        <section className="section container" id="section-nearby" aria-label="Destinos cercanos a tu ubicación">
-          <div className="section-header">
-            <div>
-              <h2 className="section-title">📍 Cerca de ti</h2>
-              <div className="section-subtitle">Encuentra los atractivos más próximos a tu ubicación actual</div>
-            </div>
-            <button className="section-link" onClick={handleGPSLocation} aria-label="Actualizar ubicación">
-              Actualizar 🔄
-            </button>
-          </div>
 
-          <div id="nearby-container">
-            {!hasGPS ? (
-              <div className="gps-permission-card" id="gps-card">
-                <div className="gps-icon">📡</div>
-                <h3>¿Dónde estás parado?</h3>
-                <p>Activa tu GPS para mostrarte la distancia a cada monumento y local temático.</p>
-                <button className="btn btn-primary btn-block" onClick={handleGPSLocation} disabled={isLocating}>
-                  {isLocating ? '📡 Localizando...' : '📍 Activar Geolocalización GPS'}
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                {nearbyList.map((item) => (
-                  <article key={item.id} className="card-horizontal">
-                    <Link href={`/destino/${item.slug}`} style={{ display: 'flex', width: '100%', textDecoration: 'none', color: 'inherit' }}>
-                      <div style={{ width: '130px', minWidth: '130px', minHeight: '110px', background: 'var(--color-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-                        <img
-                          className="card-h-img"
-                          src={formatImgUrl(item.imagenPrincipal)}
-                          alt={item.nombre}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/assets/images/placeholder.webp';
-                          }}
-                        />
-                      </div>
-                      <div className="card-h-body">
-                        <span className={`badge badge-${getCategoryColorClass(item.categoria)}`} style={{ fontSize: '0.6rem', padding: '2px 8px', marginBottom: '4px', alignSelf: 'flex-start' }}>
-                          {getCategoryEmoji(item.categoria)} {item.categoria}
-                        </span>
-                        <div className="card-h-title">{item.nombre}</div>
-                        <div className="card-h-subtitle line-clamp-2">{item.descripcionCorta || ''}</div>
-                        <div className="card-h-meta">
-                          <span className="text-muted" style={{ fontSize: '0.7rem' }}>📍 {formatDistance((item as any).distanciaKm || 0)}</span>
-                          {item.precio && <span className="text-muted" style={{ fontSize: '0.7rem' }}>· {item.precio}</span>}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', padding: '0 var(--space-3)' }}>
-                        <span style={{ color: 'var(--color-text-muted)', fontSize: '18px' }}>›</span>
-                      </div>
-                    </Link>
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        <div className="divider"></div>
-
-        {/* ── TODOS LOS DESTINOS ─────── */}
-        <section className="section container" id="section-destinos" aria-label="Todos los destinos turísticos">
-          <div className="section-header">
-            <div>
-              <h2 className="section-title">🗺️ Todos los Destinos</h2>
-              <div className="section-subtitle">Patrimonio, historia, viñedos y la ruta temática</div>
-            </div>
-            <span className="text-muted text-sm">{filteredDestinations.length} lugares</span>
-          </div>
-
-          {/* Filtros Chip */}
-          <div id="filter-chips" style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 'var(--space-4)', marginBottom: 'var(--space-2)' }}>
-            {[
-              { id: 'todos', nombre: 'Todos', emoji: '🗺️' },
-              { id: 'cultural', nombre: 'Cultural', emoji: '🎨' },
-              { id: 'historico', nombre: 'Histórico', emoji: '🏛️' },
-              { id: 'naturaleza', nombre: 'Naturaleza', emoji: '🌿' },
-              { id: 'patrimonio', nombre: 'Patrimonio', emoji: '🏺' },
-            ].map((chip) => (
-              <button
-                key={chip.id}
-                className={`chip ${activeCategory === chip.id ? 'active' : ''}`}
-                onClick={() => handleCategoryFilter(chip.id)}
-              >
-                <span className="chip-emoji">{chip.emoji}</span>
-                {chip.nombre}
-              </button>
-            ))}
-          </div>
-
-          {/* Grid de Cards Verticales */}
-          <div className="destinations-grid-container" role="list">
-            {filteredDestinations.map((dest) => (
-              <article
-                key={dest.id}
-                className={`destination-card ${dest.destacado ? 'featured' : ''} animate-fade-in-up`}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="card-img-wrap">
-                  <img
-                    className="card-img"
-                    src={formatImgUrl(dest.imagenPrincipal)}
-                    alt={dest.nombre}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/assets/images/placeholder.webp';
-                    }}
-                  />
-                  <div className="card-badge-top">
-                    <span className={`badge badge-${getCategoryColorClass(dest.categoria)}`}>
-                      {getCategoryEmoji(dest.categoria)} {dest.categoria}
-                    </span>
-                  </div>
-                  <button
-                    className={`card-fav-btn ${favorites.includes(dest.id) ? 'active' : ''}`}
-                    onClick={(e) => toggleFavorite(dest.id, e)}
-                    aria-label="Guardar en favoritos"
-                  >
-                    {favorites.includes(dest.id) ? '♥' : '♡'}
-                  </button>
-                </div>
-                <div className="card-body">
-                  <div className="card-category">
-                    {getCategoryEmoji(dest.categoria)} {dest.categoria.charAt(0).toUpperCase() + dest.categoria.slice(1)}
-                  </div>
-                  <h3 className="card-title">
-                    <Link href={`/destino/${dest.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                      {dest.nombre}
-                    </Link>
-                  </h3>
-                  <p className="card-desc line-clamp-2">{dest.descripcionCorta}</p>
-                  <div className="card-footer">
-                    <div className="card-meta">
-                      {(dest as any).distanciaKm ? <span>📍 {formatDistance((dest as any).distanciaKm)}</span> : null}
-                      {dest.precio ? <span>· {dest.precio}</span> : null}
-                    </div>
-                    {dest.rating && <div className="card-rating">⭐ {dest.rating.toFixed(1)}</div>}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <div className="divider"></div>
 
         {/* ── GASTRONOMÍA MAULINA ─────── */}
         <section className="section container" id="section-gastronomia" aria-label="Restaurantes y gastronomía">
@@ -472,7 +382,7 @@ export default function HomePage() {
             <span className="text-muted text-sm">{restaurants.length} locales</span>
           </div>
 
-          <div className="list-two-col" role="list">
+          <div className="horizontal-scroll-container" role="list">
             {restaurants.map((item) => (
               <article key={item.id} className="card-horizontal">
                 <div style={{ width: '130px', minWidth: '130px', minHeight: '110px', background: 'var(--color-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
@@ -498,6 +408,12 @@ export default function HomePage() {
               </article>
             ))}
           </div>
+
+          <div style={{ textAlign: 'center', marginTop: '32px' }}>
+            <Link href="/categoria/gastronomia" className="btn btn-outline" style={{ display: 'inline-block', padding: '12px 32px' }}>
+              Ver más opciones de Gastronomía
+            </Link>
+          </div>
         </section>
 
         <div className="divider"></div>
@@ -512,7 +428,7 @@ export default function HomePage() {
             <span className="text-muted text-sm">{accommodations.length} opciones</span>
           </div>
 
-          <div className="list-two-col" role="list">
+          <div className="horizontal-scroll-container" role="list">
             {accommodations.map((item) => (
               <article key={item.id} className="card-horizontal">
                 <div style={{ width: '130px', minWidth: '130px', minHeight: '110px', background: 'var(--color-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
@@ -537,6 +453,12 @@ export default function HomePage() {
                 </div>
               </article>
             ))}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '32px' }}>
+            <Link href="/categoria/alojamiento" className="btn btn-outline" style={{ display: 'inline-block', padding: '12px 32px' }}>
+              Ver más opciones de Alojamiento
+            </Link>
           </div>
         </section>
       </main>
