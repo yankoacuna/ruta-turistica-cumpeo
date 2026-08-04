@@ -28,23 +28,26 @@ export interface Destination {
 export interface Accommodation {
   id: string;
   nombre: string;
-  tipo: string;
+  tipo?: string;
   descripcion: string;
   coordenadas: Coordinates;
-  direccion: string;
+  direccion?: string | null;
   contacto?: {
     telefono?: string;
     whatsapp?: string;
     email?: string;
     web?: string;
-  };
+    instagram?: string;
+  } | null;
   servicios?: string[];
   precio?: {
     min?: number;
     max?: number;
     moneda?: string;
-  } | string;
-  imagenPrincipal?: string;
+    descripcion?: string;
+  } | string | null;
+  imagenPrincipal?: string | null;
+  galeria?: string[];
 }
 
 export interface Restaurant {
@@ -53,18 +56,33 @@ export interface Restaurant {
   especialidad?: string;
   descripcion: string;
   coordenadas: Coordinates;
-  direccion: string;
+  direccion?: string | null;
   contacto?: {
     telefono?: string;
     whatsapp?: string;
-  };
+    email?: string;
+    web?: string;
+    instagram?: string;
+  } | null;
   platoEstrella?: string;
-  horario?: string;
+  horario?: {
+    apertura?: string;
+    cierre?: string;
+    diasCierre?: string[];
+    descripcion?: string;
+  } | string | null;
   precio?: {
     rango?: string;
     promedioPersona?: number;
-  } | string;
-  imagenPrincipal?: string;
+    min?: number;
+    max?: number;
+    moneda?: string;
+    descripcion?: string;
+  } | string | null;
+  imagenPrincipal?: string | null;
+  galeria?: string[];
+  menuUrl?: string | null;
+  tags?: string[];
 }
 
 export interface AppConfig {
@@ -80,6 +98,7 @@ export interface AppConfig {
     nombre: string;
     emoji: string;
     color: string;
+    imagen?: string;
   }>;
   redesSociales?: Record<string, string>;
   informacionTuristica?: {
