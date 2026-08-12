@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Destination {
+  id               String   @id
+  slug             String   @unique
+  nombre           String
+  categoria        String
+  descripcionCorta String
+  descripcionLarga String?
+  historia         String?
+  coordenadas      Json     // { "lat": -35.267, "lng": -71.250 }
+  direccion        String?
+  horario          String?
+  precio           String?
+  duracionVisita   String?
+  comoLlegar       String?
+  tags             String[]
+  imagenPrincipal  String?
+  galeria          String[]
+  rating           Float?
+  destacado        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Restaurant {
+  id               String   @id
+  nombre           String
+  descripcion      String
+  coordenadas      Json
+  direccion        String?
+  horario          Json?
+  precio           Json?    // e.g. { "rango": "$$" }
+  tags             String[]
+  imagenPrincipal  String?
+  galeria          String[]
+  menuUrl          String?
+  contacto         Json?    // e.g. { "telefono": "..." }
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Accommodation {
+  id               String   @id
+  nombre           String
+  descripcion      String
+  coordenadas      Json
+  direccion        String?
+  precio           Json?    // e.g. { "min": 25000, "max": 40000 }
+  servicios        String[]
+  imagenPrincipal  String?
+  galeria          String[]
+  contacto         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Config {
+  id               String   @id @default("default")
+  categorias       Json     // Array of category objects
+  updatedAt        DateTime @updatedAt
+}

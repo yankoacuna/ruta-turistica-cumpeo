@@ -25,12 +25,27 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     }, duration);
   }, []);
 
+  const TOAST_STYLES: Record<string, string> = {
+    info:    'bg-[#1E3A5F] border border-[#023E8A]',
+    success: 'bg-[#1B4332] border border-[#2D6A4F]',
+    error:   'bg-[#7F1D1D] border border-[#C1121F]',
+    warning: 'bg-[#78350F] border border-[#D97706]',
+  };
+
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div id="toast-container" className="toast-container" role="status" aria-live="polite">
+      <div
+        id="toast-container"
+        className="fixed top-20 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"
+        role="status"
+        aria-live="polite"
+      >
         {toasts.map((t) => (
-          <div key={t.id} className={`toast toast-${t.type}`} style={{ animation: 'slideIn 0.3s ease' }}>
+          <div
+            key={t.id}
+            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-white text-sm font-semibold shadow-lg pointer-events-auto max-w-[340px] animate-[toastIn_0.3s_ease] ${TOAST_STYLES[t.type] || TOAST_STYLES.info}`}
+          >
             <span>{t.msg}</span>
           </div>
         ))}

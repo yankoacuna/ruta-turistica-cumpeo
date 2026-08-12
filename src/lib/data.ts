@@ -1,40 +1,68 @@
-import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates } from './types';
-
-import destinationsData from '../../public/data/destinations.json';
-import accommodationsData from '../../public/data/accommodations.json';
-import restaurantsData from '../../public/data/restaurants.json';
-import configData from '../../public/data/config.json';
+import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates, TourRoute } from './types';
+import { prisma } from './prisma';
+import routesData from '../../public/data/routes.json';
 
 export async function getConfig(): Promise<AppConfig> {
-  return configData as unknown as AppConfig;
+  const config = await prisma.config.findUnique({ where: { id: 'default' } });
+  if (config) return { categorias: config.categorias as any };
+  return { categorias: [] };
 }
 
 export async function getDestinations(): Promise<Destination[]> {
-  return (destinationsData.destinos as unknown as Destination[]) || [];
+  const data = await prisma.destination.findMany({ orderBy: { nombre: 'asc' } });
+  return data.map((d) => ({
+    ...d,
+    coordenadas: d.coordenadas as unknown as Coordinates,
+  })) as Destination[];
 }
 
 export async function getDestinationByIdOrSlug(idOrSlug: string): Promise<Destination | null> {
-  const dests = await getDestinations();
-  return dests.find(d => d.id === idOrSlug || d.slug === idOrSlug) || null;
+  const d = await prisma.destination.findFirst({
+    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] }
+  });
+  if (!d) return null;
+  return {
+    ...d,
+    coordenadas: d.coordenadas as unknown as Coordinates,
+  } as Destination;
 }
 
 export async function getDestinationsByCategory(categoria: string): Promise<Destination[]> {
-  const dests = await getDestinations();
-  if (!categoria || categoria === 'todos') return dests;
-  return dests.filter(d => d.categoria === categoria);
+  if (!categoria || categoria === 'todos') return getDestinations();
+  const data = await prisma.destination.findMany({ where: { categoria }, orderBy: { nombre: 'asc' } });
+  return data.map((d) => ({
+    ...d,
+    coordenadas: d.coordenadas as unknown as Coordinates,
+  })) as Destination[];
 }
 
 export async function getFeaturedDestinations(): Promise<Destination[]> {
-  const dests = await getDestinations();
-  return dests.filter(d => d.destacado);
+  const data = await prisma.destination.findMany({ where: { destacado: true }, orderBy: { nombre: 'asc' } });
+  return data.map((d) => ({
+    ...d,
+    coordenadas: d.coordenadas as unknown as Coordinates,
+  })) as Destination[];
 }
 
 export async function getAccommodations(): Promise<Accommodation[]> {
-  return (accommodationsData.alojamientos as unknown as Accommodation[]) || [];
+  const data = await prisma.accommodation.findMany({ orderBy: { nombre: 'asc' } });
+  return data.map((a) => ({
+    ...a,
+    coordenadas: a.coordenadas as unknown as Coordinates,
+    precio: a.precio as any,
+    contacto: a.contacto as any,
+  })) as Accommodation[];
 }
 
 export async function getRestaurants(): Promise<Restaurant[]> {
-  return (restaurantsData.restaurantes as unknown as Restaurant[]) || [];
+  const data = await prisma.restaurant.findMany({ orderBy: { nombre: 'asc' } });
+  return data.map((r) => ({
+    ...r,
+    coordenadas: r.coordenadas as unknown as Coordinates,
+    horario: r.horario as any,
+    precio: r.precio as any,
+    contacto: r.contacto as any,
+  })) as Restaurant[];
 }
 
 export async function getAllPOIs(): Promise<POI[]> {
@@ -64,8 +92,8 @@ export async function getAllPOIs(): Promise<POI[]> {
       categoria: 'alojamiento',
       tipo: 'alojamiento' as const,
       coordenadas: a.coordenadas,
-      imagenPrincipal: a.imagenPrincipal,
-      precio: typeof a.precio === 'object' ? `Desde $${a.precio.min?.toLocaleString('es-CL')}` : a.precio,
+      imagenPrincipal: a.imagenPrincipal ?? undefined,
+      precio: typeof a.precio === 'object' && a.precio ? `Desde $${(a.precio as any).min?.toLocaleString('es-CL')}` : (a.precio as any),
       rating: null,
       _original: a
     })),
@@ -76,8 +104,8 @@ export async function getAllPOIs(): Promise<POI[]> {
       categoria: 'gastronomia',
       tipo: 'restaurante' as const,
       coordenadas: r.coordenadas,
-      imagenPrincipal: r.imagenPrincipal,
-      precio: typeof r.precio === 'object' ? r.precio?.rango || '$' : r.precio,
+      imagenPrincipal: r.imagenPrincipal ?? undefined,
+      precio: typeof r.precio === 'object' && r.precio ? (r.precio as any).rango || '$' : (r.precio as any),
       rating: null,
       _original: r
     }))
@@ -150,4 +178,8 @@ export function formatImgUrl(url?: string | null): string {
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   if (url.startsWith('/')) return url;
   return `/${url}`;
+}
+
+export async function getTourRoutes(): Promise<TourRoute[]> {
+  return (routesData as unknown as TourRoute[]) || [];
 }
