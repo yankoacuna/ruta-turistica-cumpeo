@@ -1,199 +1,215 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { MapPin, Phone, Mail, CheckCircle2, Send, Loader2 } from 'lucide-react';
 
 export default function ContactoPage() {
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
     asunto: '',
-    mensaje: ''
+    mensaje: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulamos un retraso de red para dar feedback visual
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
       setFormData({ nombre: '', email: '', asunto: '', mensaje: '' });
-      
-      // Ocultar mensaje de éxito después de 5 segundos
+
       setTimeout(() => setIsSuccess(false), 5000);
-    }, 1500);
+    }, 1200);
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--color-background)', minHeight: '100vh', paddingBottom: '80px' }}>
-      
+    <div className="bg-[#F4F3EF] min-h-screen pb-20">
       {/* ── HERO SECTION ─────── */}
-      <section className="hero" style={{ height: '40vh', minHeight: '300px' }} aria-label="Contacto Cumpeo">
-        <img
-          className="hero-img"
-          src="/assets/images/placeholder.webp" // Idealmente una foto de la plaza o algo acogedor
-          alt="Contacto Cumpeo"
-          style={{ opacity: 0.6 }}
-        />
-        <div className="hero-overlay" style={{ background: `linear-gradient(to bottom, rgba(30, 30, 36, 0.4), rgba(30, 30, 36, 0.9))` }}></div>
-
-        <div className="hero-content" style={{ paddingTop: '60px' }}>
-          <h1 className="hero-title font-display" style={{ color: 'var(--color-sol)' }}>
-            ¡Escríbenos, no te quedes plop!
+      <section className="relative h-[35vh] min-h-[260px] flex items-center justify-center text-center bg-[#1E1E24] text-white px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1E1E24] via-[#1E1E24]/80 to-transparent z-10" />
+        <div className="relative z-20 max-w-2xl mx-auto pt-6">
+          <h1 className="font-display font-black text-3xl md:text-4xl text-sol mb-2">
+            Contacto Turístico
           </h1>
-          <p className="hero-desc">
-            ¿Tienes dudas sobre cómo llegar, dónde alojar o qué comer? Nuestro equipo de turismo está listo para ayudarte.
+          <p className="text-sm md:text-base text-gray-300">
+            ¿Tienes dudas sobre cómo llegar, dónde alojar o qué comer? El equipo de turismo de Cumpeo está a tu disposición.
           </p>
         </div>
       </section>
 
       {/* ── CONTACT CONTENT ─────── */}
-      <main className="container" style={{ position: 'relative', zIndex: 10, marginTop: '-40px' }}>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '24px',
-          background: 'var(--color-surface)',
-          padding: '32px',
-          borderRadius: 'var(--radius-xl)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-          border: '1px solid var(--color-border)'
-        }}>
-          
+      <main className="max-w-[1000px] mx-auto px-4 -mt-10 relative z-30">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 sm:p-10 rounded-2xl shadow-xl border border-border">
           {/* Lado Izquierdo: Info de Contacto */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="flex flex-col gap-6">
             <div>
-              <h2 className="font-display" style={{ fontSize: '1.8rem', marginBottom: '8px' }}>Información Turística</h2>
-              <p className="text-muted">La oficina central de turismo de Cumpeo te espera con los brazos abiertos.</p>
+              <h2 className="font-display font-bold text-2xl text-text-primary mb-2">
+                Información del Visitante
+              </h2>
+              <p className="text-sm text-text-secondary">
+                La oficina de turismo municipal de Cumpeo te espera para orientarte en tu recorrido por Pelotillehue.
+              </p>
             </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: '1.5rem', background: 'var(--color-surface-soft)', padding: '12px', borderRadius: '50%' }}>📍</div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-3.5 items-start">
+                <div className="p-3 rounded-xl bg-surface-soft border border-border text-rojo shrink-0">
+                  <MapPin size={20} />
+                </div>
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontWeight: 600 }}>Dirección Oficial</h4>
-                  <p className="text-muted" style={{ margin: 0 }}>Plaza de Armas S/N, Cumpeo.<br/>Comuna de Río Claro, Región del Maule.</p>
+                  <h4 className="text-sm font-bold text-text-primary mb-0.5">Dirección Oficial</h4>
+                  <p className="text-xs text-text-secondary leading-relaxed">
+                    Plaza de Armas S/N, Cumpeo.<br />
+                    Comuna de Río Claro, Región del Maule.
+                  </p>
                 </div>
               </div>
-              
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: '1.5rem', background: 'var(--color-surface-soft)', padding: '12px', borderRadius: '50%' }}>📞</div>
+
+              <div className="flex gap-3.5 items-start">
+                <div className="p-3 rounded-xl bg-surface-soft border border-border text-rojo shrink-0">
+                  <Phone size={20} />
+                </div>
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontWeight: 600 }}>Teléfono</h4>
-                  <p className="text-muted" style={{ margin: 0 }}>+56 71 2 XXX XXX</p>
+                  <h4 className="text-sm font-bold text-text-primary mb-0.5">Teléfono Municipal</h4>
+                  <p className="text-xs text-text-secondary">+56 71 254 1200</p>
                 </div>
               </div>
-              
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: '1.5rem', background: 'var(--color-surface-soft)', padding: '12px', borderRadius: '50%' }}>✉️</div>
+
+              <div className="flex gap-3.5 items-start">
+                <div className="p-3 rounded-xl bg-surface-soft border border-border text-rojo shrink-0">
+                  <Mail size={20} />
+                </div>
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontWeight: 600 }}>Correo Electrónico</h4>
-                  <p className="text-muted" style={{ margin: 0 }}>turismo@cumpeo.cl</p>
+                  <h4 className="text-sm font-bold text-text-primary mb-0.5">Correo Electrónico</h4>
+                  <p className="text-xs text-text-secondary">turismo@rioclaro.cl</p>
                 </div>
               </div>
             </div>
 
-            <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
-              <h4 style={{ fontWeight: 600, marginBottom: '12px' }}>Síguenos en Redes Sociales</h4>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {/* Fake social buttons */}
-                <a href="#" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', textDecoration: 'none', fontWeight: 'bold' }}>IG</a>
-                <a href="#" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#4267B2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', textDecoration: 'none', fontWeight: 'bold' }}>FB</a>
-              </div>
+            <div className="mt-auto pt-6 border-t border-border">
+              <h4 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
+                Horario de Atención
+              </h4>
+              <p className="text-xs text-text-muted">
+                Lunes a Viernes de 08:30 a 17:30 hrs. Sábados y Domingos atención en módulos de Plaza de Armas.
+              </p>
             </div>
           </div>
 
           {/* Lado Derecho: Formulario */}
-          <div style={{ background: 'var(--color-surface-soft)', padding: '24px', borderRadius: 'var(--radius-lg)' }}>
-            <h3 className="font-display" style={{ marginBottom: '20px', fontSize: '1.4rem' }}>Envíanos un Mensaje</h3>
-            
+          <div className="bg-surface-soft p-6 sm:p-7 rounded-xl border border-border flex flex-col justify-center">
+            <h3 className="font-display font-bold text-lg text-text-primary mb-4">
+              Envíanos un Mensaje
+            </h3>
+
             {isSuccess ? (
-              <div style={{ background: 'rgba(72, 187, 120, 0.1)', border: '1px solid #48BB78', padding: '24px', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>✅</div>
-                <h4 style={{ color: '#48BB78', marginBottom: '8px' }}>¡Mensaje enviado con éxito!</h4>
-                <p style={{ margin: 0, fontSize: '0.9rem' }}>Gracias por contactarnos. Te responderemos más rápido de lo que canta un gallo.</p>
+              <div className="bg-green-50 border border-green-200 p-6 rounded-xl text-center flex flex-col items-center gap-2">
+                <CheckCircle2 size={36} className="text-green-600 mb-1" />
+                <h4 className="text-base font-bold text-green-800">¡Mensaje enviado con éxito!</h4>
+                <p className="text-xs text-green-700">
+                  Gracias por comunicarte con nosotros. Te responderemos a la brevedad posible.
+                </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label htmlFor="nombre" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)' }}>Tu Nombre</label>
-                  <input 
-                    type="text" 
-                    id="nombre" 
-                    name="nombre" 
-                    required 
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="nombre" className="text-xs font-bold text-text-secondary">
+                    Nombre Completo
+                  </label>
+                  <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    required
                     value={formData.nombre}
                     onChange={handleChange}
-                    style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'white' }}
-                    placeholder="Ej. Washington"
+                    className="w-full px-3 py-2.5 rounded-lg border border-border bg-white text-sm text-text-primary focus:border-rojo focus:ring-2 focus:ring-rojo/10 outline-none transition-all"
+                    placeholder="Ej. Condorito Martínez"
                   />
                 </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label htmlFor="email" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)' }}>Correo Electrónico</label>
-                  <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    required 
+
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="email" className="text-xs font-bold text-text-secondary">
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
                     value={formData.email}
                     onChange={handleChange}
-                    style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'white' }}
+                    className="w-full px-3 py-2.5 rounded-lg border border-border bg-white text-sm text-text-primary focus:border-rojo focus:ring-2 focus:ring-rojo/10 outline-none transition-all"
                     placeholder="tucorreo@ejemplo.com"
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label htmlFor="asunto" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)' }}>¿Sobre qué nos escribes?</label>
-                  <select 
-                    id="asunto" 
-                    name="asunto" 
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="asunto" className="text-xs font-bold text-text-secondary">
+                    Asunto
+                  </label>
+                  <select
+                    id="asunto"
+                    name="asunto"
                     value={formData.asunto}
                     onChange={handleChange}
-                    style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'white' }}
+                    className="w-full px-3 py-2.5 rounded-lg border border-border bg-white text-sm text-text-primary focus:border-rojo focus:ring-2 focus:ring-rojo/10 outline-none transition-all cursor-pointer"
                   >
-                    <option value="">Selecciona un asunto...</option>
-                    <option value="tours">Información de Tours</option>
-                    <option value="alojamiento">Ayuda con Alojamiento</option>
-                    <option value="eventos">Eventos Próximos</option>
+                    <option value="">Selecciona un motivo…</option>
+                    <option value="tours">Información de Rutas y Destinos</option>
+                    <option value="alojamiento">Consultas sobre Hospedaje</option>
+                    <option value="gastronomia">Gastronomía y Restaurantes</option>
+                    <option value="eventos">Eventos y Festividades</option>
                     <option value="otro">Otro</option>
                   </select>
                 </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label htmlFor="mensaje" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)' }}>Mensaje</label>
-                  <textarea 
-                    id="mensaje" 
-                    name="mensaje" 
-                    rows={4} 
-                    required 
+
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="mensaje" className="text-xs font-bold text-text-secondary">
+                    Mensaje
+                  </label>
+                  <textarea
+                    id="mensaje"
+                    name="mensaje"
+                    rows={4}
+                    required
                     value={formData.mensaje}
                     onChange={handleChange}
-                    style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'white', resize: 'vertical' }}
-                    placeholder="Escribe tus dudas aquí..."
-                  ></textarea>
+                    className="w-full px-3 py-2.5 rounded-lg border border-border bg-white text-sm text-text-primary focus:border-rojo focus:ring-2 focus:ring-rojo/10 outline-none transition-all resize-y"
+                    placeholder="Escribe tu consulta o requerimiento aquí…"
+                  />
                 </div>
-                
-                <button 
-                  type="submit" 
-                  className="btn btn-primary" 
-                  style={{ marginTop: '8px', padding: '14px', width: '100%', fontSize: '1rem', display: 'flex', justifyContent: 'center', opacity: isSubmitting ? 0.7 : 1 }}
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-rojo text-white py-3 rounded-xl font-bold shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all disabled:opacity-60 text-sm mt-1"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Enviando mensaje...' : 'Enviar Mensaje 📬'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Enviando mensaje…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      <span>Enviar Mensaje</span>
+                    </>
+                  )}
                 </button>
               </form>
             )}
           </div>
-
         </div>
       </main>
     </div>

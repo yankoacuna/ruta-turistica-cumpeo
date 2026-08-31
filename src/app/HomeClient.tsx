@@ -5,12 +5,16 @@ import Link from 'next/link';
 import {
   sortByDistance,
   formatDistance,
-  getCategoryEmoji,
   getCategoryColorClass,
   formatImgUrl,
 } from '@/lib/data';
 import { Destination, Accommodation, Restaurant, AppConfig } from '@/lib/types';
+import { getOpeningStatus } from '@/lib/openingHours';
 import { useToast } from '@/components/Toast';
+import {
+  Search, Map, MapPin, Layers, Camera, Star,
+  UtensilsCrossed, BedDouble, Coins, RefreshCw, ChevronRight
+} from 'lucide-react';
 
 // Mapa estático de estilos de badge por color de categoría
 const BADGE_STYLES: Record<string, string> = {
@@ -172,7 +176,7 @@ export default function HomeClient({
               className="relative w-full bg-white border-2 border-rojo rounded-full shadow-[0_8px_24px_rgba(230,57,70,0.15)] flex items-center px-4 py-1 focus-within:shadow-[0_10px_28px_rgba(230,57,70,0.25)]"
               role="search"
             >
-              <span className="text-lg text-rojo mr-2.5">🔍</span>
+              <Search size={17} className="text-rojo mr-2.5 shrink-0" />
               <input
                 type="search"
                 className="flex-1 bg-transparent border-none outline-none text-sm text-text-primary py-2"
@@ -188,10 +192,10 @@ export default function HomeClient({
                       href={`/destino/${d.slug}`}
                       className="px-4 py-3 flex items-center gap-3 border-b border-border no-underline text-text-primary hover:bg-surface-soft"
                     >
-                      <span className="text-[1.3rem]">{getCategoryEmoji(d.categoria)}</span>
+                      <MapPin size={16} className="text-rojo shrink-0" />
                       <div>
                         <div className="text-[0.9rem] font-semibold">{d.nombre}</div>
-                        <div className="text-[0.75rem] text-text-muted">{d.categoria}</div>
+                        <div className="text-[0.75rem] text-text-muted capitalize">{d.categoria}</div>
                       </div>
                     </Link>
                   ))}
@@ -205,14 +209,14 @@ export default function HomeClient({
               href="/mapa"
               className="inline-flex items-center justify-center gap-2 py-3.5 px-8 rounded-full text-lg font-bold bg-rojo text-white shadow-rojo hover:-translate-y-0.5 hover:bg-rojo-dark active:scale-[0.98] transition-all no-underline"
             >
-              🗺️ Mapa GPS Condorito
+              <Map size={20} /> Mapa GPS Condorito
             </Link>
             <a
               href="#section-nearby"
               onClick={handleGPSLocation}
               className="inline-flex items-center justify-center gap-2 py-3.5 px-8 rounded-full text-lg font-bold bg-white text-text-primary border-2 border-border hover:bg-surface-soft hover:border-rojo hover:text-rojo transition-all no-underline"
             >
-              📍 Cerca de mí
+              <MapPin size={20} /> Cerca de mí
             </a>
           </div>
         </div>
@@ -226,7 +230,7 @@ export default function HomeClient({
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="font-display font-extrabold text-[1.6rem] text-text-primary flex items-center gap-2 relative pb-2 mb-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-12 after:h-1 after:bg-rojo after:rounded-full">
-                    📍 Cerca de ti
+                    <MapPin size={22} className="text-rojo" /> Cerca de ti
                   </h2>
                   <div className="text-sm text-text-secondary font-medium mt-0.5">Tus lugares más próximos en Cumpeo</div>
                 </div>
@@ -235,7 +239,7 @@ export default function HomeClient({
                   onClick={handleGPSLocation}
                   aria-label="Actualizar ubicación"
                 >
-                  Actualizar 🔄
+                  <RefreshCw size={11} /> Actualizar
                 </button>
               </div>
 
@@ -253,12 +257,12 @@ export default function HomeClient({
                       </div>
                       <div className="flex-1 p-3 flex flex-col justify-center gap-[3px] overflow-hidden">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-extrabold uppercase tracking-[0.04em] whitespace-nowrap border self-start ${getBadgeStyle(getCategoryColorClass(item.categoria))}`}>
-                          {getCategoryEmoji(item.categoria)} {item.categoria}
+                          {item.categoria}
                         </span>
                         <div className="text-[0.9rem] font-bold text-text-primary font-display">{item.nombre}</div>
                         <div className="text-[0.75rem] text-text-secondary leading-[1.4] line-clamp-2">{item.descripcionCorta || ''}</div>
-                        <div className="text-[0.7rem] text-text-muted mt-1 flex gap-2">
-                          <span>📍 {formatDistance((item as any).distanciaKm || 0)}</span>
+                        <div className="text-[0.7rem] text-text-muted mt-1 flex gap-2 items-center">
+                          <MapPin size={10} className="shrink-0" />{formatDistance((item as any).distanciaKm || 0)}
                           {item.precio && <span>· {item.precio}</span>}
                         </div>
                       </div>
@@ -279,12 +283,12 @@ export default function HomeClient({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display font-extrabold text-[1.6rem] text-text-primary flex items-center gap-2 relative pb-2 mb-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-12 after:h-1 after:bg-rojo after:rounded-full">
-                ✨ Categorías
+                <Layers size={22} className="text-rojo" /> Categorías
               </h2>
               <div className="text-sm text-text-secondary font-medium mt-0.5">Explora Cumpeo según tus intereses turísticos</div>
             </div>
             <Link href="/mapa" className="text-xs font-bold text-rojo inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FFF0F1] border border-[#FFCCD0] hover:bg-rojo hover:text-white hover:border-rojo transition-all no-underline">
-              Ver en mapa →
+              Ver en mapa <ChevronRight size={12} />
             </Link>
           </div>
 
@@ -313,7 +317,7 @@ export default function HomeClient({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
             <div>
               <h2 className="font-display font-extrabold text-[1.6rem] text-text-primary flex items-center gap-2 relative pb-2 mb-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-12 after:h-1 after:bg-rojo after:rounded-full">
-                📸 {activeCategory === 'todos' ? 'Todos los Destinos' : `Destinos: ${categories.find(c => c.id === activeCategory)?.nombre || activeCategory}`}
+                <Camera size={22} className="text-rojo" /> {activeCategory === 'todos' ? 'Todos los Destinos' : `Destinos: ${categories.find(c => c.id === activeCategory)?.nombre || activeCategory}`}
               </h2>
               <div className="text-sm text-text-secondary font-medium mt-0.5">Lugares increíbles para descubrir</div>
             </div>
@@ -335,14 +339,32 @@ export default function HomeClient({
                     />
                     <div className="absolute top-2 left-2 z-[2]">
                       <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.55rem] font-extrabold uppercase tracking-[0.04em] whitespace-nowrap border ${getBadgeStyle(getCategoryColorClass(item.categoria))}`}>
-                        {getCategoryEmoji(item.categoria)} {item.categoria}
+                        {item.categoria}
                       </span>
                     </div>
+                    {(() => {
+                      const opening = getOpeningStatus(item.horario);
+                      if (opening.isOpen === null) return null;
+                      return (
+                        <div className="absolute top-2 right-2 z-[2]">
+                          <span
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.55rem] font-extrabold backdrop-blur-sm shadow-sm ${
+                              opening.isOpen
+                                ? 'bg-green-600/90 text-white'
+                                : 'bg-red-600/90 text-white'
+                            }`}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                            {opening.label}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="p-3 flex flex-col flex-1">
                     <div className="text-[0.9rem] sm:text-[1.1rem] font-extrabold font-display text-text-primary leading-tight mb-1">{item.nombre}</div>
                     <div className="text-[0.75rem] text-text-secondary leading-[1.4] line-clamp-2 mb-2 flex-1">{item.descripcionCorta}</div>
-                    {item.precio && <div className="text-[0.7rem] sm:text-[0.75rem] text-text-muted mt-auto">💰 {item.precio}</div>}
+                    {item.precio && <div className="text-[0.7rem] sm:text-[0.75rem] text-text-muted mt-auto flex items-center gap-1"><Coins size={11} />{item.precio}</div>}
                   </div>
                 </Link>
               </article>
@@ -361,12 +383,12 @@ export default function HomeClient({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display font-extrabold text-[1.6rem] text-text-primary flex items-center gap-2 relative pb-2 mb-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-12 after:h-1 after:bg-rojo after:rounded-full">
-                ⭐ Imperdibles de Cumpeo
+                <Star size={22} className="text-rojo" /> Imperdibles de Cumpeo
               </h2>
               <div className="text-sm text-text-secondary font-medium mt-0.5">Los lugares más icónicos que debes visitar</div>
             </div>
             <Link href="/mapa" className="text-xs font-bold text-rojo inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FFF0F1] border border-[#FFCCD0] hover:bg-rojo hover:text-white hover:border-rojo transition-all no-underline">
-              Ver mapa completo →
+              Ver mapa completo <ChevronRight size={12} />
             </Link>
           </div>
 
@@ -388,7 +410,7 @@ export default function HomeClient({
                     />
                     <div className="absolute top-2 left-2 z-[2]">
                       <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.55rem] font-extrabold uppercase tracking-[0.04em] whitespace-nowrap border ${getBadgeStyle(getCategoryColorClass(item.categoria))}`}>
-                        {getCategoryEmoji(item.categoria)}
+                        {item.categoria}
                       </span>
                     </div>
                   </div>
@@ -407,7 +429,7 @@ export default function HomeClient({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display font-extrabold text-[1.6rem] text-text-primary flex items-center gap-2 relative pb-2 mb-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-12 after:h-1 after:bg-rojo after:rounded-full">
-                🍽️ Gastronomía Típica
+                <UtensilsCrossed size={22} className="text-rojo" /> Gastronomía Típica
               </h2>
               <div className="text-sm text-text-secondary font-medium mt-0.5">Donde comer y disfrutar los sabores del Maule</div>
             </div>
@@ -426,12 +448,34 @@ export default function HomeClient({
                   />
                 </div>
                 <div className="flex-1 p-3 flex flex-col justify-center gap-[3px] overflow-hidden">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-extrabold uppercase tracking-[0.04em] whitespace-nowrap border self-start bg-[#FFE0E2] text-[#C1121F] border-[#FFA8AE]">
-                    🍽️ Gastronomía
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-extrabold uppercase tracking-[0.04em] whitespace-nowrap border self-start bg-[#FFE0E2] text-[#C1121F] border-[#FFA8AE]">
+                      <UtensilsCrossed size={9} /> Gastronomía
+                    </span>
+                    {(() => {
+                      const opening = getOpeningStatus(item.horario);
+                      if (opening.isOpen === null) return null;
+                      return (
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-extrabold ${
+                            opening.isOpen
+                              ? 'bg-green-50 text-green-700 border border-green-200'
+                              : 'bg-red-50 text-red-700 border border-red-200'
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              opening.isOpen ? 'bg-green-500' : 'bg-red-500'
+                            }`}
+                          />
+                          {opening.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
                   <div className="text-[0.9rem] font-bold text-text-primary font-display">{item.nombre}</div>
                   <div className="text-[0.75rem] text-text-secondary leading-[1.4] line-clamp-2">{item.descripcion || ''}</div>
-                  <div className="text-[0.7rem] text-text-muted mt-1">📍 {item.direccion}</div>
+                  <div className="text-[0.7rem] text-text-muted mt-1 flex items-center gap-1"><MapPin size={10} />{item.direccion}</div>
                 </div>
               </article>
             ))}
@@ -451,7 +495,7 @@ export default function HomeClient({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display font-extrabold text-[1.6rem] text-text-primary flex items-center gap-2 relative pb-2 mb-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-12 after:h-1 after:bg-rojo after:rounded-full">
-                🛏️ Alojamientos
+                <BedDouble size={22} className="text-rojo" /> Alojamientos
               </h2>
               <div className="text-sm text-text-secondary font-medium mt-0.5">Hospedajes y cabañas para descansar</div>
             </div>
@@ -471,11 +515,11 @@ export default function HomeClient({
                 </div>
                 <div className="flex-1 p-3 flex flex-col justify-center gap-[3px] overflow-hidden">
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-extrabold uppercase tracking-[0.04em] whitespace-nowrap border self-start bg-[#E0F2FE] text-[#023E8A] border-[#BAE6FD]">
-                    🛏️ Alojamiento
+                    <BedDouble size={9} /> Alojamiento
                   </span>
                   <div className="text-[0.9rem] font-bold text-text-primary font-display">{item.nombre}</div>
                   <div className="text-[0.75rem] text-text-secondary leading-[1.4] line-clamp-2">{item.descripcion || ''}</div>
-                  <div className="text-[0.7rem] text-text-muted mt-1">📍 {item.direccion}</div>
+                  <div className="text-[0.7rem] text-text-muted mt-1 flex items-center gap-1"><MapPin size={10} />{item.direccion}</div>
                 </div>
               </article>
             ))}

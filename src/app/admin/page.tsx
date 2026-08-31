@@ -1,13 +1,15 @@
 import { getDestinations, getAccommodations, getRestaurants } from '@/lib/data';
+import { verifyAdminSession } from './actions';
 import AdminClient from './AdminClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const [destinos, restaurantes, alojamientos] = await Promise.all([
+  const [destinos, restaurantes, alojamientos, isAuthenticated] = await Promise.all([
     getDestinations(),
     getRestaurants(),
     getAccommodations(),
+    verifyAdminSession(),
   ]);
 
   return (
@@ -15,6 +17,7 @@ export default async function AdminPage() {
       initialDestinos={destinos}
       initialRestaurantes={restaurantes}
       initialAlojamientos={alojamientos}
+      initialAuthenticated={isAuthenticated}
     />
   );
 }

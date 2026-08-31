@@ -23,6 +23,9 @@ export interface Destination {
   galeria?: string[];
   infoUtil?: Record<string, string>;
   rating?: number;
+  publicado?: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface Accommodation {
@@ -48,6 +51,9 @@ export interface Accommodation {
   } | string | null;
   imagenPrincipal?: string | null;
   galeria?: string[];
+  publicado?: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface Restaurant {
@@ -83,6 +89,9 @@ export interface Restaurant {
   galeria?: string[];
   menuUrl?: string | null;
   tags?: string[];
+  publicado?: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface AppConfig {

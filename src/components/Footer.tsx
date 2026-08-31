@@ -3,6 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  Info, Bus, CalendarDays, Thermometer, Phone, AlertTriangle,
+  Building2, Navigation, Home, Map, Target, UtensilsCrossed,
+  BedDouble, Settings, MapPin
+} from 'lucide-react';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -13,6 +18,7 @@ export default function Footer() {
       <footer className="bg-[#1E1E24] text-gray-300 py-8 md:py-12" role="contentinfo" id="section-info">
         <div className="w-full max-w-[1200px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+
             {/* Columna 1: Marca & Municipio */}
             <div>
               <div className="text-sm font-extrabold text-sol uppercase tracking-wider mb-3 font-display">
@@ -32,24 +38,34 @@ export default function Footer() {
                 El Pueblo Temático de Condorito · Región del Maule.<br />
                 Municipalidad de Río Claro. Guía turística interactiva con geolocalización GPS.
               </p>
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider whitespace-nowrap bg-[#FFE0E2] text-[#C1121F] border border-[#FFA8AE]">¡Reflauta! Bienvenid@s</div>
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider whitespace-nowrap bg-[#FFE0E2] text-[#C1121F] border border-[#FFA8AE]">
+                ¡Reflauta! Bienvenidos
+              </div>
             </div>
 
             {/* Columna 2: Info Útil */}
             <div>
               <div className="text-sm font-extrabold text-sol uppercase tracking-wider mb-3 font-display">
-                <span>ℹ️ Info Útil del Visitante</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Info size={13} /> Info Útil del Visitante
+                </span>
               </div>
               <div className="mb-3">
-                <div className="text-xs font-bold text-gray-300 mb-[2px]">🚌 Cómo llegar</div>
+                <div className="text-xs font-bold text-gray-300 mb-[2px] flex items-center gap-1.5">
+                  <Bus size={11} /> Cómo llegar
+                </div>
                 <div className="text-xs text-gray-400">Desde Talca: Ruta 5 Sur, ~50 km (45 min). Buses desde Terminal Rodoviario Talca.</div>
               </div>
               <div className="mb-3">
-                <div className="text-xs font-bold text-gray-300 mb-[2px]">📅 Mejor época</div>
+                <div className="text-xs font-bold text-gray-300 mb-[2px] flex items-center gap-1.5">
+                  <CalendarDays size={11} /> Mejor época
+                </div>
                 <div className="text-xs text-gray-400">Octubre–Abril. Vendimia recomendada en Marzo–Abril.</div>
               </div>
               <div className="mb-3">
-                <div className="text-xs font-bold text-gray-300 mb-[2px]">🌡️ Clima</div>
+                <div className="text-xs font-bold text-gray-300 mb-[2px] flex items-center gap-1.5">
+                  <Thermometer size={11} /> Clima
+                </div>
                 <div className="text-xs text-gray-400">Mediterráneo. Veranos 25–34°C, Inviernos 4–14°C.</div>
               </div>
             </div>
@@ -57,10 +73,14 @@ export default function Footer() {
             {/* Columna 3: Contacto & Emergencias */}
             <div>
               <div className="text-sm font-extrabold text-sol uppercase tracking-wider mb-3 font-display">
-                <span>📞 Contacto & Emergencias</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Phone size={13} /> Contacto y Emergencias
+                </span>
               </div>
               <div className="mb-3">
-                <div className="text-xs font-bold text-gray-300 mb-2">🚨 Teléfonos de Emergencia</div>
+                <div className="text-xs font-bold text-gray-300 mb-2 flex items-center gap-1.5">
+                  <AlertTriangle size={11} /> Teléfonos de Emergencia
+                </div>
                 <div>
                   <span className="inline-block bg-rojo/20 border border-rojo/40 text-red-300 text-xs font-bold px-2.5 py-[3px] rounded-full m-[2px]">Carabineros: 133</span>
                   <span className="inline-block bg-rojo/20 border border-rojo/40 text-red-300 text-xs font-bold px-2.5 py-[3px] rounded-full m-[2px]">Bomberos: 132</span>
@@ -68,24 +88,52 @@ export default function Footer() {
                 </div>
               </div>
               <div className="mb-3">
-                <div className="text-xs font-bold text-gray-300 mb-[2px]">🏢 Municipalidad de Río Claro</div>
+                <div className="text-xs font-bold text-gray-300 mb-[2px] flex items-center gap-1.5">
+                  <Building2 size={11} /> Municipalidad de Río Claro
+                </div>
                 <div className="text-xs text-gray-400">Teléfono: +56 71 254 1200</div>
                 <div className="text-xs text-gray-400">Email: turismo@rioclaro.cl</div>
               </div>
             </div>
 
-            {/* Columna 4: Enlaces Rápidos */}
+            {/* Columna 4: Navegación */}
             <div>
               <div className="text-sm font-extrabold text-sol uppercase tracking-wider mb-3 font-display">
-                <span>🔗 Navegación</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Navigation size={13} /> Navegación
+                </span>
               </div>
               <ul className="list-none flex flex-col gap-2">
-                <li><Link href="/" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol">🏠 Inicio</Link></li>
-                <li><Link href="/mapa" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol">🗺️ Mapa Interactivo GPS</Link></li>
-                <li><Link href="/#section-destinos" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol">🎯 Destinos Turísticos</Link></li>
-                <li><Link href="/#section-gastronomia" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol">🍽️ Gastronomía Típica</Link></li>
-                <li><Link href="/#section-alojamientos" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol">🛏️ Alojamientos</Link></li>
-                <li><Link href="/admin" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol">⚙️ Administración</Link></li>
+                <li>
+                  <Link href="/" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Home size={11} /> Inicio
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/mapa" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Map size={11} /> Mapa Interactivo GPS
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#section-destinos" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Target size={11} /> Destinos Turísticos
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#section-gastronomia" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <UtensilsCrossed size={11} /> Gastronomía Típica
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#section-alojamientos" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <BedDouble size={11} /> Alojamientos
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Settings size={11} /> Administración
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
@@ -96,28 +144,44 @@ export default function Footer() {
               © 2026 <strong>Cumpeo Turismo</strong> · Municipalidad de Río Claro, Maule, Chile.
             </div>
             <div>
-              v1.0.0 · Next.js Edition 🚀
+              v1.0.0
             </div>
           </div>
         </div>
       </footer>
 
-      {/* ── Mobile Bottom Navigation Bar ──────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur-md border-t-[1.5px] border-border z-40 flex items-center justify-around px-2" role="navigation" aria-label="Navegación principal">
-        <Link href="/" className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/') ? 'text-rojo' : 'text-text-muted'}`}>
+      {/* Mobile Bottom Navigation Bar */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur-md border-t-[1.5px] border-border z-40 flex items-center justify-around px-2"
+        role="navigation"
+        aria-label="Navegación principal"
+      >
+        <Link
+          href="/"
+          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/') ? 'text-rojo' : 'text-text-muted'}`}
+        >
           <img src="/assets/images/condorito-oficial.png" className="w-7 h-7 rounded-full object-cover border-2 border-current" alt="Condorito" />
           <span>Inicio</span>
         </Link>
-        <Link href="/mapa" className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/mapa') ? 'text-rojo' : 'text-text-muted'}`}>
-          <span className="text-2xl flex items-center justify-center">🗺️</span>
+        <Link
+          href="/mapa"
+          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/mapa') ? 'text-rojo' : 'text-text-muted'}`}
+        >
+          <Map size={22} />
           <span>Mapa</span>
         </Link>
-        <Link href="/#section-nearby" className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/#section-nearby') ? 'text-rojo' : 'text-text-muted'}`}>
-          <span className="text-2xl flex items-center justify-center">📍</span>
+        <Link
+          href="/#section-nearby"
+          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/#section-nearby') ? 'text-rojo' : 'text-text-muted'}`}
+        >
+          <MapPin size={22} />
           <span>Cercano</span>
         </Link>
-        <Link href="/#section-info" className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/#section-info') ? 'text-rojo' : 'text-text-muted'}`}>
-          <span className="text-2xl flex items-center justify-center">ℹ️</span>
+        <Link
+          href="/#section-info"
+          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/#section-info') ? 'text-rojo' : 'text-text-muted'}`}
+        >
+          <Info size={22} />
           <span>Info</span>
         </Link>
       </nav>
