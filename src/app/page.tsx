@@ -6,17 +6,21 @@ import {
   getFeaturedDestinations,
   getAccommodations,
   getRestaurants,
+  getEmergencyContacts,
+  getEvents,
 } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [cfg, dests, feat, accomm, rests] = await Promise.all([
+  const [cfg, dests, feat, accomm, rests, emergency, events] = await Promise.all([
     getConfig(),
     getDestinations(),
     getFeaturedDestinations(),
     getAccommodations(),
     getRestaurants(),
+    getEmergencyContacts(),
+    getEvents(),
   ]);
 
   return (
@@ -26,6 +30,8 @@ export default async function HomePage() {
       initialFeatured={feat}
       initialAccommodations={accomm}
       initialRestaurants={rests}
+      initialEmergency={emergency}
+      initialEvents={events}
     />
   );
 }

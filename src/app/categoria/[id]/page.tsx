@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
 import {
   getConfig,
   getAllPOIs,
@@ -117,9 +117,10 @@ export default async function CategoryPage({ params }: PageProps) {
                   </h3>
                   <p className="text-sm text-text-secondary mb-3 flex-1 line-clamp-2">{poi.descripcionCorta}</p>
                   <div className="pt-3 border-t border-border flex items-center justify-between mt-auto">
-                    <div className="text-xs text-text-muted">
-                      {poi.precio ? <span>{poi.precio}</span> : <span className="text-text-muted">Gratuito</span>}
-                    </div>
+                    <span className="text-xs font-semibold text-rojo inline-flex items-center gap-1">
+                      <span>Ver detalles</span>
+                      <ArrowRight size={13} />
+                    </span>
                     {poi.rating && (
                       <div className="text-xs font-bold text-[#B47900] flex items-center gap-1">
                         <Star size={12} className="fill-[#FFC300] text-[#FFC300]" />

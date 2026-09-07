@@ -13,7 +13,6 @@ const emptyDest = (): Partial<Destination> => ({
   coordenadas: { lat: -35.267, lng: -71.25 },
   direccion: '',
   horario: '',
-  precio: '',
   duracionVisita: '',
   comoLlegar: '',
   tags: [],

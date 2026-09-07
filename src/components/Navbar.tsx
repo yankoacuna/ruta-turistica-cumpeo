@@ -68,41 +68,61 @@ export default function Navbar() {
         aria-label="Navegación desktop"
       >
         <div className="w-full max-w-[1200px] mx-auto px-4 h-full flex items-center justify-between">
-          {/* Brand Logo Condorito */}
-          <Link href="/" className="flex items-center gap-[10px] no-underline" title="Inicio Cumpeo Turismo">
-            <div className="w-[44px] h-[44px] rounded-full bg-sol border-2 border-[#1E1E24] overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
+          {/* Brand Logo Condorito & Municipalidad de Río Claro */}
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2.5 no-underline" title="Inicio Cumpeo Turismo">
+              <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-[#1E1E24] overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
+                <img
+                  src="/assets/images/condorito-oficial.png"
+                  alt="Condorito Logo"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/assets/images/condorito-oficial.png';
+                  }}
+                />
+              </div>
+              <div className="flex flex-col">
+                <div className="text-[1.15rem] font-extrabold text-rojo leading-none font-display">Cumpeo Turismo</div>
+                <div className="text-[0.7rem] font-bold text-text-secondary flex items-center gap-1 mt-[2px]">
+                  <span>Pueblo de Condorito</span>
+                  <span className="bg-rojo text-white text-[9px] px-[5px] py-[1px] rounded-full uppercase leading-none">
+                    Maule
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            <div className="h-7 w-px bg-border hidden lg:block" />
+
+            <div className="hidden lg:flex items-center" title="Ilustre Municipalidad de Río Claro">
               <img
-                src="/assets/images/condorito-oficial.png"
-                alt="Condorito Logo"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/assets/images/condorito-oficial.png';
-                }}
+                src="/assets/images/logo-muni-rio-claro.png"
+                alt="Ilustre Municipalidad de Río Claro"
+                className="h-8 max-w-[140px] object-contain"
               />
             </div>
-            <div className="flex flex-col">
-              <div className="text-[1.15rem] font-extrabold text-rojo leading-none font-display">Cumpeo Turismo</div>
-              <div className="text-[0.72rem] font-bold text-text-secondary flex items-center gap-1 mt-[2px]">
-                <span>El Pueblo de Condorito</span>
-                <span className="bg-rojo text-white text-[9px] px-[6px] py-[2px] rounded-full uppercase leading-none">
-                  ¡PLOP!
-                </span>
-              </div>
-            </div>
-          </Link>
+          </div>
 
           {/* Navigation Menu Links */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Link
               href="/"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all no-underline ${
                 isActive('/') ? 'text-rojo bg-rojo/10' : 'text-text-secondary hover:text-rojo hover:bg-rojo/5'
               }`}
             >
-              <span className="flex items-center justify-center w-5 h-5">
-                <Home size={16} />
-              </span>
+              <Home size={16} />
               Inicio
+            </Link>
+
+            <Link
+              href="/ruta"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all no-underline ${
+                isActive('/ruta') ? 'text-rojo bg-rojo/10' : 'text-text-secondary hover:text-rojo hover:bg-rojo/5'
+              }`}
+            >
+              <Compass size={16} />
+              La Ruta
             </Link>
 
             <Link
@@ -111,20 +131,8 @@ export default function Navbar() {
                 isActive('/historia') ? 'text-rojo bg-rojo/10' : 'text-text-secondary hover:text-rojo hover:bg-rojo/5'
               }`}
             >
-              <span className="flex items-center justify-center w-5 h-5">
-                <BookOpen size={16} />
-              </span>
+              <BookOpen size={16} />
               Historia
-            </Link>
-
-            <Link
-              href="/#section-destinos"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold text-text-secondary hover:text-rojo hover:bg-rojo/5 transition-all no-underline"
-            >
-              <span className="flex items-center justify-center w-5 h-5">
-                <Compass size={16} />
-              </span>
-              Destino
             </Link>
 
             <Link
@@ -133,10 +141,8 @@ export default function Navbar() {
                 isActive('/contacto') ? 'text-rojo bg-rojo/10' : 'text-text-secondary hover:text-rojo hover:bg-rojo/5'
               }`}
             >
-              <span className="flex items-center justify-center w-5 h-5">
-                <Phone size={16} />
-              </span>
-              Contactanos
+              <Phone size={16} />
+              Contacto
             </Link>
           </div>
 
@@ -176,26 +182,32 @@ export default function Navbar() {
 
       {/* ── MOBILE HEADER BAR ─────── */}
       <header
-        className="md:hidden fixed top-0 left-0 right-0 h-[56px] bg-white/95 backdrop-blur-md border-b-[1.5px] border-border z-40 flex items-center justify-between px-4"
+        className="md:hidden fixed top-0 left-0 right-0 h-[58px] bg-white/95 backdrop-blur-md border-b-[1.5px] border-border z-40 flex items-center justify-between px-3"
         role="banner"
       >
         <Link href="/" className="flex items-center gap-2 no-underline">
-          <div className="w-10 h-10 rounded-full bg-sol border-2 border-[#1E1E24] overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
+          <div className="w-9 h-9 rounded-full bg-sol border-2 border-[#1E1E24] overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
             <img src="/assets/images/condorito-oficial.png" alt="Condorito Logo" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col">
-            <div className="text-[1.15rem] font-extrabold text-rojo leading-none font-display">Cumpeo Turismo</div>
-            <div className="text-[0.72rem] font-bold text-text-secondary mt-[2px]">El Pueblo de Condorito</div>
+            <div className="text-[1.05rem] font-extrabold text-rojo leading-none font-display">Cumpeo Turismo</div>
+            <div className="text-[0.65rem] font-bold text-text-secondary mt-[1px]">Pueblo de Condorito</div>
           </div>
         </Link>
-        <button
-          className="bg-transparent border-none text-text-primary font-bold text-sm px-2 py-1 flex items-center gap-1.5 cursor-pointer rounded-lg hover:bg-surface-soft"
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Abrir menú"
-        >
-          <Menu size={20} />
-          <span>Menú</span>
-        </button>
+        <div className="flex items-center gap-1">
+          <img
+            src="/assets/images/logo-muni-rio-claro.png"
+            alt="Muni Río Claro"
+            className="h-6 max-w-[85px] object-contain opacity-85"
+          />
+          <button
+            className="bg-transparent border-none text-text-primary font-bold text-sm p-1.5 flex items-center cursor-pointer rounded-lg hover:bg-surface-soft"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Abrir menú"
+          >
+            <Menu size={22} />
+          </button>
+        </div>
       </header>
 
       {/* ── MOBILE SLIDE-OVER DRAWER MENU ─────── */}
@@ -253,20 +265,22 @@ export default function Navbar() {
                 <Home size={18} className="text-rojo" /> Inicio
               </Link>
               <Link
+                href="/ruta"
+                className={`flex items-center gap-3 py-3 px-6 text-sm font-bold text-text-primary no-underline transition-colors hover:bg-surface-soft ${
+                  isActive('/ruta') ? 'bg-rojo/10 text-rojo border-l-4 border-rojo' : ''
+                }`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                <Compass size={18} className="text-rojo" /> La Ruta de Condorito
+              </Link>
+              <Link
                 href="/historia"
                 className={`flex items-center gap-3 py-3 px-6 text-sm font-bold text-text-primary no-underline transition-colors hover:bg-surface-soft ${
                   isActive('/historia') ? 'bg-rojo/10 text-rojo border-l-4 border-rojo' : ''
                 }`}
                 onClick={() => setDrawerOpen(false)}
               >
-                <BookOpen size={18} className="text-rojo" /> Historia
-              </Link>
-              <Link
-                href="/#section-destinos"
-                className="flex items-center gap-3 py-3 px-6 text-sm font-bold text-text-primary no-underline transition-colors hover:bg-surface-soft"
-                onClick={() => setDrawerOpen(false)}
-              >
-                <Compass size={18} className="text-rojo" /> Destino
+                <BookOpen size={18} className="text-rojo" /> Historia del Pueblo
               </Link>
               <Link
                 href="/contacto"
@@ -275,7 +289,7 @@ export default function Navbar() {
                 }`}
                 onClick={() => setDrawerOpen(false)}
               >
-                <Phone size={18} className="text-rojo" /> Contactanos
+                <Phone size={18} className="text-rojo" /> Contacto e Información
               </Link>
               <Link
                 href="/admin"

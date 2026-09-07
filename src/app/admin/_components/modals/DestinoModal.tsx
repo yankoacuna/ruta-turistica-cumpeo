@@ -3,7 +3,7 @@ import { Star } from 'lucide-react';
 import { Destination } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImagePreview } from '../ImagePreview';
+import { ImageUploadField } from '../ImageUploadField';
 import { GalleryField } from '../GalleryField';
 
 interface DestinoModalProps {
@@ -114,14 +114,6 @@ export function DestinoModal({
               onChange={(e) => set({ horario: e.target.value })}
             />
           </Field>
-          <Field label="Precio">
-            <input
-              className={inputCls}
-              placeholder="Gratuito o $2.000"
-              value={editing.precio || ''}
-              onChange={(e) => set({ precio: e.target.value })}
-            />
-          </Field>
           <Field label="Duración Sugerida">
             <input
               className={inputCls}
@@ -173,16 +165,11 @@ export function DestinoModal({
           </Field>
         </div>
 
-        {/* Imagen Principal */}
-        <Field label="URL Imagen Principal" hint="Ruta relativa o URL completa">
-          <input
-            className={inputCls}
-            placeholder="/assets/images/..."
-            value={editing.imagenPrincipal || ''}
-            onChange={(e) => set({ imagenPrincipal: e.target.value })}
-          />
-          <ImagePreview url={editing.imagenPrincipal} />
-        </Field>
+        <ImageUploadField
+          label="Imagen Principal"
+          value={editing.imagenPrincipal || ''}
+          onChange={(url) => set({ imagenPrincipal: url })}
+        />
 
         {/* Galería de fotos */}
         <GalleryField

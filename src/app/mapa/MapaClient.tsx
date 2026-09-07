@@ -28,6 +28,7 @@ import {
   Share2,
   Compass,
   CheckCircle2,
+  ChevronRight,
 } from 'lucide-react';
 
 interface MapaClientProps {
@@ -272,7 +273,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
             <div className="flex items-center gap-2">
               <Compass size={14} className="animate-spin-slow" />
               <span>
-                Ruta Guiada: <strong>{activeRoute.nombre}</strong> · {activeRoute.poiIds.length} puntos temáticos
+                Ruta Guiada: <strong>{activeRoute.nombre}</strong> - {activeRoute.poiIds.length} puntos temáticos
               </span>
             </div>
             <button
@@ -308,11 +309,6 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.65rem] font-extrabold uppercase tracking-wider whitespace-nowrap bg-[#FFE0E2] text-[#C1121F] border border-[#FFA8AE]">
                     {selectedPoi.categoria}
                   </span>
-                  {selectedPoi.precio && (
-                    <span className="text-xs font-semibold text-text-muted">
-                      · {selectedPoi.precio}
-                    </span>
-                  )}
                   {(() => {
                     const horario = (selectedPoi._original as any)?.horario;
                     const opening = getOpeningStatus(horario);
@@ -526,10 +522,11 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                           <MapPin size={12} /> {formatDistance(km)}
                         </span>
                       ) : (
-                        <span className="text-text-muted">{poi.precio || 'Cumpeo'}</span>
+                        <span className="text-text-muted">Cumpeo</span>
                       )}
                       <span className="text-rojo font-bold flex items-center gap-1">
-                        Ver en Mapa →
+                        <span>Ver en Mapa</span>
+                        <ChevronRight size={13} />
                       </span>
                     </div>
                   </div>

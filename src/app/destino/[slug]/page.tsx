@@ -6,7 +6,6 @@ import {
   MapPin,
   Map,
   Clock,
-  Coins,
   Timer,
   BookOpen,
   Landmark,
@@ -14,6 +13,7 @@ import {
   Sparkles,
   ChevronLeft,
   Share2,
+  ArrowRight,
 } from 'lucide-react';
 import { getDestinationByIdOrSlug, getDestinations, getCategoryColorClass, formatImgUrl } from '@/lib/data';
 import { getOpeningStatus } from '@/lib/openingHours';
@@ -83,11 +83,6 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
             <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider whitespace-nowrap border ${getBadgeStyle(getCategoryColorClass(destination.categoria))}`}>
               {destination.categoria}
             </span>
-            {destination.precio && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider whitespace-nowrap border bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]">
-                {destination.precio}
-              </span>
-            )}
           </div>
           <h1 className="font-display font-black text-white text-3xl md:text-4xl leading-tight [text-shadow:0_2px_12px_rgba(0,0,0,0.6)]">
             {destination.nombre}
@@ -133,12 +128,7 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
                 );
               })()}
             </div>
-            <div>
-              <div className="text-[0.75rem] uppercase text-text-muted font-bold flex items-center gap-1">
-                <Coins size={13} className="text-rojo" /> Entrada / Tarifa
-              </div>
-              <div className="font-semibold mt-1 text-[0.95rem]">{destination.precio || 'Gratuito'}</div>
-            </div>
+
             <div>
               <div className="text-[0.75rem] uppercase text-text-muted font-bold flex items-center gap-1">
                 <Timer size={13} className="text-rojo" /> Duración sugerida
@@ -242,8 +232,9 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
                     <div className="p-4">
                       <h4 className="font-display font-bold text-text-primary text-base mb-1">{r.nombre}</h4>
                       <p className="text-text-secondary text-[0.82rem] mb-3 line-clamp-2">{r.descripcionCorta}</p>
-                      <Link href={`/destino/${r.slug}`} className="inline-flex items-center justify-center w-full py-2 px-4 rounded-full font-bold text-sm text-rojo border-2 border-rojo hover:bg-[#FFF0F1] transition-all no-underline">
-                        Ver Detalle →
+                      <Link href={`/destino/${r.slug}`} className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-full font-bold text-sm text-rojo border-2 border-rojo hover:bg-[#FFF0F1] transition-all no-underline">
+                        <span>Ver Detalle</span>
+                        <ArrowRight size={14} />
                       </Link>
                     </div>
                   </div>

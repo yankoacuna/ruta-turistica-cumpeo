@@ -7,13 +7,16 @@ import {
   MapPin,
   UtensilsCrossed,
   BedDouble,
+  CalendarDays,
   Image,
   Pencil,
   Trash2,
   Star,
   CheckCircle2,
+  Clock,
+  XCircle,
 } from 'lucide-react';
-import { Destination, Restaurant, Accommodation } from '@/lib/types';
+import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types';
 import { AdminSection } from '../_types';
 
 interface EntityHandlers<T> {
@@ -27,19 +30,22 @@ interface AdminTableProps {
   destinos: Destination[];
   restaurantes: Restaurant[];
   alojamientos: Accommodation[];
+  eventos: CumpeoEvent[];
   handlers: {
     destinos: EntityHandlers<Destination>;
     restaurantes: EntityHandlers<Restaurant>;
     alojamientos: EntityHandlers<Accommodation>;
+    eventos: EntityHandlers<CumpeoEvent>;
   };
 }
 
 function Thumbnail({ url }: { url?: string | null }) {
+  const hasRealImage = Boolean(url && !url.includes('placeholder'));
   return (
     <div className="w-10 h-10 rounded-lg overflow-hidden bg-surface-soft border border-border shrink-0">
-      {url ? (
+      {hasRealImage ? (
         <img
-          src={url.startsWith('/') || url.startsWith('http') ? url : `/${url}`}
+          src={url!.startsWith('/') || url!.startsWith('http') ? url! : `/${url!}`}
           alt=""
           className="w-full h-full object-cover"
           onError={(e) => {
@@ -47,8 +53,8 @@ function Thumbnail({ url }: { url?: string | null }) {
           }}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <Image size={14} className="text-text-muted" />
+        <div className="w-full h-full flex items-center justify-center bg-[#FAF8F5]" title="Sin imagen asignada">
+          <Image size={14} className="text-text-muted/60" />
         </div>
       )}
     </div>
@@ -91,6 +97,7 @@ export function AdminTable({
   destinos,
   restaurantes,
   alojamientos,
+  eventos,
   handlers,
 }: AdminTableProps) {
   const [search, setSearch] = useState('');
@@ -111,7 +118,7 @@ export function AdminTable({
   const filteredRestaurantes = useMemo(
     () =>
       q
-        ? restaurantes.filter((r) => r.nombre.toLowerCase().includes(q))
+        ? restaurantes.filter((r) => r.nombre.toLowerCase().includes(q) || (r.propietario || '').toLowerCase().includes(q))
         : restaurantes,
     [restaurantes, q]
   );
@@ -119,9 +126,17 @@ export function AdminTable({
   const filteredAlojamientos = useMemo(
     () =>
       q
-        ? alojamientos.filter((a) => a.nombre.toLowerCase().includes(q))
+        ? alojamientos.filter((a) => a.nombre.toLowerCase().includes(q) || (a.propietario || '').toLowerCase().includes(q))
         : alojamientos,
     [alojamientos, q]
+  );
+
+  const filteredEventos = useMemo(
+    () =>
+      q
+        ? eventos.filter((e) => e.nombre.toLowerCase().includes(q) || e.tipo.toLowerCase().includes(q))
+        : eventos,
+    [eventos, q]
   );
 
   const currentHandler =
@@ -129,6 +144,8 @@ export function AdminTable({
       ? handlers.destinos
       : activeSection === 'restaurantes'
       ? handlers.restaurantes
+      : activeSection === 'eventos'
+      ? handlers.eventos
       : handlers.alojamientos;
 
   const totalFiltered =
@@ -136,31 +153,49 @@ export function AdminTable({
       ? filteredDestinos.length
       : activeSection === 'restaurantes'
       ? filteredRestaurantes.length
+      : activeSection === 'eventos'
+      ? filteredEventos.length
       : filteredAlojamientos.length;
 
   const sectionLabel = {
     destinos: 'Destinos Turísticos',
     restaurantes: 'Restaurantes',
     alojamientos: 'Alojamientos',
+    eventos: 'Eventos, Ferias y Celebraciones',
   }[activeSection];
 
   const sectionIcon = {
     destinos: <MapPin size={18} className="text-rojo" />,
     restaurantes: <UtensilsCrossed size={18} className="text-rojo" />,
     alojamientos: <BedDouble size={18} className="text-rojo" />,
+    eventos: <CalendarDays size={18} className="text-rojo" />,
+  }[activeSection];
+
+  const sectionDescription = {
+    destinos: 'Administra los puntos de interés, esculturas de Condorito y atractivos turísticos.',
+    restaurantes: 'Gestiona la oferta gastronómica típica, horarios de atención y contactos.',
+    alojamientos: 'Administra hoteles, cabañas y opciones de hospedaje en Cumpeo.',
+    eventos: 'Programa fiestas costumbristas, ferias tradicionales y actividades culturales.',
   }[activeSection];
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-border shadow-xs overflow-hidden">
       {/* Panel Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-b border-border">
-        <h3 className="font-display font-bold text-lg text-text-primary flex items-center gap-2">
-          {sectionIcon}
-          {sectionLabel}
-          <span className="text-sm font-normal text-text-muted">({totalFiltered})</span>
-        </h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 border-b border-border bg-gradient-to-b from-white to-[#FAF8F5]/40">
+        <div>
+          <h3 className="font-display font-extrabold text-xl text-text-primary flex items-center gap-2">
+            {sectionIcon}
+            <span>{sectionLabel}</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rojo/10 text-rojo">
+              {totalFiltered} {totalFiltered === 1 ? 'registro' : 'registros'}
+            </span>
+          </h3>
+          <p className="text-xs text-text-secondary mt-1 max-w-xl">
+            {sectionDescription}
+          </p>
+        </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* Search Bar */}
           <div className="relative">
             <Search
@@ -195,12 +230,27 @@ export function AdminTable({
               {activeSection === 'destinos' && (
                 <>
                   <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Categoría</th>
-                  <th className="px-4 py-3 text-left font-bold hidden lg:table-cell">Precio</th>
+                  <th className="px-4 py-3 text-left font-bold hidden lg:table-cell">Horario</th>
                   <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Destacado</th>
                 </>
               )}
-              {activeSection !== 'destinos' && (
-                <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Dirección</th>
+              {activeSection === 'restaurantes' && (
+                <>
+                  <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Propietario</th>
+                  <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Horario</th>
+                </>
+              )}
+              {activeSection === 'alojamientos' && (
+                <>
+                  <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Propietario</th>
+                  <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Dirección</th>
+                </>
+              )}
+              {activeSection === 'eventos' && (
+                <>
+                  <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Tipo</th>
+                  <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Fecha</th>
+                </>
               )}
               <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Estado</th>
               <th className="px-4 py-3 text-right font-bold">Acciones</th>
@@ -230,7 +280,7 @@ export function AdminTable({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-text-secondary hidden lg:table-cell">
-                    {d.precio || <span className="text-text-muted">Gratuito</span>}
+                    {d.horario || <span className="text-text-muted">No especificado</span>}
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
                     <span
@@ -245,9 +295,15 @@ export function AdminTable({
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                      <CheckCircle2 size={11} /> Publicado
-                    </span>
+                    {(d.activo ?? true) ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                        <CheckCircle2 size={11} /> Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
+                        <XCircle size={11} /> En Pausa
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <RowActions
@@ -270,17 +326,31 @@ export function AdminTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-semibold text-text-primary">{r.nombre}</div>
-                    {r.especialidad && (
+                    {r.tipo && (
+                      <div className="text-[11px] text-text-muted mt-0.5 capitalize">{r.tipo}</div>
+                    )}
+                    {r.especialidad && !r.tipo && (
                       <div className="text-[11px] text-text-muted mt-0.5">{r.especialidad}</div>
                     )}
                   </td>
                   <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell">
-                    {r.direccion || <span className="text-text-muted">—</span>}
+                    {r.propietario
+                      ? <span className="font-medium text-text-primary">{r.propietario}</span>
+                      : <span className="text-text-muted">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">
+                    {(r.horario as any)?.descripcion || <span className="text-text-muted">—</span>}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                      <CheckCircle2 size={11} /> Publicado
-                    </span>
+                    {(r.activo ?? true) ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                        <CheckCircle2 size={11} /> Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
+                        <XCircle size={11} /> En Pausa
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <RowActions
@@ -308,17 +378,74 @@ export function AdminTable({
                     )}
                   </td>
                   <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell">
+                    {a.propietario
+                      ? <span className="font-medium text-text-primary">{a.propietario}</span>
+                      : <span className="text-text-muted">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">
                     {a.direccion || <span className="text-text-muted">—</span>}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                      <CheckCircle2 size={11} /> Publicado
-                    </span>
+                    {(a.activo ?? true) ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                        <CheckCircle2 size={11} /> Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
+                        <XCircle size={11} /> En Pausa
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <RowActions
                       onEdit={() => handlers.alojamientos.onEdit(a)}
                       onDelete={() => handlers.alojamientos.onDelete(a.id, a.nombre)}
+                    />
+                  </td>
+                </tr>
+              ))}
+
+            {/* ── Eventos ───────────────────────────────────────────────────────── */}
+            {activeSection === 'eventos' &&
+              filteredEventos.map((ev) => (
+                <tr
+                  key={ev.id}
+                  className="border-t border-border hover:bg-surface-soft/60 transition-colors"
+                >
+                  <td className="px-4 py-3">
+                    <Thumbnail url={ev.imagenPrincipal} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-text-primary">{ev.nombre}</div>
+                    {ev.recurrente && (
+                      <div className="text-[11px] text-[#4A7C59] mt-0.5 flex items-center gap-1">
+                        <Clock size={10} /> Anual
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    <span className="inline-block text-xs font-semibold capitalize px-2.5 py-0.5 rounded-full bg-surface-soft text-text-secondary border border-border">
+                      {ev.tipo.replace(/-/g, ' ')}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">
+                    {ev.fecha || <span className="text-text-muted">—</span>}
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    {ev.activo ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                        <CheckCircle2 size={11} /> Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
+                        <XCircle size={11} /> Inactivo
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <RowActions
+                      onEdit={() => handlers.eventos.onEdit(ev)}
+                      onDelete={() => handlers.eventos.onDelete(ev.id, ev.nombre)}
                     />
                   </td>
                 </tr>

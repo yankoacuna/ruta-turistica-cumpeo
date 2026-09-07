@@ -1,6 +1,5 @@
-import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates, TourRoute } from './types';
+import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates, TourRoute, CumpeoEvent, EmergencyContact } from './types';
 import { prisma } from './prisma';
-import routesData from '../../public/data/routes.json';
 
 export async function getConfig(): Promise<AppConfig> {
   const config = await prisma.config.findUnique({ where: { id: 'default' } });
@@ -9,7 +8,7 @@ export async function getConfig(): Promise<AppConfig> {
 }
 
 export async function getDestinations(): Promise<Destination[]> {
-  const data = await prisma.destination.findMany({ orderBy: { nombre: 'asc' } });
+  const data = await prisma.destination.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
@@ -29,7 +28,7 @@ export async function getDestinationByIdOrSlug(idOrSlug: string): Promise<Destin
 
 export async function getDestinationsByCategory(categoria: string): Promise<Destination[]> {
   if (!categoria || categoria === 'todos') return getDestinations();
-  const data = await prisma.destination.findMany({ where: { categoria }, orderBy: { nombre: 'asc' } });
+  const data = await prisma.destination.findMany({ where: { categoria, activo: true }, orderBy: { nombre: 'asc' } });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
@@ -37,7 +36,7 @@ export async function getDestinationsByCategory(categoria: string): Promise<Dest
 }
 
 export async function getFeaturedDestinations(): Promise<Destination[]> {
-  const data = await prisma.destination.findMany({ where: { destacado: true }, orderBy: { nombre: 'asc' } });
+  const data = await prisma.destination.findMany({ where: { destacado: true, activo: true }, orderBy: { nombre: 'asc' } });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
@@ -45,24 +44,54 @@ export async function getFeaturedDestinations(): Promise<Destination[]> {
 }
 
 export async function getAccommodations(): Promise<Accommodation[]> {
-  const data = await prisma.accommodation.findMany({ orderBy: { nombre: 'asc' } });
+  const data = await prisma.accommodation.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } });
   return data.map((a) => ({
     ...a,
     coordenadas: a.coordenadas as unknown as Coordinates,
-    precio: a.precio as any,
     contacto: a.contacto as any,
   })) as Accommodation[];
 }
 
 export async function getRestaurants(): Promise<Restaurant[]> {
-  const data = await prisma.restaurant.findMany({ orderBy: { nombre: 'asc' } });
+  const data = await prisma.restaurant.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } });
   return data.map((r) => ({
     ...r,
     coordenadas: r.coordenadas as unknown as Coordinates,
     horario: r.horario as any,
-    precio: r.precio as any,
     contacto: r.contacto as any,
   })) as Restaurant[];
+}
+
+export async function getEvents(): Promise<CumpeoEvent[]> {
+  try {
+    const data = await prisma.event.findMany({
+      where: { activo: true },
+      orderBy: { nombre: 'asc' },
+    });
+    return data.map((e) => ({
+      ...e,
+      coordenadas: e.coordenadas as unknown as Coordinates | null,
+    })) as CumpeoEvent[];
+  } catch (error) {
+    console.warn('Error fetching events from DB:', error);
+    return [];
+  }
+}
+
+export async function getActiveEvents(): Promise<CumpeoEvent[]> {
+  return getEvents();
+}
+
+export async function getEmergencyContacts(): Promise<EmergencyContact[]> {
+  try {
+    return await prisma.emergencyContact.findMany({
+      where: { activo: true },
+      orderBy: { orden: 'asc' },
+    });
+  } catch (error) {
+    console.warn('Error fetching emergency contacts:', error);
+    return [];
+  }
 }
 
 export async function getAllPOIs(): Promise<POI[]> {
@@ -81,7 +110,6 @@ export async function getAllPOIs(): Promise<POI[]> {
       tipo: 'destino' as const,
       coordenadas: d.coordenadas,
       imagenPrincipal: d.imagenPrincipal,
-      precio: d.precio,
       rating: d.rating,
       _original: d
     })),
@@ -93,7 +121,6 @@ export async function getAllPOIs(): Promise<POI[]> {
       tipo: 'alojamiento' as const,
       coordenadas: a.coordenadas,
       imagenPrincipal: a.imagenPrincipal ?? undefined,
-      precio: typeof a.precio === 'object' && a.precio ? `Desde $${(a.precio as any).min?.toLocaleString('es-CL')}` : (a.precio as any),
       rating: null,
       _original: a
     })),
@@ -105,7 +132,6 @@ export async function getAllPOIs(): Promise<POI[]> {
       tipo: 'restaurante' as const,
       coordenadas: r.coordenadas,
       imagenPrincipal: r.imagenPrincipal ?? undefined,
-      precio: typeof r.precio === 'object' && r.precio ? (r.precio as any).rango || '$' : (r.precio as any),
       rating: null,
       _original: r
     }))
@@ -145,18 +171,8 @@ export function formatPriceCLP(amount: number): string {
   return `$${amount.toLocaleString('es-CL')}`;
 }
 
-export function getCategoryEmoji(categoria: string): string {
-  const map: Record<string, string> = {
-    cultural: '🎨',
-    historico: '🏛️',
-    naturaleza: '🌿',
-    gastronomia: '🍽️',
-    patrimonio: '🏺',
-    entretencion: '🎉',
-    alojamiento: '🛏️',
-    restaurante: '🍴'
-  };
-  return map[categoria] || '📍';
+export function getCategoryEmoji(_categoria: string): string {
+  return '';
 }
 
 export function getCategoryColorClass(categoria: string): string {
@@ -174,12 +190,40 @@ export function getCategoryColorClass(categoria: string): string {
 }
 
 export function formatImgUrl(url?: string | null): string {
-  if (!url) return '/assets/images/placeholder.webp';
+  if (!url || url.includes('placeholder')) return '/assets/images/placeholder.webp';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   if (url.startsWith('/')) return url;
   return `/${url}`;
 }
 
 export async function getTourRoutes(): Promise<TourRoute[]> {
-  return (routesData as unknown as TourRoute[]) || [];
+  try {
+    const data = await prisma.tourRoute.findMany({
+      where: { activo: true },
+      orderBy: { orden: 'asc' },
+    });
+    if (data.length > 0) {
+      return data as unknown as TourRoute[];
+    }
+  } catch (error) {
+    console.warn('Error fetching tour routes from DB:', error);
+  }
+  return [];
 }
+
+export async function getTourRouteByIdOrSlug(idOrSlug: string): Promise<TourRoute | null> {
+  try {
+    const route = await prisma.tourRoute.findFirst({
+      where: {
+        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
+        activo: true,
+      },
+    });
+    if (route) return route as unknown as TourRoute;
+  } catch (error) {
+    console.warn('Error fetching tour route by id/slug from DB:', error);
+  }
+  const routes = await getTourRoutes();
+  return routes.find((r) => r.id === idOrSlug || r.slug === idOrSlug) || null;
+}
+

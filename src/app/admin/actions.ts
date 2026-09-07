@@ -1,7 +1,8 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { Destination, Restaurant, Accommodation } from '@/lib/types';
+import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute } from '@/lib/types';
+
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
@@ -17,7 +18,7 @@ function generateSessionToken(): string {
 
 export async function loginAdmin(password: string): Promise<{ success: boolean; error?: string }> {
   // Check password against environment variables or default
-  const validPassword = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET || 'admin123';
+  const validPassword = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET || 'cumpeo2026';
 
   if (password !== validPassword && password !== ADMIN_SECRET) {
     return { success: false, error: 'Contraseña incorrecta' };
@@ -85,7 +86,6 @@ export async function saveDestination(token: string, data: Partial<Destination>)
       coordenadas: data.coordenadas as any,
       direccion: data.direccion,
       horario: data.horario,
-      precio: data.precio,
       duracionVisita: data.duracionVisita,
       comoLlegar: data.comoLlegar,
       tags: data.tags,
@@ -93,6 +93,7 @@ export async function saveDestination(token: string, data: Partial<Destination>)
       galeria: data.galeria ?? [],
       rating: data.rating,
       destacado: data.destacado,
+      activo: data.activo ?? true,
     },
     create: {
       id,
@@ -105,7 +106,6 @@ export async function saveDestination(token: string, data: Partial<Destination>)
       coordenadas: (data.coordenadas as any) || { lat: -35.267, lng: -71.25 },
       direccion: data.direccion,
       horario: data.horario,
-      precio: data.precio,
       duracionVisita: data.duracionVisita,
       comoLlegar: data.comoLlegar,
       tags: data.tags || [],
@@ -113,6 +113,7 @@ export async function saveDestination(token: string, data: Partial<Destination>)
       galeria: data.galeria || [],
       rating: data.rating,
       destacado: data.destacado || false,
+      activo: data.activo ?? true,
     },
   });
 
@@ -145,30 +146,42 @@ export async function saveRestaurant(token: string, data: Partial<Restaurant>) {
     where: { id },
     update: {
       nombre: data.nombre,
+      tipo: data.tipo,
       descripcion: data.descripcion,
+      especialidad: data.especialidad,
+      propietario: data.propietario,
       coordenadas: data.coordenadas as any,
       direccion: data.direccion,
+      telefono: data.telefono,
+      whatsapp: data.whatsapp,
       horario: data.horario as any,
-      precio: data.precio as any,
+      mediosPago: data.mediosPago ?? [],
       tags: data.tags ?? [],
       imagenPrincipal: data.imagenPrincipal,
       galeria: data.galeria ?? [],
       menuUrl: data.menuUrl,
       contacto: data.contacto as any,
+      activo: data.activo ?? true,
     },
     create: {
       id,
       nombre: data.nombre || 'Nuevo Restaurante',
+      tipo: data.tipo,
       descripcion: data.descripcion || '',
+      especialidad: data.especialidad,
+      propietario: data.propietario,
       coordenadas: (data.coordenadas as any) || { lat: -35.267, lng: -71.25 },
       direccion: data.direccion,
+      telefono: data.telefono,
+      whatsapp: data.whatsapp,
       horario: data.horario as any,
-      precio: data.precio as any,
+      mediosPago: data.mediosPago ?? [],
       tags: data.tags ?? [],
       imagenPrincipal: data.imagenPrincipal,
       galeria: data.galeria ?? [],
       menuUrl: data.menuUrl,
       contacto: data.contacto as any,
+      activo: data.activo ?? true,
     },
   });
 
@@ -200,26 +213,34 @@ export async function saveAccommodation(token: string, data: Partial<Accommodati
     where: { id },
     update: {
       nombre: data.nombre,
+      tipo: data.tipo,
+      propietario: data.propietario,
       descripcion: data.descripcion,
       coordenadas: data.coordenadas as any,
       direccion: data.direccion,
-      precio: data.precio as any,
+      telefono: data.telefono,
+      whatsapp: data.whatsapp,
       servicios: data.servicios ?? [],
       imagenPrincipal: data.imagenPrincipal,
       galeria: data.galeria ?? [],
       contacto: data.contacto as any,
+      activo: data.activo ?? true,
     },
     create: {
       id,
       nombre: data.nombre || 'Nuevo Alojamiento',
+      tipo: data.tipo,
+      propietario: data.propietario,
       descripcion: data.descripcion || '',
       coordenadas: (data.coordenadas as any) || { lat: -35.267, lng: -71.25 },
       direccion: data.direccion,
-      precio: data.precio as any,
+      telefono: data.telefono,
+      whatsapp: data.whatsapp,
       servicios: data.servicios ?? [],
       imagenPrincipal: data.imagenPrincipal,
       galeria: data.galeria ?? [],
       contacto: data.contacto as any,
+      activo: data.activo ?? true,
     },
   });
 
@@ -242,21 +263,23 @@ export async function deleteAccommodation(token: string, id: string) {
 
 export async function exportDatabaseBackup(token?: string) {
   await assertAuthorized(token);
-  const [destinations, restaurants, accommodations, config] = await Promise.all([
+  const [destinations, restaurants, accommodations, events, config] = await Promise.all([
     prisma.destination.findMany({ orderBy: { nombre: 'asc' } }),
     prisma.restaurant.findMany({ orderBy: { nombre: 'asc' } }),
     prisma.accommodation.findMany({ orderBy: { nombre: 'asc' } }),
+    prisma.event.findMany({ orderBy: { nombre: 'asc' } }),
     prisma.config.findFirst(),
   ]);
 
   return {
-    version: '1.0',
+    version: '1.1',
     exportDate: new Date().toISOString(),
     site: 'Cumpeo Turismo',
     data: {
       destinations,
       restaurants,
       accommodations,
+      events,
       config,
     },
   };
@@ -269,7 +292,7 @@ export async function restoreDatabaseBackup(token: string, backupData: any) {
     throw new Error('Formato de copia de seguridad inválido');
   }
 
-  const { destinations, restaurants, accommodations } = backupData.data;
+  const { destinations, restaurants, accommodations, events } = backupData.data;
 
   // Restore Destinations
   if (Array.isArray(destinations)) {
@@ -304,8 +327,172 @@ export async function restoreDatabaseBackup(token: string, backupData: any) {
     }
   }
 
+  // Restore Events
+  if (Array.isArray(events)) {
+    for (const ev of events) {
+      await prisma.event.upsert({
+        where: { id: ev.id },
+        update: { ...ev },
+        create: { ...ev },
+      });
+    }
+  }
+
   revalidatePath('/');
   revalidatePath('/admin');
   revalidatePath('/mapa');
   return { success: true };
 }
+
+// ─── EVENTS ───────────────────────────────────────────────────────────────────
+
+export async function getEvents() {
+  return prisma.event.findMany({ orderBy: { nombre: 'asc' } });
+}
+
+export async function saveEvent(token: string, data: Partial<CumpeoEvent>) {
+  await assertAuthorized(token);
+  const id =
+    data.id ||
+    data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
+    'new-event';
+
+  const result = await prisma.event.upsert({
+    where: { id },
+    update: {
+      nombre: data.nombre,
+      tipo: data.tipo,
+      descripcion: data.descripcion,
+      descripcionLarga: data.descripcionLarga,
+      fecha: data.fecha,
+      recurrente: data.recurrente ?? true,
+      coordenadas: data.coordenadas as any,
+      direccion: data.direccion,
+      imagenPrincipal: data.imagenPrincipal,
+      galeria: data.galeria ?? [],
+      tags: data.tags ?? [],
+      destacado: data.destacado ?? false,
+      activo: data.activo ?? true,
+    },
+    create: {
+      id,
+      nombre: data.nombre || 'Nuevo Evento',
+      tipo: data.tipo || 'cultural',
+      descripcion: data.descripcion || '',
+      descripcionLarga: data.descripcionLarga,
+      fecha: data.fecha,
+      recurrente: data.recurrente ?? true,
+      coordenadas: data.coordenadas as any,
+      direccion: data.direccion,
+      imagenPrincipal: data.imagenPrincipal,
+      galeria: data.galeria ?? [],
+      tags: data.tags ?? [],
+      destacado: data.destacado ?? false,
+      activo: data.activo ?? true,
+    },
+  });
+
+  revalidatePath('/');
+  revalidatePath('/admin');
+  revalidatePath('/mapa');
+  return result;
+}
+
+export async function deleteEvent(token: string, id: string) {
+  await assertAuthorized(token);
+  await prisma.event.delete({ where: { id } });
+  revalidatePath('/');
+  revalidatePath('/admin');
+  revalidatePath('/mapa');
+  return true;
+}
+
+// ─── TOUR ROUTES (CIRCUITOS Y PARADAS CONFIGURABLES) ─────────────────────────
+
+export async function getAdminTourRoutes(): Promise<TourRoute[]> {
+  try {
+    const data = await prisma.tourRoute.findMany({
+      orderBy: { orden: 'asc' },
+    });
+    return data as unknown as TourRoute[];
+  } catch (error) {
+    console.error('Error fetching admin tour routes:', error);
+    return [];
+  }
+}
+
+export async function saveTourRoute(token: string, data: Partial<TourRoute>) {
+  await assertAuthorized(token);
+  const slug =
+    data.slug ||
+    data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
+    'nueva-ruta';
+  const id = data.id || slug;
+
+  const result = await prisma.tourRoute.upsert({
+    where: { id },
+    update: {
+      nombre: data.nombre,
+      slug,
+      descripcion: data.descripcion,
+      color: data.color || '#E63946',
+      poiIds: data.poiIds || [],
+      duracionEstimada: data.duracionEstimada,
+      distanciaKm: data.distanciaKm ? Number(data.distanciaKm) : null,
+      dificultad: data.dificultad || 'Fácil',
+      hitos: (data.hitos as any) ?? undefined,
+      consejos: (data.consejos as any) ?? undefined,
+      mapaImagen: data.mapaImagen,
+      destacada: data.destacada ?? false,
+      activo: data.activo ?? true,
+      orden: data.orden ?? 0,
+    },
+    create: {
+      id,
+      slug,
+      nombre: data.nombre || 'Nueva Ruta',
+      descripcion: data.descripcion || '',
+      color: data.color || '#E63946',
+      poiIds: data.poiIds || [],
+      duracionEstimada: data.duracionEstimada,
+      distanciaKm: data.distanciaKm ? Number(data.distanciaKm) : null,
+      dificultad: data.dificultad || 'Fácil',
+      hitos: (data.hitos as any) ?? [],
+      consejos: (data.consejos as any) ?? [],
+      mapaImagen: data.mapaImagen,
+      destacada: data.destacada ?? false,
+      activo: data.activo ?? true,
+      orden: data.orden ?? 0,
+    },
+  });
+
+  revalidatePath('/');
+  revalidatePath('/ruta');
+  revalidatePath('/mapa');
+  revalidatePath('/admin');
+  return result;
+}
+
+export async function deleteTourRoute(token: string, id: string) {
+  await assertAuthorized(token);
+  await prisma.tourRoute.delete({ where: { id } });
+  revalidatePath('/');
+  revalidatePath('/ruta');
+  revalidatePath('/mapa');
+  revalidatePath('/admin');
+  return true;
+}
+
+export async function updateTourRouteStops(token: string, routeId: string, poiIds: string[]) {
+  await assertAuthorized(token);
+  const result = await prisma.tourRoute.update({
+    where: { id: routeId },
+    data: { poiIds },
+  });
+  revalidatePath('/');
+  revalidatePath('/ruta');
+  revalidatePath('/mapa');
+  revalidatePath('/admin');
+  return result;
+}
+

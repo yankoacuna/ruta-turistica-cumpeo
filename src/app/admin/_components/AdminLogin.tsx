@@ -44,7 +44,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
             Panel de Administración
           </h1>
           <p className="text-sm text-text-secondary">
-            Gestor de Contenidos · Cumpeo Turismo
+            Gestor de Contenidos - Cumpeo Turismo
           </p>
         </div>
 

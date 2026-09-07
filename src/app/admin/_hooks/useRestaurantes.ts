@@ -10,7 +10,6 @@ const emptyRest = (): Partial<Restaurant> => ({
   platoEstrella: '',
   coordenadas: { lat: -35.267, lng: -71.25 },
   direccion: '',
-  precio: { rango: '$$', promedioPersona: 0 },
   horario: { apertura: '', cierre: '', descripcion: '' },
   contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '' },
   imagenPrincipal: '',
@@ -44,7 +43,6 @@ export function useRestaurantes(initial: Restaurant[], { password, showToast }: 
             ...saved,
             coordenadas: saved.coordenadas as any,
             horario: saved.horario as any,
-            precio: saved.precio as any,
             contacto: saved.contacto as any,
           } as Restaurant;
           return idx >= 0

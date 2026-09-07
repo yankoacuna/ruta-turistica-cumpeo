@@ -35,3 +35,11 @@ next-env.d.ts
 *.pem
 .vscode/
 .idea/
+
+# Archivos de trabajo y respaldos locales
+*.xlsx
+public/data/backup_original/
+
+# Fotos subidas dinámicamente desde el CMS
+public/uploads/*
+!public/uploads/.gitkeep

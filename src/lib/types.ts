@@ -14,7 +14,6 @@ export interface Destination {
   coordenadas: Coordinates;
   direccion: string;
   horario: string;
-  precio: string;
   duracionVisita?: string;
   comoLlegar?: string;
   tags?: string[];
@@ -23,6 +22,7 @@ export interface Destination {
   galeria?: string[];
   infoUtil?: Record<string, string>;
   rating?: number;
+  activo?: boolean;
   publicado?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
@@ -32,9 +32,12 @@ export interface Accommodation {
   id: string;
   nombre: string;
   tipo?: string;
+  propietario?: string | null;  // desde catastro
   descripcion: string;
   coordenadas: Coordinates;
   direccion?: string | null;
+  telefono?: string | null;
+  whatsapp?: string | null;
   contacto?: {
     telefono?: string;
     whatsapp?: string;
@@ -43,14 +46,9 @@ export interface Accommodation {
     instagram?: string;
   } | null;
   servicios?: string[];
-  precio?: {
-    min?: number;
-    max?: number;
-    moneda?: string;
-    descripcion?: string;
-  } | string | null;
   imagenPrincipal?: string | null;
   galeria?: string[];
+  activo?: boolean;
   publicado?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
@@ -59,10 +57,14 @@ export interface Accommodation {
 export interface Restaurant {
   id: string;
   nombre: string;
+  tipo?: string;              // restaurante, picada, bar, cafeteria...
   especialidad?: string;
+  propietario?: string | null; // desde catastro
   descripcion: string;
   coordenadas: Coordinates;
   direccion?: string | null;
+  telefono?: string | null;
+  whatsapp?: string | null;
   contacto?: {
     telefono?: string;
     whatsapp?: string;
@@ -71,25 +73,48 @@ export interface Restaurant {
     instagram?: string;
   } | null;
   platoEstrella?: string;
+  mediosPago?: string[];      // desde catastro: ["Efectivo", "Débito"]
   horario?: {
     apertura?: string;
     cierre?: string;
     diasCierre?: string[];
     descripcion?: string;
   } | string | null;
-  precio?: {
-    rango?: string;
-    promedioPersona?: number;
-    min?: number;
-    max?: number;
-    moneda?: string;
-    descripcion?: string;
-  } | string | null;
   imagenPrincipal?: string | null;
   galeria?: string[];
   menuUrl?: string | null;
   tags?: string[];
+  activo?: boolean;
   publicado?: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface EmergencyContact {
+  id: string;
+  institucion: string;
+  telefono: string;
+  icono?: string | null;
+  direccion?: string | null;
+  orden: number;
+  activo: boolean;
+}
+
+export interface CumpeoEvent {
+  id: string;
+  nombre: string;
+  tipo: 'fiesta-religiosa' | 'feria' | 'centro-evento' | 'cultural' | string;
+  descripcion: string;
+  descripcionLarga?: string | null;
+  fecha?: string | null;       // "20 de enero" / "Fines de semana"
+  recurrente: boolean;
+  coordenadas?: Coordinates | null;
+  direccion?: string | null;
+  imagenPrincipal?: string | null;
+  galeria?: string[];
+  tags?: string[];
+  destacado: boolean;
+  activo: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -123,19 +148,43 @@ export interface POI {
   nombre: string;
   descripcionCorta: string;
   categoria: string;
-  tipo: 'destino' | 'alojamiento' | 'restaurante';
+  tipo: 'destino' | 'alojamiento' | 'restaurante' | 'evento';
   coordenadas: Coordinates;
   imagenPrincipal?: string;
-  precio?: string;
   rating?: number | null;
   distanciaKm?: number;
-  _original?: Destination | Accommodation | Restaurant;
+  _original?: Destination | Accommodation | Restaurant | CumpeoEvent;
+}
+
+export interface RouteMilestone {
+  numero: number;
+  titulo: string;
+  descripcion: string;
+}
+
+export interface RouteTip {
+  icono?: string;
+  titulo: string;
+  texto: string;
 }
 
 export interface TourRoute {
   id: string;
+  slug?: string;
   nombre: string;
   descripcion: string;
   color: string;
   poiIds: string[];
+  duracionEstimada?: string | null;
+  distanciaKm?: number | null;
+  dificultad?: string | null;
+  hitos?: RouteMilestone[] | any | null;
+  consejos?: RouteTip[] | any | null;
+  mapaImagen?: string | null;
+  destacada?: boolean;
+  activo?: boolean;
+  orden?: number;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
+

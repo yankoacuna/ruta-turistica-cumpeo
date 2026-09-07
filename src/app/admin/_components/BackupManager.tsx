@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Destination, Restaurant, Accommodation } from '@/lib/types';
+import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types';
 import { exportDatabaseBackup, restoreDatabaseBackup } from '../actions';
 import {
   Database,
@@ -20,6 +20,7 @@ interface BackupManagerProps {
   destinos: Destination[];
   restaurantes: Restaurant[];
   alojamientos: Accommodation[];
+  eventos?: CumpeoEvent[];
   token: string;
 }
 
@@ -27,6 +28,7 @@ export function BackupManager({
   destinos,
   restaurantes,
   alojamientos,
+  eventos = [],
   token,
 }: BackupManagerProps) {
   const { showToast } = useToast();
@@ -62,14 +64,14 @@ export function BackupManager({
   };
 
   // ── Export CSV for Excel ───────────────────────────────────────────────────
-  const handleExportCSV = (type: 'destinos' | 'restaurantes' | 'alojamientos') => {
+  const handleExportCSV = (type: 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos') => {
     try {
       let csvContent = '';
       const dateStr = new Date().toISOString().split('T')[0];
       let filename = `cumpeo-${type}-${dateStr}.csv`;
 
       if (type === 'destinos') {
-        const headers = ['ID', 'Nombre', 'Categoria', 'Descripcion', 'Direccion', 'Horario', 'Precio', 'Destacado'];
+        const headers = ['ID', 'Nombre', 'Categoria', 'Descripcion', 'Direccion', 'Horario', 'Duracion', 'Destacado'];
         const rows = destinos.map((d) => [
           `"${d.id}"`,
           `"${d.nombre.replace(/"/g, '""')}"`,
@@ -77,30 +79,48 @@ export function BackupManager({
           `"${(d.descripcionCorta || '').replace(/"/g, '""')}"`,
           `"${(d.direccion || '').replace(/"/g, '""')}"`,
           `"${(d.horario || '').replace(/"/g, '""')}"`,
-          `"${(d.precio || '').replace(/"/g, '""')}"`,
+          `"${(d.duracionVisita || '').replace(/"/g, '""')}"`,
           d.destacado ? 'SI' : 'NO',
         ]);
         csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
       } else if (type === 'restaurantes') {
-        const headers = ['ID', 'Nombre', 'Especialidad', 'Descripcion', 'Direccion', 'Telefono'];
+        const headers = ['ID', 'Nombre', 'Propietario', 'Tipo', 'Especialidad', 'Descripcion', 'Direccion', 'Telefono', 'Medios de Pago'];
         const rows = restaurantes.map((r) => [
           `"${r.id}"`,
           `"${r.nombre.replace(/"/g, '""')}"`,
+          `"${(r.propietario || '').replace(/"/g, '""')}"`,
+          `"${(r.tipo || '').replace(/"/g, '""')}"`,
           `"${(r.especialidad || '').replace(/"/g, '""')}"`,
           `"${(r.descripcion || '').replace(/"/g, '""')}"`,
           `"${(r.direccion || '').replace(/"/g, '""')}"`,
           `"${(r.contacto?.telefono || '').replace(/"/g, '""')}"`,
+          `"${(r.mediosPago || []).join(' / ')}"`,
         ]);
         csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-      } else {
-        const headers = ['ID', 'Nombre', 'Tipo', 'Descripcion', 'Direccion', 'Servicios'];
+      } else if (type === 'alojamientos') {
+        const headers = ['ID', 'Nombre', 'Propietario', 'Tipo', 'Descripcion', 'Direccion', 'Telefono', 'Servicios'];
         const rows = alojamientos.map((a) => [
           `"${a.id}"`,
           `"${a.nombre.replace(/"/g, '""')}"`,
+          `"${(a.propietario || '').replace(/"/g, '""')}"`,
           `"${(a.tipo || '').replace(/"/g, '""')}"`,
           `"${(a.descripcion || '').replace(/"/g, '""')}"`,
           `"${(a.direccion || '').replace(/"/g, '""')}"`,
+          `"${(a.contacto?.telefono || '').replace(/"/g, '""')}"`,
           `"${(a.servicios || []).join('; ')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      } else {
+        const headers = ['ID', 'Nombre', 'Tipo', 'Fecha', 'Recurrente', 'Descripcion', 'Lugar', 'Activo'];
+        const rows = eventos.map((e) => [
+          `"${e.id}"`,
+          `"${e.nombre.replace(/"/g, '""')}"`,
+          `"${e.tipo}"`,
+          `"${(e.fecha || '').replace(/"/g, '""')}"`,
+          e.recurrente ? 'SI' : 'NO',
+          `"${(e.descripcion || '').replace(/"/g, '""')}"`,
+          `"${(e.direccion || '').replace(/"/g, '""')}"`,
+          e.activo ? 'SI' : 'NO',
         ]);
         csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
       }
@@ -234,6 +254,12 @@ export function BackupManager({
                 className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
               >
                 Alojamientos
+              </button>
+              <button
+                onClick={() => handleExportCSV('eventos')}
+                className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
+              >
+                Eventos
               </button>
             </div>
           </div>

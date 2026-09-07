@@ -1,9 +1,10 @@
 import React from 'react';
-import { Phone } from 'lucide-react';
+import { Phone, User } from 'lucide-react';
 import { Accommodation } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImagePreview } from '../ImagePreview';
+import { ImageUploadField } from '../ImageUploadField';
+import { GalleryField } from '../GalleryField';
 
 interface AlojamientoModalProps {
   editing: Partial<Accommodation>;
@@ -22,10 +23,6 @@ export function AlojamientoModal({
 }: AlojamientoModalProps) {
   const set = (patch: Partial<Accommodation>) => onChange({ ...editing, ...patch });
 
-  const precio = editing.precio as any || {};
-  const setPrecio = (patch: Record<string, any>) =>
-    set({ precio: { ...precio, ...patch } as any });
-
   const contacto = editing.contacto as any || {};
   const setContacto = (patch: Record<string, string>) =>
     set({ contacto: { ...contacto, ...patch } });
@@ -36,8 +33,8 @@ export function AlojamientoModal({
       onClose={onClose}
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        {/* Nombre + Tipo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nombre + Tipo + Estado Activo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <Field label="Nombre" required>
             <input
               required
@@ -53,8 +50,8 @@ export function AlojamientoModal({
               value={editing.tipo || ''}
               onChange={(e) => set({ tipo: e.target.value })}
             >
-              <option value="">Seleccionar tipo…</option>
-              <option value="Cabaña">Cabaña</option>
+              <option value="">Seleccionar tipoâ€¦</option>
+              <option value="CabaÃ±a">CabaÃ±a</option>
               <option value="Hostal">Hostal</option>
               <option value="Hotel">Hotel</option>
               <option value="Camping">Camping</option>
@@ -62,22 +59,47 @@ export function AlojamientoModal({
               <option value="Agroturismo">Agroturismo</option>
             </select>
           </Field>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-surface-soft h-[42px]">
+            <input
+              type="checkbox"
+              id="acc-activo"
+              checked={editing.activo ?? true}
+              onChange={(e) => set({ activo: e.target.checked })}
+              className="w-4 h-4 text-rojo rounded border-border focus:ring-rojo cursor-pointer"
+            />
+            <label htmlFor="acc-activo" className="text-xs font-bold text-text-primary cursor-pointer select-none">
+              {editing.activo ?? true ? 'Visible en el portal' : 'Oculto (En Pausa)'}
+            </label>
+          </div>
         </div>
 
-        {/* Descripción */}
-        <Field label="Descripción" required>
+        {/* Propietario */}
+        <Field label="Propietario" hint="Nombre del dueño o encargado">
+          <div className="relative">
+            <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+            <input
+              className={inputCls + ' pl-8'}
+              placeholder="Ej: Patricia Navarro Troncoso"
+              value={editing.propietario || ''}
+              onChange={(e) => set({ propietario: e.target.value })}
+            />
+          </div>
+        </Field>
+
+        {/* DescripciÃ³n */}
+        <Field label="DescripciÃ³n" required>
           <textarea
             required
             className={textareaCls}
-            placeholder="Descripción del alojamiento y sus características…"
+            placeholder="DescripciÃ³n del alojamiento y sus caracterÃ­sticasâ€¦"
             value={editing.descripcion || ''}
             onChange={(e) => set({ descripcion: e.target.value })}
           />
         </Field>
 
-        {/* Dirección + Servicios */}
+        {/* DirecciÃ³n + Servicios */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Dirección">
+          <Field label="DirecciÃ³n">
             <input
               className={inputCls}
               placeholder="Calle / Localidad"
@@ -88,7 +110,7 @@ export function AlojamientoModal({
           <Field label="Servicios" hint="Separados por coma">
             <input
               className={inputCls}
-              placeholder="WiFi, Estacionamiento, Piscina…"
+              placeholder="WiFi, Estacionamiento, Piscinaâ€¦"
               value={(editing.servicios || []).join(', ')}
               onChange={(e) =>
                 set({
@@ -102,63 +124,33 @@ export function AlojamientoModal({
           </Field>
         </div>
 
-        {/* Precio */}
-        <div className="rounded-xl border border-border overflow-hidden">
-          <div className="bg-surface-soft px-4 py-2.5 text-xs font-bold text-text-secondary uppercase tracking-wide">
-            Rango de Precio (CLP)
-          </div>
-          <div className="p-4 grid grid-cols-2 gap-4">
-            <Field label="Precio Desde">
-              <input
-                type="number"
-                className={inputCls}
-                placeholder="25000"
-                value={precio.min || ''}
-                onChange={(e) => setPrecio({ min: parseInt(e.target.value) || 0 })}
-              />
-            </Field>
-            <Field label="Precio Hasta">
-              <input
-                type="number"
-                className={inputCls}
-                placeholder="45000"
-                value={precio.max || ''}
-                onChange={(e) => setPrecio({ max: parseInt(e.target.value) || 0 })}
-              />
-            </Field>
-            <div className="col-span-2">
-              <Field label="Descripción del Precio" hint="Ej: Por noche, incluye desayuno">
-                <input
-                  className={inputCls}
-                  placeholder="Por noche por persona"
-                  value={precio.descripcion || ''}
-                  onChange={(e) => setPrecio({ descripcion: e.target.value })}
-                />
-              </Field>
-            </div>
-          </div>
-        </div>
 
         {/* Contacto */}
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="bg-surface-soft px-4 py-2.5 text-xs font-bold text-text-secondary uppercase tracking-wide flex items-center gap-1.5">
-            <Phone size={12} /> Información de Contacto
+            <Phone size={12} /> InformaciÃ³n de Contacto
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="Teléfono">
+            <Field label="TelÃ©fono (Llamadas)">
               <input
                 className={inputCls}
-                placeholder="+56 71 XXX XXXX"
-                value={contacto.telefono || ''}
-                onChange={(e) => setContacto({ telefono: e.target.value })}
+                placeholder="+56 9 XXXX XXXX"
+                value={editing.telefono || contacto.telefono || ''}
+                onChange={(e) => {
+                  setContacto({ telefono: e.target.value });
+                  set({ telefono: e.target.value });
+                }}
               />
             </Field>
             <Field label="WhatsApp">
               <input
                 className={inputCls}
                 placeholder="+56 9 XXXX XXXX"
-                value={contacto.whatsapp || ''}
-                onChange={(e) => setContacto({ whatsapp: e.target.value })}
+                value={editing.whatsapp || contacto.whatsapp || ''}
+                onChange={(e) => {
+                  setContacto({ whatsapp: e.target.value });
+                  set({ whatsapp: e.target.value });
+                }}
               />
             </Field>
             <Field label="Sitio Web">
@@ -206,19 +198,21 @@ export function AlojamientoModal({
           </Field>
         </div>
 
-        {/* Imagen */}
-        <Field label="URL Imagen Principal" hint="Ruta relativa o URL completa">
-          <input
-            className={inputCls}
-            placeholder="/assets/images/..."
-            value={editing.imagenPrincipal || ''}
-            onChange={(e) => set({ imagenPrincipal: e.target.value })}
-          />
-          <ImagePreview url={editing.imagenPrincipal} />
-        </Field>
+        <ImageUploadField
+          label="Imagen Principal"
+          value={editing.imagenPrincipal || ''}
+          onChange={(url) => set({ imagenPrincipal: url })}
+        />
+
+        {/* Galería de fotos */}
+        <GalleryField
+          images={editing.galeria || []}
+          onChange={(images) => set({ galeria: images })}
+        />
 
         <ModalActions onClose={onClose} isPending={isPending} />
       </form>
     </ModalWrapper>
   );
 }
+

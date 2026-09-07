@@ -21,22 +21,27 @@ export default function Footer() {
 
             {/* Columna 1: Marca & Municipio */}
             <div>
-              <div className="text-sm font-extrabold text-sol uppercase tracking-wider mb-3 font-display">
-                <span className="inline-flex items-center gap-2">
-                  <img
-                    src="/assets/images/condorito-oficial.png"
-                    className="w-6 h-6 rounded-full"
-                    alt="Condorito"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/assets/images/condorito-oficial.png';
-                    }}
-                  />
-                  Cumpeo Turismo
-                </span>
+              <div className="mb-3">
+                <img
+                  src="/assets/images/logo-muni-rio-claro.png"
+                  className="h-10 max-w-[170px] object-contain brightness-125"
+                  alt="Ilustre Municipalidad de Río Claro"
+                />
+              </div>
+              <div className="text-sm font-extrabold text-sol uppercase tracking-wider mb-2 font-display flex items-center gap-2">
+                <img
+                  src="/assets/images/condorito-oficial.png"
+                  className="w-5 h-5 rounded-full"
+                  alt="Condorito"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/assets/images/condorito-oficial.png';
+                  }}
+                />
+                Cumpeo Turismo
               </div>
               <p className="text-xs leading-relaxed text-gray-400 mb-3">
-                El Pueblo Temático de Condorito · Región del Maule.<br />
-                Municipalidad de Río Claro. Guía turística interactiva con geolocalización GPS.
+                El Pueblo Temático de Condorito - Región del Maule.<br />
+                Iniciativa impulsada por la Ilustre Municipalidad de Río Claro para el desarrollo patrimonial y turístico.
               </p>
               <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider whitespace-nowrap bg-[#FFE0E2] text-[#C1121F] border border-[#FFA8AE]">
                 ¡Reflauta! Bienvenidos
@@ -110,28 +115,28 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/ruta" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Target size={11} /> La Ruta de Condorito
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/historia" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Info size={11} /> Historia del Pueblo
+                  </Link>
+                </li>
+                <li>
                   <Link href="/mapa" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
-                    <Map size={11} /> Mapa Interactivo GPS
+                    <Map size={11} /> Mapa GPS en Vivo
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#section-destinos" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
-                    <Target size={11} /> Destinos Turísticos
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#section-gastronomia" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
-                    <UtensilsCrossed size={11} /> Gastronomía Típica
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#section-alojamientos" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
-                    <BedDouble size={11} /> Alojamientos
+                  <Link href="/contacto" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Phone size={11} /> Contacto & Emergencias
                   </Link>
                 </li>
                 <li>
                   <Link href="/admin" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
-                    <Settings size={11} /> Administración
+                    <Settings size={11} /> Panel de Administración
                   </Link>
                 </li>
               </ul>
@@ -141,7 +146,7 @@ export default function Footer() {
           {/* Bar inferior copyright */}
           <div className="mt-6 md:mt-8 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-gray-500 flex-wrap gap-2">
             <div>
-              © 2026 <strong>Cumpeo Turismo</strong> · Municipalidad de Río Claro, Maule, Chile.
+              © 2026 <strong>Cumpeo Turismo</strong> - Municipalidad de Río Claro, Maule, Chile.
             </div>
             <div>
               v1.0.0
@@ -160,29 +165,29 @@ export default function Footer() {
           href="/"
           className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/') ? 'text-rojo' : 'text-text-muted'}`}
         >
-          <img src="/assets/images/condorito-oficial.png" className="w-7 h-7 rounded-full object-cover border-2 border-current" alt="Condorito" />
+          <Home size={20} />
           <span>Inicio</span>
+        </Link>
+        <Link
+          href="/ruta"
+          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/ruta') ? 'text-rojo' : 'text-text-muted'}`}
+        >
+          <Target size={20} />
+          <span>La Ruta</span>
         </Link>
         <Link
           href="/mapa"
           className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/mapa') ? 'text-rojo' : 'text-text-muted'}`}
         >
-          <Map size={22} />
-          <span>Mapa</span>
+          <Map size={20} />
+          <span>Mapa GPS</span>
         </Link>
         <Link
-          href="/#section-nearby"
-          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/#section-nearby') ? 'text-rojo' : 'text-text-muted'}`}
+          href="/contacto"
+          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/contacto') ? 'text-rojo' : 'text-text-muted'}`}
         >
-          <MapPin size={22} />
-          <span>Cercano</span>
-        </Link>
-        <Link
-          href="/#section-info"
-          className={`flex flex-col items-center justify-center gap-1 w-full h-full no-underline text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${isActive('/#section-info') ? 'text-rojo' : 'text-text-muted'}`}
-        >
-          <Info size={22} />
-          <span>Info</span>
+          <Phone size={20} />
+          <span>Contacto</span>
         </Link>
       </nav>
     </>

@@ -9,7 +9,6 @@ const emptyAcc = (): Partial<Accommodation> => ({
   descripcion: '',
   coordenadas: { lat: -35.267, lng: -71.25 },
   direccion: '',
-  precio: { min: 0, max: 0, moneda: 'CLP', descripcion: '' },
   servicios: [],
   imagenPrincipal: '',
   contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '' },
@@ -40,7 +39,6 @@ export function useAlojamientos(initial: Accommodation[], { password, showToast 
           const updated = {
             ...saved,
             coordenadas: saved.coordenadas as any,
-            precio: saved.precio as any,
             contacto: saved.contacto as any,
           } as Accommodation;
           return idx >= 0
