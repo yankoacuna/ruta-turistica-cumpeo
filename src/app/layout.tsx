@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import './globals.css';
 import Navbar from '@/components/Navbar';
@@ -7,13 +7,16 @@ import FloatingMapButton from '@/components/FloatingMapButton';
 import PWARegister from '@/components/PWARegister';
 import { ToastProvider } from '@/components/Toast';
 
+export const viewport: Viewport = {
+  themeColor: '#E63946',
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://cumpeo-turismo.vercel.app'),
   title: 'Cumpeo Turismo — El Pueblo de Condorito, Maule, Chile',
   description: 'Descubre Cumpeo, el pueblo de Condorito en el corazón del Maule. Historia, naturaleza, gastronomía y rutas interactivas con GPS.',
   keywords: ['Cumpeo', 'turismo', 'Condorito', 'Maule', 'Chile', 'Río Claro', 'pueblo temático'],
   manifest: '/manifest.json',
-  themeColor: '#E63946',
   openGraph: {
     title: 'Cumpeo Turismo — El Pueblo de Condorito',
     description: 'Guía turística interactiva de Cumpeo, Región del Maule. Mapa GPS, destinos, gastronomía y más.',

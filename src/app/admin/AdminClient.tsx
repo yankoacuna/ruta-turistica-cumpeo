@@ -51,6 +51,7 @@ export default function AdminClient({
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const destinos = useDestinos(initialDestinos, { password, showToast });
   const restaurantes = useRestaurantes(initialRestaurantes, { password, showToast });
@@ -89,8 +90,6 @@ export default function AdminClient({
   };
 
   if (!isAuthenticated) return <AdminLogin onLogin={handleLogin} />;
-
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex">
