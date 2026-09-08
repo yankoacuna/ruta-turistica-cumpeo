@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, UserRole, AdminUser, AdminSessionUser } from '@/lib/types';
-import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
+import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, shouldRefreshToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
@@ -89,27 +89,46 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
   const session = verifySessionToken(token);
   if (!session) return null;
 
+  if (session.id === 'master-admin') {
+    return session;
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: session.id },
       select: { id: true, email: true, nombre: true, role: true, activo: true },
     });
-    if (user && !user.activo) {
+    if (!user || !user.activo) {
       return null;
     }
-    if (user) {
-      return {
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre,
-        role: user.role as UserRole,
-      };
-    }
-  } catch (err) {
-    // Si falla temporalmente la conexión, retornamos la sesión firmada
-  }
+    const sessionUser: AdminSessionUser = {
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      role: user.role as UserRole,
+    };
 
-  return session;
+    // Renovación deslizante automática (Sliding Session) si quedan menos de 3 días
+    if (shouldRefreshToken(token)) {
+      try {
+        const refreshedToken = createSessionToken(sessionUser);
+        cookieStore.set(SESSION_COOKIE_NAME, refreshedToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7,
+        });
+      } catch {
+        // En contexto de Server Component de solo lectura, cookies().set no está permitido; se ignora sin error
+      }
+    }
+
+    return sessionUser;
+  } catch (err) {
+    console.error('Error fetching admin session user from DB:', err);
+    return null;
+  }
 }
 
 export async function loginAdmin(
@@ -276,7 +295,13 @@ export async function assertAuthorized(token?: string) {
 
 // ─── DESTINATIONS ─────────────────────────────────────────────────────────────
 
-export async function saveDestination(token: string, data: Partial<Destination>) {
+export async function saveDestination(
+  tokenOrData: string | Partial<Destination>,
+  maybeData?: Partial<Destination>
+) {
+  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
+  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
+
   await assertAuthorized(token);
   const slug =
     data.slug ||
@@ -333,7 +358,10 @@ export async function saveDestination(token: string, data: Partial<Destination>)
   return result;
 }
 
-export async function deleteDestination(token: string, id: string) {
+export async function deleteDestination(tokenOrId: string, maybeId?: string) {
+  const token = maybeId ? tokenOrId : undefined;
+  const id = maybeId ? maybeId : tokenOrId;
+
   await requireRole(['ADMIN'], token);
   await prisma.destination.delete({ where: { id } });
   revalidatePath('/');
@@ -344,7 +372,13 @@ export async function deleteDestination(token: string, id: string) {
 
 // ─── RESTAURANTS ──────────────────────────────────────────────────────────────
 
-export async function saveRestaurant(token: string, data: Partial<Restaurant>) {
+export async function saveRestaurant(
+  tokenOrData: string | Partial<Restaurant>,
+  maybeData?: Partial<Restaurant>
+) {
+  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
+  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
+
   await assertAuthorized(token);
   const id =
     data.id ||
@@ -400,7 +434,10 @@ export async function saveRestaurant(token: string, data: Partial<Restaurant>) {
   return result;
 }
 
-export async function deleteRestaurant(token: string, id: string) {
+export async function deleteRestaurant(tokenOrId: string, maybeId?: string) {
+  const token = maybeId ? tokenOrId : undefined;
+  const id = maybeId ? maybeId : tokenOrId;
+
   await requireRole(['ADMIN'], token);
   await prisma.restaurant.delete({ where: { id } });
   revalidatePath('/');
@@ -411,7 +448,13 @@ export async function deleteRestaurant(token: string, id: string) {
 
 // ─── ACCOMMODATIONS ───────────────────────────────────────────────────────────
 
-export async function saveAccommodation(token: string, data: Partial<Accommodation>) {
+export async function saveAccommodation(
+  tokenOrData: string | Partial<Accommodation>,
+  maybeData?: Partial<Accommodation>
+) {
+  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
+  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
+
   await assertAuthorized(token);
   const id =
     data.id ||
@@ -459,7 +502,10 @@ export async function saveAccommodation(token: string, data: Partial<Accommodati
   return result;
 }
 
-export async function deleteAccommodation(token: string, id: string) {
+export async function deleteAccommodation(tokenOrId: string, maybeId?: string) {
+  const token = maybeId ? tokenOrId : undefined;
+  const id = maybeId ? maybeId : tokenOrId;
+
   await requireRole(['ADMIN'], token);
   await prisma.accommodation.delete({ where: { id } });
   revalidatePath('/');
@@ -471,7 +517,7 @@ export async function deleteAccommodation(token: string, id: string) {
 // ─── BACKUP & RESTORE ─────────────────────────────────────────────────────────
 
 export async function exportDatabaseBackup(token?: string) {
-  await assertAuthorized(token);
+  await requireRole(['ADMIN'], token);
   const [
     destinations,
     restaurants,
@@ -506,7 +552,10 @@ export async function exportDatabaseBackup(token?: string) {
   };
 }
 
-export async function restoreDatabaseBackup(token: string, backupData: any) {
+export async function restoreDatabaseBackup(tokenOrData: string | any, maybeData?: any) {
+  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
+  const backupData = typeof tokenOrData === 'string' ? maybeData : tokenOrData;
+
   await requireRole(['ADMIN'], token);
 
   if (!backupData?.data) {
@@ -595,7 +644,13 @@ export async function getEvents() {
   return prisma.event.findMany({ orderBy: { nombre: 'asc' } });
 }
 
-export async function saveEvent(token: string, data: Partial<CumpeoEvent>) {
+export async function saveEvent(
+  tokenOrData: string | Partial<CumpeoEvent>,
+  maybeData?: Partial<CumpeoEvent>
+) {
+  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
+  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
+
   await assertAuthorized(token);
   const id =
     data.id ||
@@ -643,7 +698,10 @@ export async function saveEvent(token: string, data: Partial<CumpeoEvent>) {
   return result;
 }
 
-export async function deleteEvent(token: string, id: string) {
+export async function deleteEvent(tokenOrId: string, maybeId?: string) {
+  const token = maybeId ? tokenOrId : undefined;
+  const id = maybeId ? maybeId : tokenOrId;
+
   await requireRole(['ADMIN'], token);
   await prisma.event.delete({ where: { id } });
   revalidatePath('/');
@@ -666,7 +724,13 @@ export async function getAdminTourRoutes(): Promise<TourRoute[]> {
   }
 }
 
-export async function saveTourRoute(token: string, data: Partial<TourRoute>) {
+export async function saveTourRoute(
+  tokenOrData: string | Partial<TourRoute>,
+  maybeData?: Partial<TourRoute>
+) {
+  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
+  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
+
   await assertAuthorized(token);
   const slug =
     data.slug ||
@@ -718,7 +782,10 @@ export async function saveTourRoute(token: string, data: Partial<TourRoute>) {
   return result;
 }
 
-export async function deleteTourRoute(token: string, id: string) {
+export async function deleteTourRoute(tokenOrId: string, maybeId?: string) {
+  const token = maybeId ? tokenOrId : undefined;
+  const id = maybeId ? maybeId : tokenOrId;
+
   await requireRole(['ADMIN'], token);
   await prisma.tourRoute.delete({ where: { id } });
   revalidatePath('/');
@@ -728,7 +795,25 @@ export async function deleteTourRoute(token: string, id: string) {
   return true;
 }
 
-export async function updateTourRouteStops(token: string, routeId: string, poiIds: string[]) {
+export async function updateTourRouteStops(
+  tokenOrRouteId: string,
+  routeIdOrPoiIds: string | string[],
+  maybePoiIds?: string[]
+) {
+  let token: string | undefined;
+  let routeId: string;
+  let poiIds: string[];
+
+  if (Array.isArray(routeIdOrPoiIds)) {
+    token = undefined;
+    routeId = tokenOrRouteId;
+    poiIds = routeIdOrPoiIds;
+  } else {
+    token = tokenOrRouteId;
+    routeId = routeIdOrPoiIds;
+    poiIds = maybePoiIds || [];
+  }
+
   await assertAuthorized(token);
   const result = await prisma.tourRoute.update({
     where: { id: routeId },
@@ -738,7 +823,6 @@ export async function updateTourRouteStops(token: string, routeId: string, poiId
   revalidatePath('/ruta');
   revalidatePath('/mapa');
   revalidatePath('/admin');
-  return result;
 }
 
 // ─── USER MANAGEMENT (SOLO ADMINISTRADOR) ───────────────────────────────────

@@ -24,7 +24,7 @@ interface BackupManagerProps {
   alojamientos: Accommodation[];
   eventos?: CumpeoEvent[];
   rutas?: TourRoute[];
-  token: string;
+  token?: string;
   userRole?: UserRole;
 }
 
@@ -34,7 +34,6 @@ export function BackupManager({
   alojamientos,
   eventos = [],
   rutas = [],
-  token,
   userRole = 'ADMIN',
 }: BackupManagerProps) {
   const isAdmin = userRole === 'ADMIN';
@@ -48,7 +47,7 @@ export function BackupManager({
   const handleExportJSON = async () => {
     try {
       setIsExporting(true);
-      const backup = await exportDatabaseBackup(token);
+      const backup = await exportDatabaseBackup();
 
       const blob = new Blob([JSON.stringify(backup, null, 2)], {
         type: 'application/json',
@@ -167,7 +166,7 @@ export function BackupManager({
         }
 
         setRestoreStatus('Aplicando datos en la base de datos PostgreSQL...');
-        await restoreDatabaseBackup(token, json);
+        await restoreDatabaseBackup(json);
 
         showToast('¡Copia de seguridad restaurada con éxito!', 'success');
         setRestoreStatus('Restauración completada. Recarga la página para ver los cambios actualizados.');
@@ -242,14 +241,20 @@ export function BackupManager({
             </div>
           ) : (
             <div className="space-y-3">
-              <button
-                onClick={handleExportJSON}
-                disabled={isExporting}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rojo text-white font-bold text-sm shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all disabled:opacity-50"
-              >
-                {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
-                <span>{isExporting ? 'Generando backup...' : 'Descargar Backup Completo (JSON)'}</span>
-              </button>
+              {isAdmin ? (
+                <button
+                  onClick={handleExportJSON}
+                  disabled={isExporting}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rojo text-white font-bold text-sm shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all disabled:opacity-50"
+                >
+                  {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
+                  <span>{isExporting ? 'Generando backup...' : 'Descargar Backup Completo (JSON)'}</span>
+                </button>
+              ) : (
+                <div className="p-3 rounded-xl bg-[#FAF8F5] border border-border text-center text-xs text-text-muted">
+                  El respaldo JSON completo está reservado para Administradores. Puedes descargar las planillas CSV a continuación.
+                </div>
+              )}
 
               <div className="flex items-center gap-2 pt-2 border-t border-border flex-wrap">
                 <span className="text-[11px] font-bold text-text-muted">Exportar CSV:</span>

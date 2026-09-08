@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import { join, basename } from "path";
 import { existsSync } from "fs";
+import { getAdminSession } from "@/app/admin/actions";
 
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
 const MAX_SIZE_MB = 5;
@@ -9,6 +10,14 @@ const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "im
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getAdminSession();
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'EDITOR')) {
+      return NextResponse.json(
+        { error: "No autorizado: Se requiere rol de Administrador o Editor para subir archivos" },
+        { status: 403 }
+      );
+    }
+
     if (!existsSync(UPLOAD_DIR)) {
       await mkdir(UPLOAD_DIR, { recursive: true });
     }
@@ -50,6 +59,14 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const session = await getAdminSession();
+    if (!session || session.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: "No autorizado: Solo un Administrador puede eliminar archivos del servidor" },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const targetUrl = body.url || body.filename;
 

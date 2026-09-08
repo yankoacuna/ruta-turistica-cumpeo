@@ -1,7 +1,7 @@
 import { useState, useTransition } from 'react';
 import { CumpeoEvent } from '@/lib/types';
 import { saveEvent, deleteEvent } from '../actions';
-import { ToastFn } from '../_types';
+import { ToastFn, HookOptions } from '../_types';
 
 const emptyEvento = (): Partial<CumpeoEvent> => ({
   nombre: '',
@@ -19,12 +19,7 @@ const emptyEvento = (): Partial<CumpeoEvent> => ({
   activo: true,
 });
 
-interface Options {
-  password: string;
-  showToast: ToastFn;
-}
-
-export function useEventos(initial: CumpeoEvent[], { password, showToast }: Options) {
+export function useEventos(initial: CumpeoEvent[], { showToast, onAuthError }: HookOptions) {
   const [eventos, setEventos] = useState<CumpeoEvent[]>(initial);
   const [editing, setEditing] = useState<Partial<CumpeoEvent> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -38,7 +33,7 @@ export function useEventos(initial: CumpeoEvent[], { password, showToast }: Opti
     if (!editing?.nombre) return;
     startTransition(async () => {
       try {
-        const saved = await saveEvent(password, editing);
+        const saved = await saveEvent(editing);
         setEventos((prev) => {
           const idx = prev.findIndex((ev) => ev.id === saved.id);
           const updated = {
@@ -54,6 +49,9 @@ export function useEventos(initial: CumpeoEvent[], { password, showToast }: Opti
         showToast(`"${saved.nombre}" guardado`, 'success');
         close();
       } catch (err: any) {
+        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
+          onAuthError?.();
+        }
         showToast(`Error: ${err.message}`, 'error');
       }
     });
@@ -63,10 +61,13 @@ export function useEventos(initial: CumpeoEvent[], { password, showToast }: Opti
     if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
     startTransition(async () => {
       try {
-        await deleteEvent(password, id);
+        await deleteEvent(id);
         setEventos((prev) => prev.filter((ev) => ev.id !== id));
         showToast('Evento eliminado', 'info');
       } catch (err: any) {
+        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
+          onAuthError?.();
+        }
         showToast(`Error: ${err.message}`, 'error');
       }
     });

@@ -12,3 +12,9 @@ export type AdminSection =
 export type { UserRole, AdminUser, AdminSessionUser } from '@/lib/types';
 
 export type ToastFn = (message: string, type: 'success' | 'error' | 'info') => void;
+
+export interface HookOptions {
+  showToast: ToastFn;
+  onAuthError?: () => void;
+  password?: string;
+}

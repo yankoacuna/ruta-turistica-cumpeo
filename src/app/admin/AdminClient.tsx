@@ -37,6 +37,7 @@ import { EventoModal } from './_components/modals/EventoModal';
 import { RutaModal } from './_components/modals/RutaModal';
 import { UserModal } from './_components/modals/UserModal';
 import { ChangePasswordModal } from './_components/modals/ChangePasswordModal';
+import { SessionExpiredModal } from './_components/modals/SessionExpiredModal';
 import {
   loginAdmin,
   logoutAdmin,
@@ -72,13 +73,13 @@ export default function AdminClient({
   initialAuthenticated = false,
 }: Props) {
   const { showToast } = useToast();
-  const [password, setPassword] = useState('');
   const [session, setSession] = useState<AdminSessionUser | null>(initialSession);
   const [isAuthenticated, setIsAuthenticated] = useState(
     Boolean(initialSession || initialAuthenticated)
   );
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
 
   // Users management state
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
@@ -88,17 +89,21 @@ export default function AdminClient({
   const [isUserPending, setIsUserPending] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
-  // Role permissions
-  const role: UserRole = session?.role || 'ADMIN';
+  // Role permissions (Fail-secure: si no hay sesión, asume LECTOR)
+  const role: UserRole = session?.role || 'LECTOR';
   const isAdmin = role === 'ADMIN';
   const canEdit = role === 'ADMIN' || role === 'EDITOR';
   const canDelete = role === 'ADMIN';
 
-  const destinos = useDestinos(initialDestinos, { password, showToast });
-  const restaurantes = useRestaurantes(initialRestaurantes, { password, showToast });
-  const alojamientos = useAlojamientos(initialAlojamientos, { password, showToast });
-  const eventos = useEventos(initialEventos, { password, showToast });
-  const rutas = useRutas(initialRutas, { password, showToast });
+  const handleAuthError = () => {
+    setIsSessionExpired(true);
+  };
+
+  const destinos = useDestinos(initialDestinos, { showToast, onAuthError: handleAuthError });
+  const restaurantes = useRestaurantes(initialRestaurantes, { showToast, onAuthError: handleAuthError });
+  const alojamientos = useAlojamientos(initialAlojamientos, { showToast, onAuthError: handleAuthError });
+  const eventos = useEventos(initialEventos, { showToast, onAuthError: handleAuthError });
+  const rutas = useRutas(initialRutas, { showToast, onAuthError: handleAuthError });
 
   const isAnyPending =
     destinos.isPending ||
@@ -116,7 +121,6 @@ export default function AdminClient({
       if (res.success && res.user) {
         setSession(res.user);
         setIsAuthenticated(true);
-        setPassword(pwd || identifier);
         showToast(`Bienvenido, ${res.user.nombre} (${res.user.role})`, 'success');
 
         if (res.user.role === 'ADMIN') {
@@ -145,7 +149,6 @@ export default function AdminClient({
     }
     setSession(null);
     setIsAuthenticated(false);
-    setPassword('');
     setActiveSection('dashboard');
     window.location.href = '/admin';
   };
@@ -362,7 +365,6 @@ export default function AdminClient({
               alojamientos={alojamientos.alojamientos}
               eventos={eventos.eventos}
               rutas={rutas.rutas}
-              token={password}
               userRole={role}
             />
           )}
@@ -437,6 +439,20 @@ export default function AdminClient({
           )}
           {isChangePasswordOpen && (
             <ChangePasswordModal onClose={() => setIsChangePasswordOpen(false)} />
+          )}
+
+          {/* Modal de re-autenticación cuando expira la sesión */}
+          {isSessionExpired && (
+            <SessionExpiredModal
+              currentUser={session}
+              onSuccess={(refreshedUser) => {
+                setSession(refreshedUser);
+                setIsAuthenticated(true);
+                setIsSessionExpired(false);
+                showToast(`Sesión reanudada con éxito para ${refreshedUser.nombre}. Ya puedes guardar tus cambios.`, 'success');
+              }}
+              onLogout={handleLogout}
+            />
           )}
         </main>
       </div>

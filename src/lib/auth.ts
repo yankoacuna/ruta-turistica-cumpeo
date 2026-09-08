@@ -42,11 +42,22 @@ export function verifyPassword(password: string, combinedHash: string): boolean 
   }
 }
 
+export interface SessionTokenPayload extends AdminSessionUser {
+  iat?: number;
+  exp?: number;
+}
+
 /**
- * Crea un token de sesión firmado para el usuario
+ * Crea un token de sesión firmado para el usuario con expiración de 7 días
  */
 export function createSessionToken(user: AdminSessionUser): string {
-  const payload = Buffer.from(JSON.stringify(user)).toString('base64url');
+  const now = Math.floor(Date.now() / 1000);
+  const payloadData: SessionTokenPayload = {
+    ...user,
+    iat: now,
+    exp: now + 7 * 24 * 60 * 60, // 7 días de validez
+  };
+  const payload = Buffer.from(JSON.stringify(payloadData)).toString('base64url');
   const secret = getSecret();
   const signature = crypto
     .createHmac('sha256', secret)
@@ -78,11 +89,50 @@ export function verifySessionToken(token: string): AdminSessionUser | null {
     if (!crypto.timingSafeEqual(sigBuffer, expBuffer)) return null;
 
     const jsonStr = Buffer.from(payload, 'base64url').toString('utf8');
-    const user = JSON.parse(jsonStr) as AdminSessionUser;
+    const user = JSON.parse(jsonStr) as SessionTokenPayload;
 
     if (!user || !user.id || !user.role) return null;
-    return user;
+
+    // Verificar si el token ha expirado
+    if (user.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      if (now > user.exp) {
+        return null;
+      }
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      role: user.role,
+    };
   } catch (error) {
     return null;
+  }
+}
+
+/**
+ * Determina si el token de sesión está próximo a expirar (menos de 3 días restantes)
+ * para realizar una renovación deslizante automática (Sliding Session).
+ */
+export function shouldRefreshToken(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 2) return false;
+    const [payload] = parts;
+    if (!payload) return false;
+
+    const jsonStr = Buffer.from(payload, 'base64url').toString('utf8');
+    const user = JSON.parse(jsonStr) as SessionTokenPayload;
+
+    if (!user || !user.exp) return true;
+    const now = Math.floor(Date.now() / 1000);
+    const remainingSeconds = user.exp - now;
+
+    // Renovar si le quedan menos de 3 días (3 * 86400 = 259200 segundos)
+    return remainingSeconds < 3 * 24 * 60 * 60;
+  } catch {
+    return false;
   }
 }

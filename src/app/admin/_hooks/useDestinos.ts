@@ -1,7 +1,7 @@
 import { useState, useTransition } from 'react';
 import { Destination } from '@/lib/types';
 import { saveDestination, deleteDestination } from '../actions';
-import { ToastFn } from '../_types';
+import { ToastFn, HookOptions } from '../_types';
 
 const emptyDest = (): Partial<Destination> => ({
   nombre: '',
@@ -21,12 +21,7 @@ const emptyDest = (): Partial<Destination> => ({
   galeria: [],
 });
 
-interface Options {
-  password: string;
-  showToast: ToastFn;
-}
-
-export function useDestinos(initial: Destination[], { password, showToast }: Options) {
+export function useDestinos(initial: Destination[], { showToast, onAuthError }: HookOptions) {
   const [destinos, setDestinos] = useState<Destination[]>(initial);
   const [editing, setEditing] = useState<Partial<Destination> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -40,7 +35,7 @@ export function useDestinos(initial: Destination[], { password, showToast }: Opt
     if (!editing?.nombre) return;
     startTransition(async () => {
       try {
-        const saved = await saveDestination(password, editing);
+        const saved = await saveDestination(editing);
         setDestinos((prev) => {
           const idx = prev.findIndex((d) => d.id === saved.id);
           const updated = { ...saved, coordenadas: saved.coordenadas as any } as Destination;
@@ -51,6 +46,9 @@ export function useDestinos(initial: Destination[], { password, showToast }: Opt
         showToast(`"${saved.nombre}" guardado`, 'success');
         close();
       } catch (err: any) {
+        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
+          onAuthError?.();
+        }
         showToast(`Error: ${err.message}`, 'error');
       }
     });
@@ -60,10 +58,13 @@ export function useDestinos(initial: Destination[], { password, showToast }: Opt
     if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
     startTransition(async () => {
       try {
-        await deleteDestination(password, id);
+        await deleteDestination(id);
         setDestinos((prev) => prev.filter((d) => d.id !== id));
         showToast('Destino eliminado', 'info');
       } catch (err: any) {
+        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
+          onAuthError?.();
+        }
         showToast(`Error: ${err.message}`, 'error');
       }
     });

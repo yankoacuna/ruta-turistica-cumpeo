@@ -1,7 +1,7 @@
 import { useState, useTransition } from 'react';
 import { Restaurant } from '@/lib/types';
 import { saveRestaurant, deleteRestaurant } from '../actions';
-import { ToastFn } from '../_types';
+import { ToastFn, HookOptions } from '../_types';
 
 const emptyRest = (): Partial<Restaurant> => ({
   nombre: '',
@@ -17,12 +17,7 @@ const emptyRest = (): Partial<Restaurant> => ({
   tags: [],
 });
 
-interface Options {
-  password: string;
-  showToast: ToastFn;
-}
-
-export function useRestaurantes(initial: Restaurant[], { password, showToast }: Options) {
+export function useRestaurantes(initial: Restaurant[], { showToast, onAuthError }: HookOptions) {
   const [restaurantes, setRestaurantes] = useState<Restaurant[]>(initial);
   const [editing, setEditing] = useState<Partial<Restaurant> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -36,7 +31,7 @@ export function useRestaurantes(initial: Restaurant[], { password, showToast }: 
     if (!editing?.nombre) return;
     startTransition(async () => {
       try {
-        const saved = await saveRestaurant(password, editing);
+        const saved = await saveRestaurant(editing);
         setRestaurantes((prev) => {
           const idx = prev.findIndex((r) => r.id === saved.id);
           const updated = {
@@ -52,6 +47,9 @@ export function useRestaurantes(initial: Restaurant[], { password, showToast }: 
         showToast(`"${saved.nombre}" guardado`, 'success');
         close();
       } catch (err: any) {
+        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
+          onAuthError?.();
+        }
         showToast(`Error: ${err.message}`, 'error');
       }
     });
@@ -61,10 +59,13 @@ export function useRestaurantes(initial: Restaurant[], { password, showToast }: 
     if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
     startTransition(async () => {
       try {
-        await deleteRestaurant(password, id);
+        await deleteRestaurant(id);
         setRestaurantes((prev) => prev.filter((r) => r.id !== id));
         showToast('Restaurante eliminado', 'info');
       } catch (err: any) {
+        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
+          onAuthError?.();
+        }
         showToast(`Error: ${err.message}`, 'error');
       }
     });
