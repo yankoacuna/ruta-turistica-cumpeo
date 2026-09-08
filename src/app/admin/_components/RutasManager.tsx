@@ -8,6 +8,8 @@ import Link from 'next/link';
 interface RutasManagerProps {
   rutas: TourRoute[];
   allPois: POI[];
+  canEdit?: boolean;
+  canDelete?: boolean;
   onNew: () => void;
   onEdit: (ruta: TourRoute) => void;
   onDelete: (id: string, nombre: string) => void;
@@ -16,6 +18,8 @@ interface RutasManagerProps {
 export function RutasManager({
   rutas,
   allPois,
+  canEdit = true,
+  canDelete = true,
   onNew,
   onEdit,
   onDelete,
@@ -35,12 +39,14 @@ export function RutasManager({
           </p>
         </div>
 
-        <button
-          onClick={onNew}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-rojo hover:bg-rojo-dark text-white transition-all shadow-sm shrink-0 self-start sm:self-auto"
-        >
-          <Plus size={16} /> Crear Nueva Ruta
-        </button>
+        {canEdit && (
+          <button
+            onClick={onNew}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-rojo hover:bg-rojo-dark text-white transition-all shadow-sm shrink-0 self-start sm:self-auto"
+          >
+            <Plus size={16} /> Crear Nueva Ruta
+          </button>
+        )}
       </div>
 
       {/* Grid of routes */}
@@ -152,19 +158,23 @@ export function RutasManager({
                   </Link>
 
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onEdit(ruta)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-border hover:border-rojo text-text-primary transition-all shadow-2xs"
-                    >
-                      <Pencil size={12} /> Configurar Paradas
-                    </button>
-                    <button
-                      onClick={() => onDelete(ruta.id, ruta.nombre)}
-                      className="p-1.5 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-50 transition-colors"
-                      title="Eliminar ruta"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => onEdit(ruta)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-border hover:border-rojo text-text-primary transition-all shadow-2xs"
+                      >
+                        <Pencil size={12} /> Configurar Paradas
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => onDelete(ruta.id, ruta.nombre)}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Eliminar ruta"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

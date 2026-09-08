@@ -1,19 +1,29 @@
 import { getDestinations, getAccommodations, getRestaurants, getTourRoutes, getAllPOIs } from '@/lib/data';
-import { verifyAdminSession, getEvents } from './actions';
+import { getAdminSession, getEvents, getAdminUsers } from './actions';
 import AdminClient from './AdminClient';
+import { AdminUser } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const [destinos, restaurantes, alojamientos, eventos, rutas, allPois, isAuthenticated] = await Promise.all([
+  const [destinos, restaurantes, alojamientos, eventos, rutas, allPois, session] = await Promise.all([
     getDestinations(),
     getRestaurants(),
     getAccommodations(),
     getEvents(),
     getTourRoutes(),
     getAllPOIs(),
-    verifyAdminSession(),
+    getAdminSession(),
   ]);
+
+  let initialUsers: AdminUser[] = [];
+  if (session && session.role === 'ADMIN') {
+    try {
+      initialUsers = await getAdminUsers();
+    } catch (e) {
+      console.error('Error fetching initial users:', e);
+    }
+  }
 
   return (
     <AdminClient
@@ -23,8 +33,8 @@ export default async function AdminPage() {
       initialEventos={eventos as any}
       initialRutas={rutas}
       allPois={allPois}
-      initialAuthenticated={isAuthenticated}
+      initialSession={session}
+      initialUsers={initialUsers}
     />
   );
 }
-

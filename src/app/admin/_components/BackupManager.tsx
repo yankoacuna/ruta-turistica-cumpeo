@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types';
+import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute } from '@/lib/types';
 import { exportDatabaseBackup, restoreDatabaseBackup } from '../actions';
 import {
   Database,
@@ -13,15 +13,19 @@ import {
   AlertTriangle,
   Loader2,
   RefreshCw,
+  Lock,
 } from 'lucide-react';
 import { useToast } from '@/components/Toast';
+import { UserRole } from '@/lib/types';
 
 interface BackupManagerProps {
   destinos: Destination[];
   restaurantes: Restaurant[];
   alojamientos: Accommodation[];
   eventos?: CumpeoEvent[];
+  rutas?: TourRoute[];
   token: string;
+  userRole?: UserRole;
 }
 
 export function BackupManager({
@@ -29,8 +33,12 @@ export function BackupManager({
   restaurantes,
   alojamientos,
   eventos = [],
+  rutas = [],
   token,
+  userRole = 'ADMIN',
 }: BackupManagerProps) {
+  const isAdmin = userRole === 'ADMIN';
+  const canExport = userRole === 'ADMIN' || userRole === 'EDITOR';
   const { showToast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -208,7 +216,7 @@ export function BackupManager({
             </p>
 
             {/* Current Summary */}
-            <div className="grid grid-cols-3 gap-2 bg-surface-soft p-3 rounded-xl border border-border mb-4 text-center">
+            <div className="grid grid-cols-4 gap-2 bg-surface-soft p-3 rounded-xl border border-border mb-4 text-center">
               <div>
                 <div className="font-extrabold text-base text-text-primary">{destinos.length}</div>
                 <div className="text-[10px] text-text-muted font-bold uppercase">Destinos</div>
@@ -221,48 +229,57 @@ export function BackupManager({
                 <div className="font-extrabold text-base text-text-primary">{alojamientos.length}</div>
                 <div className="text-[10px] text-text-muted font-bold uppercase">Alojamientos</div>
               </div>
+              <div>
+                <div className="font-extrabold text-base text-text-primary">{rutas.length}</div>
+                <div className="text-[10px] text-text-muted font-bold uppercase">Rutas</div>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <button
-              onClick={handleExportJSON}
-              disabled={isExporting}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rojo text-white font-bold text-sm shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all disabled:opacity-50"
-            >
-              {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
-              <span>{isExporting ? 'Generando backup...' : 'Descargar Backup Completo (JSON)'}</span>
-            </button>
-
-            {/* CSV Exports */}
-            <div className="pt-2 border-t border-border flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-text-secondary">Exportar a Excel (CSV):</span>
-              <button
-                onClick={() => handleExportCSV('destinos')}
-                className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
-              >
-                Destinos
-              </button>
-              <button
-                onClick={() => handleExportCSV('restaurantes')}
-                className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
-              >
-                Restaurantes
-              </button>
-              <button
-                onClick={() => handleExportCSV('alojamientos')}
-                className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
-              >
-                Alojamientos
-              </button>
-              <button
-                onClick={() => handleExportCSV('eventos')}
-                className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
-              >
-                Eventos
-              </button>
+          {!canExport ? (
+            <div className="p-4 rounded-xl bg-surface-soft border border-border text-center text-xs text-text-muted">
+              La descarga de copias de seguridad está reservada para Editores y Administradores.
             </div>
-          </div>
+          ) : (
+            <div className="space-y-3">
+              <button
+                onClick={handleExportJSON}
+                disabled={isExporting}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rojo text-white font-bold text-sm shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all disabled:opacity-50"
+              >
+                {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
+                <span>{isExporting ? 'Generando backup...' : 'Descargar Backup Completo (JSON)'}</span>
+              </button>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border flex-wrap">
+                <span className="text-[11px] font-bold text-text-muted">Exportar CSV:</span>
+                <button
+                  onClick={() => handleExportCSV('destinos')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
+                >
+                  Destinos
+                </button>
+                <button
+                  onClick={() => handleExportCSV('restaurantes')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
+                >
+                  Restaurantes
+                </button>
+                <button
+                  onClick={() => handleExportCSV('alojamientos')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
+                >
+                  Alojamientos
+                </button>
+                <button
+                  onClick={() => handleExportCSV('eventos')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-soft border border-border text-xs font-semibold hover:border-rojo hover:text-rojo transition-colors"
+                >
+                  Eventos
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Card: Restore from JSON */}
@@ -284,28 +301,42 @@ export function BackupManager({
             </div>
           </div>
 
-          <div>
-            <label className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-xl hover:border-rojo bg-surface-soft/60 cursor-pointer transition-all">
-              <Upload size={24} className="text-text-muted mb-2" />
-              <span className="text-xs font-bold text-text-primary mb-0.5">
-                {isRestoring ? 'Restaurando archivo...' : 'Seleccionar archivo .json de respaldo'}
-              </span>
-              <span className="text-[11px] text-text-muted">Haz clic para buscar en tu equipo</span>
-              <input
-                type="file"
-                accept=".json,application/json"
-                className="hidden"
-                onChange={handleFileRestore}
-                disabled={isRestoring}
-              />
-            </label>
-
-            {restoreStatus && (
-              <div className="mt-3 p-3 rounded-xl bg-surface-soft border border-border text-xs font-medium text-text-secondary text-center">
-                {restoreStatus}
+          {!isAdmin ? (
+            <div className="p-5 rounded-xl bg-[#FAF8F5] border border-border text-center space-y-2">
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
+                <Lock size={18} />
               </div>
-            )}
-          </div>
+              <div className="text-xs font-bold text-text-primary">
+                Restauración restringida
+              </div>
+              <p className="text-[11px] text-text-muted max-w-sm mx-auto leading-relaxed">
+                La restauración de la base de datos es una operación de alta criticidad reservada exclusivamente para usuarios con rol de <strong>Administrador</strong>.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-xl hover:border-rojo bg-surface-soft/60 cursor-pointer transition-all">
+                <Upload size={24} className="text-text-muted mb-2" />
+                <span className="text-xs font-bold text-text-primary mb-0.5">
+                  {isRestoring ? 'Restaurando archivo...' : 'Seleccionar archivo .json de respaldo'}
+                </span>
+                <span className="text-[11px] text-text-muted">Haz clic para buscar en tu equipo</span>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={handleFileRestore}
+                  disabled={isRestoring}
+                />
+              </label>
+
+              {restoreStatus && (
+                <div className="mt-3 p-3 rounded-xl bg-surface-soft border border-border text-xs font-medium text-text-secondary text-center">
+                  {restoreStatus}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

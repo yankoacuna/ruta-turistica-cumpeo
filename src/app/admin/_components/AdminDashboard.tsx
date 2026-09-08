@@ -17,8 +17,12 @@ import {
   HardDrive,
   QrCode,
   Map,
+  Users,
+  Eye,
+  Shield,
+  ShieldAlert,
 } from 'lucide-react';
-import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute } from '@/lib/types';
+import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser } from '@/lib/types';
 import { StatCard } from './StatCard';
 import { AdminSection } from '../_types';
 
@@ -28,6 +32,8 @@ interface AdminDashboardProps {
   alojamientos: Accommodation[];
   eventos?: CumpeoEvent[];
   rutas?: TourRoute[];
+  usersCount?: number;
+  currentUser?: AdminSessionUser | null;
   onNavigate: (section: AdminSection) => void;
   onNewDestino?: () => void;
   onNewRestaurante?: () => void;
@@ -42,6 +48,8 @@ export function AdminDashboard({
   alojamientos,
   eventos = [],
   rutas = [],
+  usersCount = 0,
+  currentUser,
   onNavigate,
   onNewDestino,
   onNewRestaurante,
@@ -49,6 +57,9 @@ export function AdminDashboard({
   onNewEvento,
   onNewRuta,
 }: AdminDashboardProps) {
+  const isLector = currentUser?.role === 'LECTOR';
+  const isAdmin = currentUser?.role === 'ADMIN';
+
   const totalItems =
     destinos.length + restaurantes.length + alojamientos.length + eventos.length + rutas.length;
 
@@ -100,64 +111,85 @@ export function AdminDashboard({
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold mb-3 backdrop-blur-xs">
             <Star size={12} className="text-sol" />
-            Panel de Control Turístico Oficial
+            <span>Panel de Control Turístico Oficial</span>
+            {currentUser?.role && (
+              <span className="ml-1.5 px-2 py-0.2 rounded-full bg-white/30 text-[10px] font-extrabold uppercase tracking-wide">
+                Rol: {currentUser.role}
+              </span>
+            )}
           </div>
           <h1 className="font-display font-black text-2xl sm:text-3xl tracking-tight text-white mb-2">
-            Ruta Turística Cumpeo
+            {currentUser?.nombre ? `Hola, ${currentUser.nombre}` : 'Ruta Turística Cumpeo'}
           </h1>
           <p className="text-white/90 text-sm leading-relaxed">
-            Bienvenido al gestor de contenidos. Desde aquí administras todos los destinos, gastronomía, hospedajes, eventos y circuitos que ven los turistas en la plataforma móvil y en los tótems informativos.
+            Bienvenido al gestor de contenidos. Desde aquí supervisas los destinos, gastronomía, hospedajes, eventos y circuitos que ven los turistas en la plataforma móvil y en los tótems informativos.
           </p>
         </div>
       </div>
 
-      {/* Quick Action Shortcuts */}
-      <div className="bg-white rounded-2xl border border-border p-4 sm:p-5 shadow-2xs">
-        <div className="text-xs font-extrabold uppercase tracking-wider text-text-muted mb-3">
-          Accesos Rápidos de Creación
+      {/* Quick Action Shortcuts or Read-Only Notice */}
+      {!isLector ? (
+        <div className="bg-white rounded-2xl border border-border p-4 sm:p-5 shadow-2xs">
+          <div className="text-xs font-extrabold uppercase tracking-wider text-text-muted mb-3">
+            Accesos Rápidos de Creación
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            <button
+              onClick={onNewDestino || (() => onNavigate('destinos'))}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 text-amber-800 text-xs font-bold transition-all shadow-2xs group"
+            >
+              <Plus size={14} className="group-hover:scale-110 transition-transform" />
+              <span>Nuevo Destino</span>
+            </button>
+
+            <button
+              onClick={onNewRestaurante || (() => onNavigate('restaurantes'))}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 text-rose-800 text-xs font-bold transition-all shadow-2xs group"
+            >
+              <Plus size={14} className="group-hover:scale-110 transition-transform" />
+              <span>Restaurante</span>
+            </button>
+
+            <button
+              onClick={onNewAlojamiento || (() => onNavigate('alojamientos'))}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-sky-200 bg-sky-50/50 hover:bg-sky-100/70 text-sky-800 text-xs font-bold transition-all shadow-2xs group"
+            >
+              <Plus size={14} className="group-hover:scale-110 transition-transform" />
+              <span>Alojamiento</span>
+            </button>
+
+            <button
+              onClick={onNewEvento || (() => onNavigate('eventos'))}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 text-emerald-800 text-xs font-bold transition-all shadow-2xs group"
+            >
+              <Plus size={14} className="group-hover:scale-110 transition-transform" />
+              <span>Evento</span>
+            </button>
+
+            <button
+              onClick={onNewRuta || (() => onNavigate('rutas'))}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 text-purple-800 text-xs font-bold transition-all shadow-2xs group col-span-2 sm:col-span-1"
+            >
+              <Plus size={14} className="group-hover:scale-110 transition-transform" />
+              <span>Nueva Ruta</span>
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-          <button
-            onClick={onNewDestino || (() => onNavigate('destinos'))}
-            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 text-amber-800 text-xs font-bold transition-all shadow-2xs group"
-          >
-            <Plus size={14} className="group-hover:scale-110 transition-transform" />
-            <span>Nuevo Destino</span>
-          </button>
-
-          <button
-            onClick={onNewRestaurante || (() => onNavigate('restaurantes'))}
-            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 text-rose-800 text-xs font-bold transition-all shadow-2xs group"
-          >
-            <Plus size={14} className="group-hover:scale-110 transition-transform" />
-            <span>Restaurante</span>
-          </button>
-
-          <button
-            onClick={onNewAlojamiento || (() => onNavigate('alojamientos'))}
-            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-sky-200 bg-sky-50/50 hover:bg-sky-100/70 text-sky-800 text-xs font-bold transition-all shadow-2xs group"
-          >
-            <Plus size={14} className="group-hover:scale-110 transition-transform" />
-            <span>Alojamiento</span>
-          </button>
-
-          <button
-            onClick={onNewEvento || (() => onNavigate('eventos'))}
-            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 text-emerald-800 text-xs font-bold transition-all shadow-2xs group"
-          >
-            <Plus size={14} className="group-hover:scale-110 transition-transform" />
-            <span>Evento</span>
-          </button>
-
-          <button
-            onClick={onNewRuta || (() => onNavigate('rutas'))}
-            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 text-purple-800 text-xs font-bold transition-all shadow-2xs group col-span-2 sm:col-span-1"
-          >
-            <Plus size={14} className="group-hover:scale-110 transition-transform" />
-            <span>Nueva Ruta</span>
-          </button>
+      ) : (
+        <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
+          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+            <Eye size={20} />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-emerald-900 mb-0.5">
+              Modo de Solo Lectura Activado
+            </div>
+            <p className="text-xs text-emerald-800/80 leading-relaxed">
+              Tu cuenta tiene asignado el rol de <strong>Lector</strong>. Puedes visualizar todos los registros, consultar estadísticas de cobertura fotográfica y generar códigos QR sin riesgo de alterar la información. Para crear o editar contenidos, consulta a un administrador municipal.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">

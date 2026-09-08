@@ -2,7 +2,17 @@
 
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Destination, Accommodation, Restaurant, CumpeoEvent, TourRoute, POI } from '@/lib/types';
+import {
+  Destination,
+  Accommodation,
+  Restaurant,
+  CumpeoEvent,
+  TourRoute,
+  POI,
+  AdminUser,
+  AdminSessionUser,
+  UserRole,
+} from '@/lib/types';
 import { useToast } from '@/components/Toast';
 
 import { useDestinos } from './_hooks/useDestinos';
@@ -19,12 +29,22 @@ import { AdminTable } from './_components/AdminTable';
 import { RutasManager } from './_components/RutasManager';
 import { QRGenerator } from './_components/QRGenerator';
 import { BackupManager } from './_components/BackupManager';
+import { UserManager } from './_components/UserManager';
 import { DestinoModal } from './_components/modals/DestinoModal';
 import { RestauranteModal } from './_components/modals/RestauranteModal';
 import { AlojamientoModal } from './_components/modals/AlojamientoModal';
 import { EventoModal } from './_components/modals/EventoModal';
 import { RutaModal } from './_components/modals/RutaModal';
-import { loginAdmin, logoutAdmin } from './actions';
+import { UserModal } from './_components/modals/UserModal';
+import { ChangePasswordModal } from './_components/modals/ChangePasswordModal';
+import {
+  loginAdmin,
+  logoutAdmin,
+  getAdminUsers,
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
+} from './actions';
 
 import { AdminSection } from './_types';
 
@@ -35,6 +55,8 @@ interface Props {
   initialEventos: CumpeoEvent[];
   initialRutas?: TourRoute[];
   allPois?: POI[];
+  initialSession?: AdminSessionUser | null;
+  initialUsers?: AdminUser[];
   initialAuthenticated?: boolean;
 }
 
@@ -45,13 +67,32 @@ export default function AdminClient({
   initialEventos,
   initialRutas = [],
   allPois = [],
+  initialSession = null,
+  initialUsers = [],
   initialAuthenticated = false,
 }: Props) {
   const { showToast } = useToast();
   const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(initialAuthenticated);
+  const [session, setSession] = useState<AdminSessionUser | null>(initialSession);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    Boolean(initialSession || initialAuthenticated)
+  );
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Users management state
+  const [users, setUsers] = useState<AdminUser[]>(initialUsers);
+  const [editingUser, setEditingUser] = useState<
+    (Partial<AdminUser> & { password?: string }) | null
+  >(null);
+  const [isUserPending, setIsUserPending] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+
+  // Role permissions
+  const role: UserRole = session?.role || 'ADMIN';
+  const isAdmin = role === 'ADMIN';
+  const canEdit = role === 'ADMIN' || role === 'EDITOR';
+  const canDelete = role === 'ADMIN';
 
   const destinos = useDestinos(initialDestinos, { password, showToast });
   const restaurantes = useRestaurantes(initialRestaurantes, { password, showToast });
@@ -64,36 +105,136 @@ export default function AdminClient({
     restaurantes.isPending ||
     alojamientos.isPending ||
     eventos.isPending ||
-    rutas.isPending;
+    rutas.isPending ||
+    isUserPending;
 
+  // ─── LOGIN & LOGOUT ─────────────────────────────────────────────────────────
 
-  const handleLogin = async (pwd: string) => {
+  const handleLogin = async (identifier: string, pwd?: string) => {
     try {
-      const res = await loginAdmin(pwd);
-      if (res.success) {
-        setPassword(pwd);
+      const res = await loginAdmin(identifier, pwd);
+      if (res.success && res.user) {
+        setSession(res.user);
         setIsAuthenticated(true);
-        showToast('Sesión de administración iniciada con éxito', 'success');
+        setPassword(pwd || identifier);
+        showToast(`Bienvenido, ${res.user.nombre} (${res.user.role})`, 'success');
+
+        if (res.user.role === 'ADMIN') {
+          try {
+            const uList = await getAdminUsers();
+            setUsers(uList);
+          } catch (e) {
+            console.error('Error fetching users:', e);
+          }
+        }
       } else {
-        showToast(res.error || 'Contraseña incorrecta', 'error');
+        showToast(res.error || 'Credenciales incorrectas', 'error');
+        throw new Error(res.error || 'Credenciales incorrectas');
       }
     } catch (err: any) {
-      showToast(`Error al iniciar sesión: ${err.message}`, 'error');
+      showToast(err.message || 'Error al iniciar sesión', 'error');
+      throw err;
     }
   };
 
   const handleLogout = async () => {
-    await logoutAdmin();
+    try {
+      await logoutAdmin();
+    } catch (err) {
+      console.error('Error al cerrar sesión:', err);
+    }
+    setSession(null);
     setIsAuthenticated(false);
     setPassword('');
-    showToast('Sesión cerrada correctamente', 'info');
+    setActiveSection('dashboard');
+    window.location.href = '/admin';
+  };
+
+  // ─── USER MANAGEMENT HANDLERS ───────────────────────────────────────────────
+
+  const handleNewUser = () => {
+    setEditingUser({
+      nombre: '',
+      email: '',
+      role: 'LECTOR',
+      password: '',
+      activo: true,
+    });
+  };
+
+  const handleEditUser = (user: AdminUser) => {
+    setEditingUser({ ...user, password: '' });
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    setIsUserPending(true);
+    try {
+      if (editingUser.id) {
+        const updated = await updateAdminUser(editingUser.id, {
+          nombre: editingUser.nombre,
+          role: editingUser.role,
+          activo: editingUser.activo,
+          password: editingUser.password || undefined,
+        });
+        setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+        showToast(`Usuario "${updated.nombre}" actualizado con éxito`, 'success');
+      } else {
+        if (!editingUser.email || !editingUser.nombre || !editingUser.password) {
+          showToast('Por favor completa todos los campos obligatorios', 'error');
+          setIsUserPending(false);
+          return;
+        }
+        const created = await createAdminUser({
+          email: editingUser.email,
+          nombre: editingUser.nombre,
+          password: editingUser.password,
+          role: editingUser.role || 'LECTOR',
+        });
+        setUsers((prev) => [...prev, created]);
+        showToast(`Usuario "${created.nombre}" creado exitosamente`, 'success');
+      }
+      setEditingUser(null);
+    } catch (err: any) {
+      showToast(`Error: ${err.message}`, 'error');
+    } finally {
+      setIsUserPending(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (user: AdminUser) => {
+    try {
+      const updated = await updateAdminUser(user.id, {
+        activo: !user.activo,
+      });
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      showToast(
+        `Usuario ${updated.activo ? 'activado' : 'desactivado'} con éxito`,
+        'info'
+      );
+    } catch (err: any) {
+      showToast(`Error: ${err.message}`, 'error');
+    }
+  };
+
+  const handleDeleteUser = async (id: string, nombre: string) => {
+    if (!confirm(`¿Estás seguro de eliminar permanentemente al usuario "${nombre}"?`)) return;
+    try {
+      await deleteAdminUser(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+      showToast(`Usuario "${nombre}" eliminado`, 'info');
+    } catch (err: any) {
+      showToast(`Error: ${err.message}`, 'error');
+    }
   };
 
   if (!isAuthenticated) return <AdminLogin onLogin={handleLogin} />;
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex">
-      {/* Sidebar navigation with clear separation of Dashboard, Editable Items, and Tools */}
+      {/* Sidebar navigation */}
       <AdminSidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
@@ -103,7 +244,10 @@ export default function AdminClient({
           alojamientos: alojamientos.alojamientos.length,
           eventos: eventos.eventos.length,
           rutas: rutas.rutas.length,
+          usuarios: users.length,
         }}
+        currentUser={session}
+        onChangePassword={() => setIsChangePasswordOpen(true)}
         onLogout={handleLogout}
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
@@ -113,6 +257,8 @@ export default function AdminClient({
       <div className="flex-1 flex flex-col min-w-0">
         <AdminTopBar
           activeSection={activeSection}
+          currentUser={session}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
           onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           onLogout={handleLogout}
         />
@@ -136,117 +282,164 @@ export default function AdminClient({
               alojamientos={alojamientos.alojamientos}
               eventos={eventos.eventos}
               rutas={rutas.rutas}
+              usersCount={users.length}
+              currentUser={session}
               onNavigate={setActiveSection}
-              onNewDestino={destinos.openNew}
-              onNewRestaurante={restaurantes.openNew}
-              onNewAlojamiento={alojamientos.openNew}
-              onNewEvento={eventos.openNew}
-              onNewRuta={rutas.openNew}
+              onNewDestino={canEdit ? destinos.openNew : undefined}
+              onNewRestaurante={canEdit ? restaurantes.openNew : undefined}
+              onNewAlojamiento={canEdit ? alojamientos.openNew : undefined}
+              onNewEvento={canEdit ? eventos.openNew : undefined}
+              onNewRuta={canEdit ? rutas.openNew : undefined}
             />
           )}
 
-        {/* Rutas y Paradas Manager */}
-        {activeSection === 'rutas' && (
-          <RutasManager
-            rutas={rutas.rutas}
-            allPois={allPois}
-            onNew={rutas.openNew}
-            onEdit={rutas.openEdit}
-            onDelete={rutas.handleDelete}
-          />
-        )}
+          {/* Rutas y Paradas Manager */}
+          {activeSection === 'rutas' && (
+            <RutasManager
+              rutas={rutas.rutas}
+              allPois={allPois}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              onNew={rutas.openNew}
+              onEdit={rutas.openEdit}
+              onDelete={rutas.handleDelete}
+            />
+          )}
 
-        {/* Tables */}
-        {activeSection !== 'dashboard' &&
-          activeSection !== 'rutas' &&
-          activeSection !== 'qrcodes' &&
-          activeSection !== 'backups' && (
-            <AdminTable
-              activeSection={activeSection}
+          {/* Tables for Destinos, Restaurantes, Alojamientos, Eventos */}
+          {activeSection !== 'dashboard' &&
+            activeSection !== 'rutas' &&
+            activeSection !== 'qrcodes' &&
+            activeSection !== 'backups' &&
+            activeSection !== 'usuarios' && (
+              <AdminTable
+                activeSection={activeSection}
+                destinos={destinos.destinos}
+                restaurantes={restaurantes.restaurantes}
+                alojamientos={alojamientos.alojamientos}
+                eventos={eventos.eventos}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                handlers={{
+                  destinos: {
+                    onNew: destinos.openNew,
+                    onEdit: destinos.openEdit,
+                    onDelete: destinos.handleDelete,
+                  },
+                  restaurantes: {
+                    onNew: restaurantes.openNew,
+                    onEdit: restaurantes.openEdit,
+                    onDelete: restaurantes.handleDelete,
+                  },
+                  alojamientos: {
+                    onNew: alojamientos.openNew,
+                    onEdit: alojamientos.openEdit,
+                    onDelete: alojamientos.handleDelete,
+                  },
+                  eventos: {
+                    onNew: eventos.openNew,
+                    onEdit: eventos.openEdit,
+                    onDelete: eventos.handleDelete,
+                  },
+                }}
+              />
+            )}
+
+          {/* QR Code Generator */}
+          {activeSection === 'qrcodes' && (
+            <QRGenerator
+              destinos={destinos.destinos}
+              restaurantes={restaurantes.restaurantes}
+              alojamientos={alojamientos.alojamientos}
+            />
+          )}
+
+          {/* Backup & Restore Manager */}
+          {activeSection === 'backups' && (
+            <BackupManager
               destinos={destinos.destinos}
               restaurantes={restaurantes.restaurantes}
               alojamientos={alojamientos.alojamientos}
               eventos={eventos.eventos}
-              handlers={{
-                destinos: { onNew: destinos.openNew, onEdit: destinos.openEdit, onDelete: destinos.handleDelete },
-                restaurantes: { onNew: restaurantes.openNew, onEdit: restaurantes.openEdit, onDelete: restaurantes.handleDelete },
-                alojamientos: { onNew: alojamientos.openNew, onEdit: alojamientos.openEdit, onDelete: alojamientos.handleDelete },
-                eventos: { onNew: eventos.openNew, onEdit: eventos.openEdit, onDelete: eventos.handleDelete },
-              }}
+              rutas={rutas.rutas}
+              token={password}
+              userRole={role}
             />
           )}
 
+          {/* User Management (Solo Administrador) */}
+          {activeSection === 'usuarios' && isAdmin && (
+            <UserManager
+              users={users}
+              currentUserId={session?.id || ''}
+              onNewUser={handleNewUser}
+              onEditUser={handleEditUser}
+              onDeleteUser={handleDeleteUser}
+              onToggleStatus={handleToggleUserStatus}
+            />
+          )}
 
-        {/* QR Code Generator */}
-        {activeSection === 'qrcodes' && (
-          <QRGenerator
-            destinos={destinos.destinos}
-            restaurantes={restaurantes.restaurantes}
-            alojamientos={alojamientos.alojamientos}
-          />
-        )}
-
-        {/* Backup & Restore Manager */}
-        {activeSection === 'backups' && (
-          <BackupManager
-            destinos={destinos.destinos}
-            restaurantes={restaurantes.restaurantes}
-            alojamientos={alojamientos.alojamientos}
-            eventos={eventos.eventos}
-            token={password}
-          />
-        )}
-
-        {/* Modals */}
-        {destinos.editing && (
-          <DestinoModal
-            editing={destinos.editing}
-            onChange={destinos.setEditing}
-            onSubmit={destinos.handleSave}
-            onClose={destinos.close}
-            isPending={destinos.isPending}
-          />
-        )}
-        {restaurantes.editing && (
-          <RestauranteModal
-            editing={restaurantes.editing}
-            onChange={restaurantes.setEditing}
-            onSubmit={restaurantes.handleSave}
-            onClose={restaurantes.close}
-            isPending={restaurantes.isPending}
-          />
-        )}
-        {alojamientos.editing && (
-          <AlojamientoModal
-            editing={alojamientos.editing}
-            onChange={alojamientos.setEditing}
-            onSubmit={alojamientos.handleSave}
-            onClose={alojamientos.close}
-            isPending={alojamientos.isPending}
-          />
-        )}
-        {eventos.editing && (
-          <EventoModal
-            editing={eventos.editing}
-            onChange={eventos.setEditing}
-            onSubmit={eventos.handleSave}
-            onClose={eventos.close}
-            isPending={eventos.isPending}
-          />
-        )}
-        {rutas.editing && (
-          <RutaModal
-            editing={rutas.editing}
-            availablePois={allPois}
-            onChange={rutas.setEditing}
-            onSubmit={rutas.handleSave}
-            onClose={rutas.close}
-            isPending={rutas.isPending}
-          />
-        )}
+          {/* Modals */}
+          {destinos.editing && (
+            <DestinoModal
+              editing={destinos.editing}
+              onChange={destinos.setEditing}
+              onSubmit={destinos.handleSave}
+              onClose={destinos.close}
+              isPending={destinos.isPending}
+            />
+          )}
+          {restaurantes.editing && (
+            <RestauranteModal
+              editing={restaurantes.editing}
+              onChange={restaurantes.setEditing}
+              onSubmit={restaurantes.handleSave}
+              onClose={restaurantes.close}
+              isPending={restaurantes.isPending}
+            />
+          )}
+          {alojamientos.editing && (
+            <AlojamientoModal
+              editing={alojamientos.editing}
+              onChange={alojamientos.setEditing}
+              onSubmit={alojamientos.handleSave}
+              onClose={alojamientos.close}
+              isPending={alojamientos.isPending}
+            />
+          )}
+          {eventos.editing && (
+            <EventoModal
+              editing={eventos.editing}
+              onChange={eventos.setEditing}
+              onSubmit={eventos.handleSave}
+              onClose={eventos.close}
+              isPending={eventos.isPending}
+            />
+          )}
+          {rutas.editing && (
+            <RutaModal
+              editing={rutas.editing}
+              availablePois={allPois}
+              onChange={rutas.setEditing}
+              onSubmit={rutas.handleSave}
+              onClose={rutas.close}
+              isPending={rutas.isPending}
+            />
+          )}
+          {editingUser && (
+            <UserModal
+              editing={editingUser}
+              onChange={setEditingUser}
+              onSubmit={handleSaveUser}
+              onClose={() => setEditingUser(null)}
+              isPending={isUserPending}
+            />
+          )}
+          {isChangePasswordOpen && (
+            <ChangePasswordModal onClose={() => setIsChangePasswordOpen(false)} />
+          )}
         </main>
       </div>
     </div>
   );
 }
-

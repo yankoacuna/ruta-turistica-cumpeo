@@ -131,3 +131,19 @@ model TourRoute {
   updatedAt        DateTime @updatedAt
 }
 
+enum Role {
+  ADMIN
+  EDITOR
+  LECTOR
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nombre    String
+  password  String
+  role      Role     @default(LECTOR)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

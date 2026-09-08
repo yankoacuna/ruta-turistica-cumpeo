@@ -14,11 +14,15 @@ import {
   ExternalLink,
   LogOut,
   X,
-  Sparkles,
   ShieldCheck,
+  ShieldAlert,
+  Shield,
+  Eye,
   Radio,
+  Users,
+  KeyRound,
 } from 'lucide-react';
-import { AdminSection } from '../_types';
+import { AdminSection, AdminSessionUser } from '../_types';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -29,7 +33,10 @@ interface AdminSidebarProps {
     alojamientos: number;
     eventos: number;
     rutas: number;
+    usuarios?: number;
   };
+  currentUser?: AdminSessionUser | null;
+  onChangePassword?: () => void;
   onLogout: () => void;
   mobileOpen: boolean;
   onCloseMobile: () => void;
@@ -39,10 +46,44 @@ export function AdminSidebar({
   activeSection,
   onSectionChange,
   counts,
+  currentUser,
+  onChangePassword,
   onLogout,
   mobileOpen,
   onCloseMobile,
 }: AdminSidebarProps) {
+  const role = currentUser?.role || 'ADMIN';
+
+  const toolItems = [
+    {
+      id: 'qrcodes' as AdminSection,
+      label: 'Generador de QR',
+      icon: QrCode,
+      count: undefined,
+    },
+    ...(role !== 'LECTOR'
+      ? [
+          {
+            id: 'backups' as AdminSection,
+            label: 'Copias de Seguridad',
+            icon: Database,
+            count: undefined,
+          },
+        ]
+      : []),
+    ...(role === 'ADMIN'
+      ? [
+          {
+            id: 'usuarios' as AdminSection,
+            label: 'Usuarios y Accesos',
+            icon: Users,
+            count: counts.usuarios,
+            color: 'text-rojo',
+          },
+        ]
+      : []),
+  ];
+
   const navGroups = [
     {
       title: 'VISIÓN GENERAL',
@@ -98,20 +139,7 @@ export function AdminSidebar({
     },
     {
       title: 'HERRAMIENTAS Y SISTEMA',
-      items: [
-        {
-          id: 'qrcodes' as AdminSection,
-          label: 'Generador de QR',
-          icon: QrCode,
-          count: undefined,
-        },
-        {
-          id: 'backups' as AdminSection,
-          label: 'Copias de Seguridad',
-          icon: Database,
-          count: undefined,
-        },
-      ],
+      items: toolItems,
     },
   ];
 
@@ -119,6 +147,33 @@ export function AdminSidebar({
     onSectionChange(id);
     onCloseMobile();
   };
+
+  const getRoleDisplay = () => {
+    switch (role) {
+      case 'ADMIN':
+        return {
+          label: 'Administrador',
+          badgeCls: 'bg-red-50 text-rojo border-red-200',
+          icon: ShieldAlert,
+        };
+      case 'EDITOR':
+        return {
+          label: 'Editor',
+          badgeCls: 'bg-purple-50 text-purple-700 border-purple-200',
+          icon: Shield,
+        };
+      case 'LECTOR':
+      default:
+        return {
+          label: 'Lector',
+          badgeCls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          icon: Eye,
+        };
+    }
+  };
+
+  const roleInfo = getRoleDisplay();
+  const RoleIcon = roleInfo.icon;
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white border-r border-border/80 select-none">
@@ -223,25 +278,37 @@ export function AdminSidebar({
       {/* Footer / User & Session */}
       <div className="p-3 border-t border-border/70 bg-[#FAF8F5]/80">
         <div className="p-3 bg-white rounded-xl border border-border/80 shadow-2xs mb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                <ShieldCheck size={16} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-200/80 flex items-center justify-center text-rojo font-bold text-xs shrink-0">
+              {currentUser?.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'A'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold text-text-primary leading-tight truncate">
+                {currentUser?.nombre || 'Administrador'}
               </div>
-              <div>
-                <div className="text-xs font-bold text-text-primary leading-tight">Administrador</div>
-                <div className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-                  Sesión activa
-                </div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold border ${roleInfo.badgeCls}`}>
+                  <RoleIcon size={10} />
+                  {roleInfo.label}
+                </span>
               </div>
             </div>
+            {onChangePassword && (
+              <button
+                onClick={onChangePassword}
+                className="p-1.5 text-text-muted hover:text-rojo hover:bg-surface-soft rounded-lg transition-colors shrink-0"
+                title="Cambiar mi contraseña"
+              >
+                <KeyRound size={15} />
+              </button>
+            )}
           </div>
         </div>
 
         <button
+          type="button"
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-200 transition-all"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-200 transition-all cursor-pointer"
         >
           <LogOut size={14} />
           <span>Cerrar Sesión</span>

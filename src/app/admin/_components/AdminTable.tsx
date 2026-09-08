@@ -26,11 +26,13 @@ interface EntityHandlers<T> {
 }
 
 interface AdminTableProps {
-  activeSection: Exclude<AdminSection, 'dashboard' | 'qrcodes' | 'backups'>;
+  activeSection: Exclude<AdminSection, 'dashboard' | 'qrcodes' | 'backups' | 'usuarios'>;
   destinos: Destination[];
   restaurantes: Restaurant[];
   alojamientos: Accommodation[];
   eventos: CumpeoEvent[];
+  canEdit?: boolean;
+  canDelete?: boolean;
   handlers: {
     destinos: EntityHandlers<Destination>;
     restaurantes: EntityHandlers<Restaurant>;
@@ -61,23 +63,45 @@ function Thumbnail({ url }: { url?: string | null }) {
   );
 }
 
-function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+function RowActions({
+  onEdit,
+  onDelete,
+  canEdit = true,
+  canDelete = true,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
+}) {
+  if (!canEdit && !canDelete) {
+    return (
+      <div className="flex justify-end text-[11px] text-text-muted italic py-1">
+        Solo lectura
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-1 justify-end">
-      <button
-        onClick={onEdit}
-        className="p-2 text-cielo hover:bg-[#E0F2FE] rounded-lg transition-colors"
-        title="Editar registro"
-      >
-        <Pencil size={15} />
-      </button>
-      <button
-        onClick={onDelete}
-        className="p-2 text-rojo hover:bg-[#FFE0E2] rounded-lg transition-colors"
-        title="Eliminar registro"
-      >
-        <Trash2 size={15} />
-      </button>
+      {canEdit && (
+        <button
+          onClick={onEdit}
+          className="p-2 text-cielo hover:bg-[#E0F2FE] rounded-lg transition-colors"
+          title="Editar registro"
+        >
+          <Pencil size={15} />
+        </button>
+      )}
+      {canDelete && (
+        <button
+          onClick={onDelete}
+          className="p-2 text-rojo hover:bg-[#FFE0E2] rounded-lg transition-colors"
+          title="Eliminar registro"
+        >
+          <Trash2 size={15} />
+        </button>
+      )}
     </div>
   );
 }
@@ -98,6 +122,8 @@ export function AdminTable({
   restaurantes,
   alojamientos,
   eventos,
+  canEdit = true,
+  canDelete = true,
   handlers,
 }: AdminTableProps) {
   const [search, setSearch] = useState('');
@@ -211,12 +237,14 @@ export function AdminTable({
             />
           </div>
 
-          <button
-            className="flex items-center gap-1.5 bg-rojo text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rojo-dark transition-all shadow-[0_2px_8px_rgba(230,57,70,0.25)] whitespace-nowrap"
-            onClick={currentHandler.onNew}
-          >
-            <Plus size={15} /> Nuevo
-          </button>
+          {canEdit && (
+            <button
+              className="flex items-center gap-1.5 bg-rojo text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rojo-dark transition-all shadow-[0_2px_8px_rgba(230,57,70,0.25)] whitespace-nowrap"
+              onClick={currentHandler.onNew}
+            >
+              <Plus size={15} /> Nuevo
+            </button>
+          )}
         </div>
       </div>
 
@@ -309,6 +337,8 @@ export function AdminTable({
                     <RowActions
                       onEdit={() => handlers.destinos.onEdit(d)}
                       onDelete={() => handlers.destinos.onDelete(d.id, d.nombre)}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
                     />
                   </td>
                 </tr>
@@ -356,6 +386,8 @@ export function AdminTable({
                     <RowActions
                       onEdit={() => handlers.restaurantes.onEdit(r)}
                       onDelete={() => handlers.restaurantes.onDelete(r.id, r.nombre)}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
                     />
                   </td>
                 </tr>
@@ -400,6 +432,8 @@ export function AdminTable({
                     <RowActions
                       onEdit={() => handlers.alojamientos.onEdit(a)}
                       onDelete={() => handlers.alojamientos.onDelete(a.id, a.nombre)}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
                     />
                   </td>
                 </tr>
@@ -446,6 +480,8 @@ export function AdminTable({
                     <RowActions
                       onEdit={() => handlers.eventos.onEdit(ev)}
                       onDelete={() => handlers.eventos.onDelete(ev.id, ev.nombre)}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
                     />
                   </td>
                 </tr>

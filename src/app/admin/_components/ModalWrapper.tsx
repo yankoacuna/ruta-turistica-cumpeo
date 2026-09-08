@@ -36,9 +36,10 @@ export function ModalWrapper({ title, onClose, children }: ModalWrapperProps) {
 interface ModalActionsProps {
   onClose: () => void;
   isPending: boolean;
+  submitLabel?: string;
 }
 
-export function ModalActions({ onClose, isPending }: ModalActionsProps) {
+export function ModalActions({ onClose, isPending, submitLabel }: ModalActionsProps) {
   return (
     <div className="flex gap-3 pt-4 border-t border-border mt-2">
       <button
@@ -47,7 +48,7 @@ export function ModalActions({ onClose, isPending }: ModalActionsProps) {
         className="flex-1 flex items-center justify-center gap-2 bg-rojo text-white py-3 rounded-xl font-bold shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isPending ? <Loader2 size={17} className="animate-spin" /> : <Save size={17} />}
-        {isPending ? 'Guardando…' : 'Guardar Cambios'}
+        {isPending ? 'Guardando…' : (submitLabel || 'Guardar Cambios')}
       </button>
       <button
         type="button"

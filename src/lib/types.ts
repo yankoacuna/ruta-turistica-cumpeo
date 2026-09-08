@@ -188,3 +188,21 @@ export interface TourRoute {
   updatedAt?: string | Date;
 }
 
+export type UserRole = 'ADMIN' | 'EDITOR' | 'LECTOR';
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  nombre: string;
+  role: UserRole;
+  activo: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface AdminSessionUser {
+  id: string;
+  email: string;
+  nombre: string;
+  role: UserRole;
+}
