@@ -15,8 +15,10 @@ import {
   Minus,
   Compass,
   Crosshair,
+  ChevronRight,
 } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { formatImgUrl } from '@/lib/data';
 
 interface MapComponentProps {
   pois: POI[];
@@ -261,6 +263,7 @@ export default function MapComponent({
   onCenterCumpeoClick,
 }: MapComponentProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const [hoveredPoiId, setHoveredPoiId] = useState<string | null>(null);
 
   if (!apiKey || apiKey === 'TU_API_KEY_DE_GOOGLE_AQUI') {
     return (
@@ -310,10 +313,11 @@ export default function MapComponent({
             hasGPS={!!userCoords}
           />
 
-          {/* POI markers */}
+          {/* POI markers con Hover Card enriquecido */}
           {displayPois.map((poi, idx) => {
             if (!poi.coordenadas) return null;
             const isSelected = selectedPoi?.id === poi.id;
+            const isHovered = hoveredPoiId === poi.id && !isSelected;
             const color = activeRoute ? activeRoute.color : getMarkerColor(poi.categoria);
 
             return (
@@ -321,20 +325,71 @@ export default function MapComponent({
                 key={poi.id}
                 position={poi.coordenadas}
                 onClick={() => onSelectPoi(poi)}
-                zIndex={isSelected ? 1000 : 10 + idx}
+                zIndex={isSelected ? 1000 : isHovered ? 999 : 10 + idx}
               >
                 <div
-                  className={`flex items-center justify-center rounded-full text-white shadow-md cursor-pointer transition-all duration-200 border-2 border-[#1E1E24] ${
-                    isSelected
-                      ? 'w-12 h-12 scale-110 ring-4 ring-white shadow-xl'
-                      : 'w-9 h-9 hover:scale-110'
-                  }`}
-                  style={{
-                    backgroundColor: isSelected ? '#E63946' : color,
-                  }}
-                  title={poi.nombre}
+                  className="relative flex items-center justify-center cursor-pointer"
+                  onMouseEnter={() => setHoveredPoiId(poi.id)}
+                  onMouseLeave={() => setHoveredPoiId(null)}
                 >
-                  {getMarkerIcon(poi.categoria)}
+                  {/* Pin circular */}
+                  <div
+                    className={`flex items-center justify-center rounded-full text-white shadow-md transition-all duration-200 border-2 border-[#1E1E24] ${
+                      isSelected
+                        ? 'w-12 h-12 scale-110 ring-4 ring-white shadow-2xl'
+                        : isHovered
+                        ? 'w-11 h-11 scale-115 ring-4 ring-white shadow-xl'
+                        : 'w-9 h-9 hover:scale-110'
+                    }`}
+                    style={{
+                      backgroundColor: isSelected ? '#E63946' : color,
+                    }}
+                  >
+                    {getMarkerIcon(poi.categoria)}
+                  </div>
+
+                  {/* ── Tarjeta flotante al sobreponer el cursor (Tooltip Enriquecido) ── */}
+                  {isHovered && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3.5 w-64 p-2.5 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_16px_36px_rgba(0,0,0,0.25)] border border-border pointer-events-none z-[9999] animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-soft border border-border shrink-0">
+                          <img
+                            src={formatImgUrl(poi.imagenPrincipal)}
+                            alt={poi.nombre}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/assets/images/placeholder.webp';
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span
+                            className="inline-block text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full text-white mb-0.5 shadow-xs"
+                            style={{ backgroundColor: color }}
+                          >
+                            {poi.categoria}
+                          </span>
+                          <h4 className="font-display font-extrabold text-xs text-text-primary truncate leading-tight">
+                            {poi.nombre}
+                          </h4>
+                        </div>
+                      </div>
+
+                      {poi.descripcionCorta && (
+                        <p className="text-[11px] text-text-muted line-clamp-2 leading-snug">
+                          {poi.descripcionCorta}
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-between text-[10px] font-bold text-rojo pt-1 border-t border-border/70">
+                        <span>Haz clic para ver detalles y ruta</span>
+                        <ChevronRight size={12} />
+                      </div>
+
+                      {/* Triángulo inferior que apunta hacia el marcador */}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2.5 h-2.5 bg-white border-r border-b border-border rotate-45" />
+                    </div>
+                  )}
                 </div>
               </AdvancedMarker>
             );

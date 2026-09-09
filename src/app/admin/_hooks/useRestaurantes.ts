@@ -7,7 +7,6 @@ const emptyRest = (): Partial<Restaurant> => ({
   nombre: '',
   descripcion: '',
   especialidad: '',
-  platoEstrella: '',
   coordenadas: { lat: -35.267, lng: -71.25 },
   direccion: '',
   horario: { apertura: '', cierre: '', descripcion: '' },

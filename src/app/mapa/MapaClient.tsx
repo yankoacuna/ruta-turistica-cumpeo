@@ -5,7 +5,7 @@ import Link from 'next/link';
 import MapComponent from '@/components/MapComponent';
 import { POI, TourRoute } from '@/lib/types';
 import { calcDistanceKm, formatDistance, formatImgUrl, sortByDistance } from '@/lib/data';
-import { getOpeningStatus } from '@/lib/openingHours';
+import { useOpeningStatus } from '@/hooks/useOpeningStatus';
 import { useToast } from '@/components/Toast';
 import {
   Crosshair,
@@ -37,6 +37,46 @@ interface MapaClientProps {
 }
 
 const CUMPEO_CENTER = { lat: -35.267, lng: -71.25 };
+
+/**
+ * Badge "Abierto/Cerrado" en pildora, para la ficha del POI seleccionado.
+ * Se extrae a un componente propio porque useOpeningStatus() es un hook: no
+ * puede llamarse dentro de la IIFE que antes vivia inline en el JSX.
+ */
+function OpeningBadgePill({ horario }: { horario: unknown }) {
+  const status = useOpeningStatus(horario as Parameters<typeof useOpeningStatus>[0]);
+  if (status?.isOpen == null) return null;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.65rem] font-bold ${
+        status.isOpen
+          ? 'bg-green-50 text-green-700 border border-green-200'
+          : 'bg-red-50 text-red-700 border border-red-200'
+      }`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${status.isOpen ? 'bg-green-500' : 'bg-red-500'}`} />
+      {status.label}
+    </span>
+  );
+}
+
+/** Badge "Abierto/Cerrado" en la esquina de la tarjeta del listado. */
+function OpeningBadgeCorner({ horario }: { horario: unknown }) {
+  const status = useOpeningStatus(horario as Parameters<typeof useOpeningStatus>[0]);
+  if (status?.isOpen == null) return null;
+  return (
+    <div className="absolute top-2 right-2 z-10">
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-extrabold backdrop-blur-sm shadow-sm ${
+          status.isOpen ? 'bg-green-600/90 text-white' : 'bg-red-600/90 text-white'
+        }`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+        {status.label}
+      </span>
+    </div>
+  );
+}
 
 export default function MapaClient({ initialPois, initialTourRoutes }: MapaClientProps) {
   const { showToast } = useToast();
@@ -309,27 +349,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.65rem] font-extrabold uppercase tracking-wider whitespace-nowrap bg-[#FFE0E2] text-[#C1121F] border border-[#FFA8AE]">
                     {selectedPoi.categoria}
                   </span>
-                  {(() => {
-                    const horario = (selectedPoi._original as any)?.horario;
-                    const opening = getOpeningStatus(horario);
-                    if (opening.isOpen === null) return null;
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.65rem] font-bold ${
-                          opening.isOpen
-                            ? 'bg-green-50 text-green-700 border border-green-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            opening.isOpen ? 'bg-green-500' : 'bg-red-500'
-                          }`}
-                        />
-                        {opening.label}
-                      </span>
-                    );
-                  })()}
+                  <OpeningBadgePill horario={(selectedPoi._original as any)?.horario} />
                 </div>
                 <button
                   onClick={() => setSelectedPoi(null)}
@@ -485,25 +505,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                         {poi.categoria}
                       </span>
                     </div>
-                    {(() => {
-                      const horario = (poi._original as any)?.horario;
-                      const opening = getOpeningStatus(horario);
-                      if (opening.isOpen === null) return null;
-                      return (
-                        <div className="absolute top-2 right-2 z-10">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-extrabold backdrop-blur-sm shadow-sm ${
-                              opening.isOpen
-                                ? 'bg-green-600/90 text-white'
-                                : 'bg-red-600/90 text-white'
-                            }`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                            {opening.label}
-                          </span>
-                        </div>
-                      );
-                    })()}
+                    <OpeningBadgeCorner horario={(poi._original as any)?.horario} />
                   </div>
 
                   <div className="p-4 flex-1 flex flex-col justify-between">

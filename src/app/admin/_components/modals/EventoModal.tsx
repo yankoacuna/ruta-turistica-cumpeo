@@ -5,6 +5,7 @@ import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import { ImageUploadField } from '../ImageUploadField';
 import { GalleryField } from '../GalleryField';
+import { CoordinatesPicker, CommaSeparatedField } from './common';
 
 interface EventoModalProps {
   editing: Partial<CumpeoEvent>;
@@ -29,7 +30,6 @@ export function EventoModal({
       onClose={onClose}
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-
         {/* Nombre */}
         <Field label="Nombre del Evento" required>
           <input
@@ -105,51 +105,22 @@ export function EventoModal({
           </div>
         </Field>
 
-        {/* Coordenadas */}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Latitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={(editing.coordenadas as any)?.lat ?? -35.267}
-              onChange={(e) =>
-                set({ coordenadas: { ...(editing.coordenadas as any), lat: parseFloat(e.target.value) } })
-              }
-            />
-          </Field>
-          <Field label="Longitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={(editing.coordenadas as any)?.lng ?? -71.25}
-              onChange={(e) =>
-                set({ coordenadas: { ...(editing.coordenadas as any), lng: parseFloat(e.target.value) } })
-              }
-            />
-          </Field>
-        </div>
+        {/* Coordenadas Refactorizadas con Selector de Mapa */}
+        <CoordinatesPicker
+          coordinates={editing.coordenadas as any}
+          onChange={(coordenadas) => set({ coordenadas: coordenadas as any })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Evento'}`}
+        />
 
         {/* Tags */}
-        <Field label="Etiquetas" hint="Separadas por coma">
-          <div className="relative">
-            <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input
-              className={inputCls + ' pl-8'}
-              placeholder="religioso, enero, tradición…"
-              value={(editing.tags || []).join(', ')}
-              onChange={(e) =>
-                set({
-                  tags: e.target.value
-                    .split(',')
-                    .map((t) => t.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
-          </div>
-        </Field>
+        <CommaSeparatedField
+          label="Etiquetas"
+          icon={<Tag size={14} />}
+          placeholder="religioso, enero, tradición…"
+          hint="Separadas por coma"
+          value={editing.tags || []}
+          onChange={(tags) => set({ tags })}
+        />
 
         {/* Switches: Recurrente + Destacado + Activo */}
         <div className="rounded-xl border border-border overflow-hidden">

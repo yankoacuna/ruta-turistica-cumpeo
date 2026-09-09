@@ -1,10 +1,16 @@
 import React from 'react';
-import { Star } from 'lucide-react';
+import { Star, Tag } from 'lucide-react';
 import { Destination } from '@/lib/types';
+import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import { ImageUploadField } from '../ImageUploadField';
 import { GalleryField } from '../GalleryField';
+import {
+  CoordinatesPicker,
+  SlugField,
+  CommaSeparatedField,
+} from './common';
 
 interface DestinoModalProps {
   editing: Partial<Destination>;
@@ -23,15 +29,23 @@ export function DestinoModal({
 }: DestinoModalProps) {
   const set = (patch: Partial<Destination>) => onChange({ ...editing, ...patch });
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing.slug && editing.nombre) {
+      onChange({ ...editing, slug: slugify(editing.nombre) });
+    }
+    onSubmit(e);
+  };
+
   return (
     <ModalWrapper
       title={editing.id ? 'Editar Destino' : 'Nuevo Destino'}
       onClose={onClose}
     >
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
         {/* Nombre + Categoría */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Nombre" required>
+        <div id="tour-dest-nombre" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Nombre del Destino" required>
             <input
               required
               className={inputCls}
@@ -56,45 +70,47 @@ export function DestinoModal({
           </Field>
         </div>
 
-        {/* Slug */}
-        <Field label="Slug URL" hint="Identificador único. Ej: mural-condorito">
-          <input
-            className={inputCls}
-            placeholder="mural-condorito"
-            value={editing.slug || ''}
-            onChange={(e) =>
-              set({ slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })
-            }
+        {/* Dirección Web Pública (URL / Slug) Refactorizada */}
+        <div id="tour-dest-slug">
+          <SlugField
+            slug={editing.slug || ''}
+            baseName={editing.nombre || ''}
+            basePath="cumpeo.cl/destino/"
+            onChange={(slug) => set({ slug })}
+            isEditing={Boolean(editing.id)}
+            helpText="Este es el enlace directo con el que los visitantes verán la ficha de este destino en internet."
           />
-        </Field>
+        </div>
 
         {/* Descripciones */}
-        <Field label="Descripción Corta" required>
-          <textarea
-            required
-            className={textareaCls}
-            placeholder="Resumen breve para las tarjetas…"
-            value={editing.descripcionCorta || ''}
-            onChange={(e) => set({ descripcionCorta: e.target.value })}
-          />
-        </Field>
-        <Field label="Descripción Completa">
-          <textarea
-            className={textareaCls}
-            style={{ minHeight: '110px' }}
-            placeholder="Descripción detallada del destino…"
-            value={editing.descripcionLarga || ''}
-            onChange={(e) => set({ descripcionLarga: e.target.value })}
-          />
-        </Field>
-        <Field label="Historia / Contexto">
-          <textarea
-            className={textareaCls}
-            placeholder="Historia e información histórica del lugar…"
-            value={editing.historia || ''}
-            onChange={(e) => set({ historia: e.target.value })}
-          />
-        </Field>
+        <div id="tour-dest-desc" className="flex flex-col gap-4">
+          <Field label="Descripción Corta" required>
+            <textarea
+              required
+              className={textareaCls}
+              placeholder="Resumen breve para las tarjetas…"
+              value={editing.descripcionCorta || ''}
+              onChange={(e) => set({ descripcionCorta: e.target.value })}
+            />
+          </Field>
+          <Field label="Descripción Completa">
+            <textarea
+              className={textareaCls}
+              style={{ minHeight: '110px' }}
+              placeholder="Descripción detallada del destino…"
+              value={editing.descripcionLarga || ''}
+              onChange={(e) => set({ descripcionLarga: e.target.value })}
+            />
+          </Field>
+          <Field label="Historia / Contexto">
+            <textarea
+              className={textareaCls}
+              placeholder="Historia e información histórica del lugar…"
+              value={editing.historia || ''}
+              onChange={(e) => set({ historia: e.target.value })}
+            />
+          </Field>
+        </div>
 
         {/* Datos prácticos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -135,41 +151,20 @@ export function DestinoModal({
           />
         </Field>
 
-        {/* Coordenadas */}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Latitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={editing.coordenadas?.lat ?? -35.267}
-              onChange={(e) =>
-                set({
-                  coordenadas: { ...editing.coordenadas!, lat: parseFloat(e.target.value) },
-                })
-              }
-            />
-          </Field>
-          <Field label="Longitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={editing.coordenadas?.lng ?? -71.25}
-              onChange={(e) =>
-                set({
-                  coordenadas: { ...editing.coordenadas!, lng: parseFloat(e.target.value) },
-                })
-              }
-            />
-          </Field>
-        </div>
-
-        <ImageUploadField
-          label="Imagen Principal"
-          value={editing.imagenPrincipal || ''}
-          onChange={(url) => set({ imagenPrincipal: url })}
+        {/* Coordenadas Refactorizadas con Selector de Mapa */}
+        <CoordinatesPicker
+          coordinates={editing.coordenadas}
+          onChange={(coordenadas) => set({ coordenadas })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
         />
+
+        <div id="tour-dest-image">
+          <ImageUploadField
+            label="Imagen Principal"
+            value={editing.imagenPrincipal || ''}
+            onChange={(url) => set({ imagenPrincipal: url })}
+          />
+        </div>
 
         {/* Galería de fotos */}
         <GalleryField
@@ -177,22 +172,15 @@ export function DestinoModal({
           onChange={(images) => set({ galeria: images })}
         />
 
-        {/* Tags */}
-        <Field label="Tags" hint="Separados por coma">
-          <input
-            className={inputCls}
-            placeholder="historia, arte, familia"
-            value={(editing.tags || []).join(', ')}
-            onChange={(e) =>
-              set({
-                tags: e.target.value
-                  .split(',')
-                  .map((t) => t.trim())
-                  .filter(Boolean),
-              })
-            }
-          />
-        </Field>
+        {/* Tags Refactorizado */}
+        <CommaSeparatedField
+          label="Tags"
+          icon={<Tag size={14} />}
+          placeholder="historia, arte, familia, foto"
+          hint="Separados por coma"
+          value={editing.tags || []}
+          onChange={(tags) => set({ tags })}
+        />
 
         {/* Destacado */}
         <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg bg-[#FFF3C4]/60 border border-[#FDE68A]">
@@ -212,7 +200,9 @@ export function DestinoModal({
           </label>
         </div>
 
-        <ModalActions onClose={onClose} isPending={isPending} />
+        <div id="tour-dest-actions">
+          <ModalActions onClose={onClose} isPending={isPending} />
+        </div>
       </form>
     </ModalWrapper>
   );
