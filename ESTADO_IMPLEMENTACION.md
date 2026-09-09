@@ -31,10 +31,10 @@ Este documento detalla el estado actual de los requerimientos técnicos establec
 
 ## 3. Códigos QR y Señaléticas en Terreno
 *La página web debe ser accesible a través de un código QR que se escaneará en las señaléticas instaladas a lo largo de la ruta.*
-**Estado: 50% Completado** 🟡
+**Estado: 100% Completado** 🟢
 
 - `[x]` Arquitectura de enlaces preparada: Las URL como `misitio.com/destino/plaza-cumpeo` están funcionales y listas para ser vinculadas.
-- `[ ]` **Pendiente (Crítico):** Programar un **Generador Automático de Códigos QR** dentro del panel de administración, que permita a la Municipalidad descargar el código QR en alta calidad para enviarlo a la imprenta de las señaléticas.
+- `[x]` **Generador Automático de Códigos QR** integrado en el panel `/admin`, permitiendo a la Municipalidad generar y descargar códigos QR en alta resolución (2048×2048 px) listos para imprenta de tótems y placas físicas.
 
 ---
 

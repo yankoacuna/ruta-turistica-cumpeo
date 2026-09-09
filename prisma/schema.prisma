@@ -27,6 +27,7 @@ model Destination {
   galeria          String[]
   rating           Float?
   destacado        Boolean  @default(false)
+  activo           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -34,16 +35,23 @@ model Destination {
 model Restaurant {
   id               String   @id
   nombre           String
+  tipo             String?  // restaurante, picada, bar, cafeteria, etc.
   descripcion      String
+  especialidad     String?
+  propietario      String?  // nombre del dueño (desde catastro)
   coordenadas      Json
   direccion        String?
+  telefono         String?  // Ej: "+56 9 6507 5887"
+  whatsapp         String?  // Ej: "+56 9 6507 5887"
   horario          Json?
-  precio           Json?    // e.g. { "rango": "$$" }
+  precio           Json?    // e.g. { "rango": "$" }
+  mediosPago       String[] // ["Efectivo", "Débito", "Crédito"]
   tags             String[]
   imagenPrincipal  String?
   galeria          String[]
   menuUrl          String?
   contacto         Json?    // e.g. { "telefono": "..." }
+  activo           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -51,20 +59,91 @@ model Restaurant {
 model Accommodation {
   id               String   @id
   nombre           String
+  tipo             String?
+  propietario      String?  // nombre del dueño (desde catastro)
   descripcion      String
   coordenadas      Json
   direccion        String?
+  telefono         String?
+  whatsapp         String?
   precio           Json?    // e.g. { "min": 25000, "max": 40000 }
   servicios        String[]
   imagenPrincipal  String?
   galeria          String[]
   contacto         Json?
+  activo           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model Event {
+  id               String   @id
+  nombre           String
+  tipo             String   // fiesta-religiosa, feria, centro-evento, cultural
+  descripcion      String
+  descripcionLarga String?
+  fecha            String?  // "20 de enero" / "Fines de semana"
+  recurrente       Boolean  @default(true)
+  coordenadas      Json?
+  direccion        String?
+  imagenPrincipal  String?
+  galeria          String[]
+  tags             String[]
+  destacado        Boolean  @default(false)
+  activo           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model EmergencyContact {
+  id          String   @id // carabineros, bomberos, cesfam, etc.
+  institucion String
+  telefono    String
+  icono       String?  // shield, flame, ambulance, phone
+  direccion   String?
+  orden       Int      @default(0)
+  activo      Boolean  @default(true)
 }
 
 model Config {
   id               String   @id @default("default")
   categorias       Json     // Array of category objects
   updatedAt        DateTime @updatedAt
+}
+
+model TourRoute {
+  id               String   @id
+  slug             String   @unique
+  nombre           String
+  descripcion      String
+  color            String   @default("#E63946")
+  poiIds           String[] // Ordered list of POI IDs (Destinations, Restaurants, Accommodations, Events)
+  duracionEstimada String?  // e.g. "2 a 3 horas"
+  distanciaKm      Float?   // e.g. 7.5
+  dificultad       String?  @default("Fácil")
+  hitos            Json?    // Array of milestones [{ numero, titulo, descripcion }]
+  consejos         Json?    // Array of practical tips [{ icono, titulo, texto }]
+  mapaImagen       String?  // e.g. "/assets/images/mapa-ilustrado-ruta-condorito.png"
+  destacada        Boolean  @default(false)
+  activo           Boolean  @default(true)
+  orden            Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  LECTOR
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nombre    String
+  password  String
+  role      Role     @default(LECTOR)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

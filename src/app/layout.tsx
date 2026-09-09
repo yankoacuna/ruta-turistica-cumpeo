@@ -1,9 +1,15 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import FloatingMapButton from '@/components/FloatingMapButton';
+import PWARegister from '@/components/PWARegister';
 import { ToastProvider } from '@/components/Toast';
+
+export const viewport: Viewport = {
+  themeColor: '#E63946',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://cumpeo-turismo.vercel.app'),
@@ -28,7 +34,6 @@ export default function RootLayout({
   return (
     <html lang="es-CL">
       <head>
-
         <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
         <link rel="apple-touch-icon" href="/assets/icons/icon-180.png" />
       </head>
@@ -41,13 +46,9 @@ export default function RootLayout({
           <Footer />
           
           {/* Floating Action Button for Map */}
-          <Link 
-            href="/mapa" 
-            className="fixed bottom-[calc(64px+env(safe-area-inset-bottom,0px)+12px)] md:bottom-4 right-4 w-12 h-12 rounded-full bg-sol text-text-primary flex items-center justify-center text-2xl shadow-md z-30 hover:scale-110 hover:bg-sol-dark transition-all" 
-            title="Abrir Mapa Interactivo"
-          >
-            🗺️
-          </Link>
+          <FloatingMapButton />
+          {/* PWA Offline Service Worker Registration */}
+          <PWARegister />
         </ToastProvider>
       </body>
     </html>
