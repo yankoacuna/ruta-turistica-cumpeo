@@ -73,9 +73,9 @@ export function FeaturedSection({ featured }: FeaturedSectionProps) {
 
         {/* Filas secundarias */}
         {secundarios.length > 0 && (
-          <ul className="lg:col-span-5 flex flex-col gap-3">
+          <ul className="lg:col-span-5 lg:self-start flex flex-col gap-3">
             {secundarios.map((d) => (
-              <li key={d.id} className="flex-1">
+              <li key={d.id}>
                 <Link
                   href={`/destino/${d.slug}`}
                   className="group h-full bg-white border-[1.5px] border-border hover:border-ink rounded-xl p-3 flex items-center gap-3.5 no-underline transition-colors"
