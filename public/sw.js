@@ -1,9 +1,5 @@
-const CACHE_NAME = 'cumpeo-turismo-v1';
+const CACHE_NAME = 'cumpeo-turismo-v2';
 const PRECACHE_ASSETS = [
-  '/',
-  '/mapa',
-  '/historia',
-  '/contacto',
   '/assets/icons/favicon.svg',
   '/assets/icons/icon-192.png',
   '/assets/icons/icon-512.png',
@@ -40,10 +36,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Do not cache admin routes, API endpoints, or non-http protocols
+  // Do not cache admin routes, API endpoints, Next.js internal assets, or non-http protocols
   if (
     url.pathname.startsWith('/admin') ||
     url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/_next') ||
     !url.protocol.startsWith('http')
   ) {
     return;

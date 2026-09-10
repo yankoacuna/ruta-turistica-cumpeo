@@ -550,7 +550,7 @@ export async function exportDatabaseBackup(token?: string) {
   return {
     version: '1.2',
     exportDate: new Date().toISOString(),
-    site: 'Cumpeo Turismo',
+    site: 'Turismo Cumpeo',
     data: {
       destinations,
       restaurants,

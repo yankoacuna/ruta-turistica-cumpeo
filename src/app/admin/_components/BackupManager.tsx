@@ -100,7 +100,7 @@ export function BackupManager({
         const json = JSON.parse(event.target?.result as string);
 
         if (!json.data || (!json.data.destinations && !json.data.restaurants)) {
-          throw new Error('El archivo no tiene la estructura de respaldo válida de Cumpeo Turismo.');
+          throw new Error('El archivo no tiene la estructura de respaldo válida de Turismo Cumpeo.');
         }
 
         setPendingBackupData(json);

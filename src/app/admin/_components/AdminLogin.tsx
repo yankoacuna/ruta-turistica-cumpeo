@@ -52,7 +52,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4">
       <div className="w-full max-w-[420px]">
         {/* Brand Header */}
         <div className="text-center mb-6">
@@ -70,7 +70,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
             Panel de Administración
           </h1>
           <p className="text-sm text-text-secondary">
-            Gestor de Contenidos - Cumpeo Turismo
+            Gestor de Contenidos - Turismo Cumpeo
           </p>
         </div>
 

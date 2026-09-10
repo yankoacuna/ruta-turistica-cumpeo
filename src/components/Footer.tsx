@@ -6,13 +6,17 @@ import { usePathname } from 'next/navigation';
 import {
   Info, Bus, CalendarDays, Thermometer, Phone, AlertTriangle,
   Building2, Navigation, Home, Map, Target, UtensilsCrossed,
-  BedDouble, Settings, MapPin
+  BedDouble, MapPin
 } from 'lucide-react';
 import { Editable } from '@/components/site-text';
 
 export default function Footer() {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <>
@@ -165,11 +169,6 @@ export default function Footer() {
                 <li>
                   <Link href="/contacto" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
                     <Phone size={11} /> <Editable k="nav.contactoLargo" />
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/admin" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
-                    <Settings size={11} /> <Editable k="nav.admin" />
                   </Link>
                 </li>
               </ul>

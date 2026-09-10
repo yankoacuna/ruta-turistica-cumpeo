@@ -1,6 +1,6 @@
 {
-  "name": "Cumpeo Turismo — Ruta Oficial",
-  "short_name": "Cumpeo Turismo",
+  "name": "Turismo Cumpeo — Ruta Oficial",
+  "short_name": "Turismo Cumpeo",
   "description": "Guía turística interactiva de Cumpeo, el pueblo de Condorito en el Maule, Chile.",
   "start_url": "/",
   "display": "standalone",

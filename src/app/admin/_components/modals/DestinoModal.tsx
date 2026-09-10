@@ -6,7 +6,6 @@ import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import {
   CoordinatesPicker,
-  SlugField,
   CommaSeparatedField,
   MediaFields,
   DireccionField,
@@ -32,9 +31,8 @@ export function DestinoModal({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editing.slug && editing.nombre) {
-      onChange({ ...editing, slug: slugify(editing.nombre) });
-    }
+    const finalSlug = slugify(editing.nombre || '') || editing.slug || 'destino';
+    onChange({ ...editing, slug: finalSlug });
     onSubmit(e);
   };
 
@@ -52,7 +50,10 @@ export function DestinoModal({
               className={inputCls}
               placeholder="Ej: Mural de Condorito"
               value={editing.nombre || ''}
-              onChange={(e) => set({ nombre: e.target.value })}
+              onChange={(e) => {
+                const nombre = e.target.value;
+                set({ nombre, slug: slugify(nombre) });
+              }}
             />
           </Field>
           <Field label="Categoría" required>
@@ -69,18 +70,6 @@ export function DestinoModal({
               <option value="entretencion">Entretención</option>
             </select>
           </Field>
-        </div>
-
-        {/* Dirección Web Pública (URL / Slug) Refactorizada */}
-        <div id="tour-dest-slug">
-          <SlugField
-            slug={editing.slug || ''}
-            baseName={editing.nombre || ''}
-            basePath="cumpeo.cl/destino/"
-            onChange={(slug) => set({ slug })}
-            isEditing={Boolean(editing.id)}
-            helpText="Este es el enlace directo con el que los visitantes verán la ficha de este destino en internet."
-          />
         </div>
 
         {/* Descripciones */}

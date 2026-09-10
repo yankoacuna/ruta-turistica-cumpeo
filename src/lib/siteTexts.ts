@@ -53,7 +53,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Barra de navegación',
     items: [
-      { key: 'nav.marca', label: 'Nombre del sitio', value: 'Cumpeo Turismo' },
+      { key: 'nav.marca', label: 'Nombre del sitio', value: 'Turismo Cumpeo' },
       { key: 'nav.marcaBajada', label: 'Bajada de la marca', value: 'Pueblo de Condorito' },
       { key: 'nav.marcaRegion', label: 'Etiqueta de región', value: 'Maule' },
       { key: 'nav.inicio', label: 'Menú: inicio', value: 'Inicio' },
@@ -81,7 +81,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Pie de página',
     items: [
-      { key: 'footer.marca', label: 'Nombre del sitio', value: 'Cumpeo Turismo' },
+      { key: 'footer.marca', label: 'Nombre del sitio', value: 'Turismo Cumpeo' },
       {
         key: 'footer.descripcion',
         label: 'Descripción institucional',
@@ -135,7 +135,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       {
         key: 'footer.copyright',
         label: 'Línea de copyright',
-        value: '© 2026 Cumpeo Turismo - Municipalidad de Río Claro, Maule, Chile.',
+        value: '© 2026 Turismo Cumpeo - Municipalidad de Río Claro, Maule, Chile.',
       },
       { key: 'footer.version', label: 'Versión', value: 'v1.0.0' },
     ],

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   LayoutDashboard,
@@ -23,6 +23,8 @@ import {
   Radio,
   Users,
   KeyRound,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { AdminSection, AdminSessionUser } from '../_types';
 
@@ -56,6 +58,30 @@ export function AdminSidebar({
   mobileOpen,
   onCloseMobile,
 }: AdminSidebarProps) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Recordar preferencia del usuario en localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('cumpeo-admin-sidebar-collapsed');
+      if (saved !== null) {
+        setCollapsed(saved === 'true');
+      }
+    } catch {
+      // Ignorar si el almacenamiento local está restringido
+    }
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('cumpeo-admin-sidebar-collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const role = currentUser?.role || 'ADMIN';
 
   const toolItems = [
@@ -193,64 +219,141 @@ export function AdminSidebar({
   const roleInfo = getRoleDisplay();
   const RoleIcon = roleInfo.icon;
 
-  const sidebarContent = (
+  const renderSidebar = (isCollapsed: boolean) => (
     <div className="flex flex-col h-full bg-white border-r border-border/80 select-none">
       {/* Brand Header */}
-      <div className="p-5 border-b border-border/70 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rojo to-rojo-dark flex items-center justify-center text-white font-display font-black text-xl shadow-md shadow-rojo/20">
-            C
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-display font-extrabold text-base text-text-primary tracking-tight">
-                Ruta Cumpeo
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-rojo/10 text-rojo px-1.5 py-0.5 rounded">
-                CMS
-              </span>
-            </div>
-            <p className="text-[11px] text-text-muted font-medium">Gestor Municipal de Turismo</p>
-          </div>
+      {isCollapsed ? (
+        <div className="h-16 border-b border-border/70 flex items-center justify-center relative">
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="p-2 text-text-muted hover:text-rojo hover:bg-[#FAF8F5] rounded-xl transition-all cursor-pointer shadow-2xs"
+            title="Expandir barra lateral"
+            aria-label="Expandir barra lateral"
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
+      ) : (
+        <div className="h-16 px-4 border-b border-border/70 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-rojo flex items-center justify-center text-white font-display font-black text-sm shrink-0 shadow-sm shadow-rojo/20">
+              RC
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-display font-extrabold text-sm text-text-primary tracking-tight truncate">
+                  Ruta Cumpeo
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-rojo/10 text-rojo px-1.5 py-0.2 rounded">
+                  CMS
+                </span>
+              </div>
+              <p className="text-[10px] text-text-muted font-medium truncate">Gestor Municipal de Turismo</p>
+            </div>
+          </div>
 
-        {/* Mobile close button */}
-        <button
-          onClick={onCloseMobile}
-          className="lg:hidden p-1.5 text-text-muted hover:text-text-primary hover:bg-surface-soft rounded-lg transition-colors"
-          aria-label="Cerrar menú"
-        >
-          <X size={20} />
-        </button>
-      </div>
+          {/* Desktop collapse button */}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="hidden lg:flex p-1.5 text-text-muted hover:text-rojo hover:bg-[#FAF8F5] rounded-lg transition-colors cursor-pointer"
+            title="Comprimir barra lateral (solo iconos)"
+            aria-label="Comprimir barra lateral"
+          >
+            <ChevronLeft size={18} />
+          </button>
+
+          {/* Mobile close button */}
+          <button
+            onClick={onCloseMobile}
+            className="lg:hidden p-1.5 text-text-muted hover:text-text-primary hover:bg-surface-soft rounded-lg transition-colors"
+            aria-label="Cerrar menú"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
 
       {/* Quick Website Link Button */}
-      <div className="px-4 pt-4 pb-2">
-        <Link
-          href="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-border text-xs font-semibold text-text-secondary hover:text-rojo hover:border-rojo/40 hover:bg-[#FFF5F5] transition-all group shadow-2xs"
-        >
-          <span className="flex items-center gap-2">
-            <Radio size={14} className="text-emerald-500 animate-pulse" />
-            <span>Ver Portal en Vivo</span>
-          </span>
-          <ExternalLink size={13} className="text-text-muted group-hover:text-rojo transition-colors" />
-        </Link>
-      </div>
+      {isCollapsed ? (
+        <div className="p-2 flex justify-center">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FAF8F5] border border-border text-text-secondary hover:text-rojo hover:border-rojo/40 hover:bg-[#FFF5F5] transition-all shadow-2xs group"
+            title="Ver Portal en Vivo (Abre en nueva pestaña)"
+          >
+            <Radio size={16} className="text-emerald-500 animate-pulse" />
+          </Link>
+        </div>
+      ) : (
+        <div className="px-4 pt-4 pb-2">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-border text-xs font-semibold text-text-secondary hover:text-rojo hover:border-rojo/40 hover:bg-[#FFF5F5] transition-all group shadow-2xs"
+          >
+            <span className="flex items-center gap-2">
+              <Radio size={14} className="text-emerald-500 animate-pulse" />
+              <span>Ver Portal en Vivo</span>
+            </span>
+            <ExternalLink size={13} className="text-text-muted group-hover:text-rojo transition-colors" />
+          </Link>
+        </div>
+      )}
 
       {/* Navigation Sections */}
-      <div id="tour-sidebar-nav" className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
-        {navGroups.map((group) => (
+      <div id="tour-sidebar-nav" className={`flex-1 overflow-y-auto ${isCollapsed ? 'px-2 py-3 space-y-3' : 'px-3 py-3 space-y-5'}`}>
+        {navGroups.map((group, gIdx) => (
           <div key={group.title}>
-            <div className="px-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-text-muted">
-              {group.title}
-            </div>
+            {isCollapsed ? (
+              gIdx > 0 && <div className="border-t border-border/70 my-2.5 mx-1" title={group.title} />
+            ) : (
+              <div className="px-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-text-muted">
+                {group.title}
+              </div>
+            )}
+
             <div className="space-y-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
+
+                if (isCollapsed) {
+                  return (
+                    <div key={item.id} className="relative flex justify-center">
+                      <button
+                        type="button"
+                        id={`tour-nav-${item.id}`}
+                        onClick={() => handleNavClick(item.id)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all relative cursor-pointer ${
+                          isActive
+                            ? 'bg-rojo text-white shadow-sm shadow-rojo/25 font-bold'
+                            : 'text-text-secondary hover:text-text-primary hover:bg-[#FAF8F5]'
+                        }`}
+                        title={`${item.label}${item.count !== undefined ? ` (${item.count})` : ''}`}
+                        aria-label={item.label}
+                      >
+                        <Icon
+                          size={18}
+                          className={
+                            isActive
+                              ? 'text-white'
+                              : (item as any).color || 'text-text-muted'
+                          }
+                        />
+                        {item.count !== undefined && item.count > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[17px] h-4 px-1 rounded-full bg-rojo text-white text-[9px] font-bold flex items-center justify-center border border-white shadow-xs">
+                            {item.count > 99 ? '99+' : item.count}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  );
+                }
 
                 return (
                   <button
@@ -295,55 +398,93 @@ export function AdminSidebar({
       </div>
 
       {/* Footer / User & Session */}
-      <div className="p-3 border-t border-border/70 bg-[#FAF8F5]/80">
-        <div className="p-3 bg-white rounded-xl border border-border/80 shadow-2xs mb-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-200/80 flex items-center justify-center text-rojo font-bold text-xs shrink-0">
-              {currentUser?.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'A'}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-text-primary leading-tight truncate">
-                {currentUser?.nombre || 'Administrador'}
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold border ${roleInfo.badgeCls}`}>
-                  <RoleIcon size={10} />
-                  {roleInfo.label}
-                </span>
-              </div>
-            </div>
-            {onChangePassword && (
-              <button
-                onClick={onChangePassword}
-                className="p-1.5 text-text-muted hover:text-rojo hover:bg-surface-soft rounded-lg transition-colors shrink-0"
-                title="Cambiar mi contraseña"
-              >
-                <KeyRound size={15} />
-              </button>
-            )}
+      {isCollapsed ? (
+        <div className="p-2 border-t border-border/70 bg-[#FAF8F5]/80 flex flex-col items-center gap-2">
+          <div
+            className="w-10 h-10 rounded-xl bg-red-50 border border-red-200/80 flex items-center justify-center text-rojo font-bold text-xs cursor-default shadow-2xs"
+            title={`${currentUser?.nombre || 'Administrador'} · ${roleInfo.label}`}
+          >
+            {currentUser?.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'A'}
           </div>
-        </div>
 
-        <button
-          type="button"
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-200 transition-all cursor-pointer"
-        >
-          <LogOut size={14} />
-          <span>Cerrar Sesión</span>
-        </button>
-      </div>
+          {onChangePassword && (
+            <button
+              type="button"
+              onClick={onChangePassword}
+              className="w-9 h-9 flex items-center justify-center text-text-muted hover:text-rojo hover:bg-surface-soft rounded-lg transition-colors cursor-pointer"
+              title="Cambiar mi contraseña"
+              aria-label="Cambiar mi contraseña"
+            >
+              <KeyRound size={15} />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onLogout}
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all cursor-pointer"
+            title="Cerrar Sesión"
+            aria-label="Cerrar Sesión"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
+      ) : (
+        <div className="p-3 border-t border-border/70 bg-[#FAF8F5]/80">
+          <div className="p-3 bg-white rounded-xl border border-border/80 shadow-2xs mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-200/80 flex items-center justify-center text-rojo font-bold text-xs shrink-0">
+                {currentUser?.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'A'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-text-primary leading-tight truncate">
+                  {currentUser?.nombre || 'Administrador'}
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold border ${roleInfo.badgeCls}`}>
+                    <RoleIcon size={10} />
+                    {roleInfo.label}
+                  </span>
+                </div>
+              </div>
+              {onChangePassword && (
+                <button
+                  type="button"
+                  onClick={onChangePassword}
+                  className="p-1.5 text-text-muted hover:text-rojo hover:bg-surface-soft rounded-lg transition-colors shrink-0 cursor-pointer"
+                  title="Cambiar mi contraseña"
+                >
+                  <KeyRound size={15} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-200 transition-all cursor-pointer"
+          >
+            <LogOut size={14} />
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 
   return (
     <>
-      {/* Desktop Sidebar (Fixed) */}
-      <aside className="hidden lg:block w-64 shrink-0 h-screen sticky top-0 z-30">
-        {sidebarContent}
+      {/* Desktop Sidebar (Collapsible with smooth width transition) */}
+      <aside
+        className={`hidden lg:block shrink-0 h-screen sticky top-0 z-30 transition-[width] duration-300 ease-in-out ${
+          collapsed ? 'w-[72px]' : 'w-64'
+        }`}
+      >
+        {renderSidebar(collapsed)}
       </aside>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile Drawer Overlay (Always expanded for better touch interaction) */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
@@ -351,7 +492,7 @@ export function AdminSidebar({
             onClick={onCloseMobile}
           />
           <div className="relative w-72 max-w-[85vw] h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
-            {sidebarContent}
+            {renderSidebar(false)}
           </div>
         </div>
       )}

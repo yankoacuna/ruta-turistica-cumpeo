@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import FloatingMapButton from '@/components/FloatingMapButton';
+import SiteLayout from '@/components/SiteLayout';
 import PWARegister from '@/components/PWARegister';
 import { ToastProvider } from '@/components/Toast';
 import { SiteTextProvider } from '@/components/site-text';
@@ -47,14 +45,10 @@ export default async function RootLayout({
       <body className="w-full min-h-[100dvh] bg-bg text-text-primary font-sans antialiased flex flex-col overflow-x-hidden relative">
         <ToastProvider>
           <SiteTextProvider initial={siteTexts}>
-            <Navbar />
-            <main className="flex-1 pt-[56px] pb-[calc(64px+env(safe-area-inset-bottom,0px)+1.5rem)] md:pt-[68px] md:pb-6">
+            <SiteLayout>
               {children}
-            </main>
-            <Footer />
+            </SiteLayout>
 
-            {/* Floating Action Button for Map */}
-            <FloatingMapButton />
             {/* PWA Offline Service Worker Registration */}
             <PWARegister />
           </SiteTextProvider>

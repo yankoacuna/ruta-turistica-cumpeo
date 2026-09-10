@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Map,
-  Settings,
   BookOpen,
   Phone,
   Menu,
@@ -61,6 +60,10 @@ export default function Navbar() {
     }
   };
 
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <>
       {/* ── DESKTOP TOP NAV ─────── */}
@@ -72,7 +75,7 @@ export default function Navbar() {
         <div className="w-full max-w-[1200px] mx-auto px-4 h-full flex items-center justify-between">
           {/* Brand Logo Condorito & Municipalidad de Río Claro */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5 no-underline" title="Inicio Cumpeo Turismo">
+            <Link href="/" className="flex items-center gap-2.5 no-underline" title="Inicio Turismo Cumpeo">
               <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
                 <img
                   src="/assets/images/condorito-oficial.png"
@@ -174,14 +177,6 @@ export default function Navbar() {
               title="Abrir Mapa GPS de Condorito"
             >
               <Map size={16} /> <Editable k="nav.mapaCta" />
-            </Link>
-            <Link
-              href="/admin"
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-surface-soft border border-border text-text-secondary hover:bg-rojo hover:border-rojo hover:text-white transition-all"
-              title="Panel Admin"
-              aria-label="Panel de Administración"
-            >
-              <Settings size={18} />
             </Link>
           </div>
         </div>
@@ -311,15 +306,6 @@ export default function Navbar() {
                 onClick={() => setDrawerOpen(false)}
               >
                 <Phone size={18} className="text-rojo" /> <Editable k="nav.contactoLargo" />
-              </Link>
-              <Link
-                href="/admin"
-                className={`flex items-center gap-3 py-3 px-6 text-sm font-bold text-text-primary no-underline transition-colors hover:bg-surface-soft ${
-                  isActive('/admin') ? 'bg-rojo/10 text-rojo border-l-4 border-rojo' : ''
-                }`}
-                onClick={() => setDrawerOpen(false)}
-              >
-                <Settings size={18} className="text-rojo" /> <Editable k="nav.admin" />
               </Link>
 
               <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2.5 px-4">
