@@ -17,8 +17,10 @@ import {
   CloudSun,
   CloudRain,
 } from 'lucide-react';
+import { Editable, useSiteText } from '@/components/site-text';
 
 export default function Navbar() {
+  const { get } = useSiteText();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [weather, setWeather] = useState<{ temp: number; type: 'sun' | 'cloud-sun' | 'cloud' | 'rain' } | null>(null);
@@ -71,7 +73,7 @@ export default function Navbar() {
           {/* Brand Logo Condorito & Municipalidad de Río Claro */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5 no-underline" title="Inicio Cumpeo Turismo">
-              <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-[#1E1E24] overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
+              <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
                 <img
                   src="/assets/images/condorito-oficial.png"
                   alt="Condorito Logo"
@@ -82,12 +84,17 @@ export default function Navbar() {
                 />
               </div>
               <div className="flex flex-col">
-                <div className="text-[1.15rem] font-extrabold text-rojo leading-none font-display">Cumpeo Turismo</div>
+                <Editable
+                  k="nav.marca"
+                  as="div"
+                  className="text-[1.15rem] font-extrabold text-rojo leading-none font-display"
+                />
                 <div className="text-[0.7rem] font-bold text-text-secondary flex items-center gap-1 mt-[2px]">
-                  <span>Pueblo de Condorito</span>
-                  <span className="bg-rojo text-white text-[9px] px-[5px] py-[1px] rounded-full uppercase leading-none">
-                    Maule
-                  </span>
+                  <Editable k="nav.marcaBajada" />
+                  <Editable
+                    k="nav.marcaRegion"
+                    className="bg-rojo text-white text-[9px] px-[5px] py-[1px] rounded-full uppercase leading-none"
+                  />
                 </div>
               </div>
             </Link>
@@ -112,7 +119,7 @@ export default function Navbar() {
               }`}
             >
               <Home size={16} />
-              Inicio
+              <Editable k="nav.inicio" />
             </Link>
 
             <Link
@@ -122,7 +129,7 @@ export default function Navbar() {
               }`}
             >
               <Compass size={16} />
-              La Ruta
+              <Editable k="nav.ruta" />
             </Link>
 
             <Link
@@ -132,7 +139,7 @@ export default function Navbar() {
               }`}
             >
               <BookOpen size={16} />
-              Historia
+              <Editable k="nav.historia" />
             </Link>
 
             <Link
@@ -142,7 +149,7 @@ export default function Navbar() {
               }`}
             >
               <Phone size={16} />
-              Contacto
+              <Editable k="nav.contacto" />
             </Link>
           </div>
 
@@ -158,15 +165,15 @@ export default function Navbar() {
                   <span>{weather.temp}°C Cumpeo</span>
                 </>
               ) : (
-                'Cargando clima...'
+                get('nav.climaCargando')
               )}
             </div>
             <Link
               href="/mapa"
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-sol hover:bg-sol-dark text-[#1E1E24] text-sm font-extrabold no-underline transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-sol hover:bg-sol-dark text-ink text-sm font-extrabold no-underline transition-all shadow-sm"
               title="Abrir Mapa GPS de Condorito"
             >
-              <Map size={16} /> Abrir Mapa GPS
+              <Map size={16} /> <Editable k="nav.mapaCta" />
             </Link>
             <Link
               href="/admin"
@@ -186,12 +193,20 @@ export default function Navbar() {
         role="banner"
       >
         <Link href="/" className="flex items-center gap-2 no-underline">
-          <div className="w-9 h-9 rounded-full bg-sol border-2 border-[#1E1E24] overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
+          <div className="w-9 h-9 rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
             <img src="/assets/images/condorito-oficial.png" alt="Condorito Logo" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col">
-            <div className="text-[1.05rem] font-extrabold text-rojo leading-none font-display">Cumpeo Turismo</div>
-            <div className="text-[0.65rem] font-bold text-text-secondary mt-[1px]">Pueblo de Condorito</div>
+            <Editable
+              k="nav.marca"
+              as="div"
+              className="text-[1.05rem] font-extrabold text-rojo leading-none font-display"
+            />
+            <Editable
+              k="nav.marcaBajada"
+              as="div"
+              className="text-[0.65rem] font-bold text-text-secondary mt-[1px]"
+            />
           </div>
         </Link>
         <div className="flex items-center gap-1">
@@ -222,14 +237,20 @@ export default function Navbar() {
           >
             <div className="p-4 bg-rojo flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
-                <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-[#1E1E24] overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
+                <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
                   <img src="/assets/images/condorito-oficial.png" alt="Condorito" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <div className="font-display text-[1.15rem] font-black text-sol leading-tight">
-                    Cumpeo Turismo
-                  </div>
-                  <div className="text-[0.75rem] text-gray-200 font-semibold">Pelotillehue Real</div>
+                  <Editable
+                    k="nav.marca"
+                    as="div"
+                    className="font-display text-[1.15rem] font-black text-sol leading-tight"
+                  />
+                  <Editable
+                    k="nav.drawerBajada"
+                    as="div"
+                    className="text-[0.75rem] text-gray-200 font-semibold"
+                  />
                 </div>
               </div>
               <button
@@ -250,7 +271,7 @@ export default function Navbar() {
                       <span>{weather.temp}°C Cumpeo</span>
                     </>
                   ) : (
-                    'Cargando clima...'
+                    get('nav.climaCargando')
                   )}
                 </div>
               </div>
@@ -262,7 +283,7 @@ export default function Navbar() {
                 }`}
                 onClick={() => setDrawerOpen(false)}
               >
-                <Home size={18} className="text-rojo" /> Inicio
+                <Home size={18} className="text-rojo" /> <Editable k="nav.inicio" />
               </Link>
               <Link
                 href="/ruta"
@@ -271,7 +292,7 @@ export default function Navbar() {
                 }`}
                 onClick={() => setDrawerOpen(false)}
               >
-                <Compass size={18} className="text-rojo" /> La Ruta de Condorito
+                <Compass size={18} className="text-rojo" /> <Editable k="nav.rutaLargo" />
               </Link>
               <Link
                 href="/historia"
@@ -280,7 +301,7 @@ export default function Navbar() {
                 }`}
                 onClick={() => setDrawerOpen(false)}
               >
-                <BookOpen size={18} className="text-rojo" /> Historia del Pueblo
+                <BookOpen size={18} className="text-rojo" /> <Editable k="nav.historiaLargo" />
               </Link>
               <Link
                 href="/contacto"
@@ -289,7 +310,7 @@ export default function Navbar() {
                 }`}
                 onClick={() => setDrawerOpen(false)}
               >
-                <Phone size={18} className="text-rojo" /> Contacto e Información
+                <Phone size={18} className="text-rojo" /> <Editable k="nav.contactoLargo" />
               </Link>
               <Link
                 href="/admin"
@@ -298,19 +319,19 @@ export default function Navbar() {
                 }`}
                 onClick={() => setDrawerOpen(false)}
               >
-                <Settings size={18} className="text-rojo" /> Panel de Administración
+                <Settings size={18} className="text-rojo" /> <Editable k="nav.admin" />
               </Link>
 
               <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2.5 px-4">
                 <Link
                   href="/mapa"
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-sol hover:bg-sol-dark text-[#1E1E24] text-sm font-extrabold no-underline transition-all w-full shadow-sm"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-sol hover:bg-sol-dark text-ink text-sm font-extrabold no-underline transition-all w-full shadow-sm"
                   onClick={() => setDrawerOpen(false)}
                 >
-                  <Map size={18} /> Abrir Mapa GPS
+                  <Map size={18} /> <Editable k="nav.mapaCta" />
                 </Link>
                 <div className="text-center text-[0.75rem] text-text-muted mt-2">
-                  <em>&quot;¡Exijo una explicación! — Ven a Cumpeo&quot;</em>
+                  <Editable k="nav.frase" as="em" />
                 </div>
               </div>
             </div>

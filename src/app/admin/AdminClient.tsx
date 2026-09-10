@@ -12,6 +12,8 @@ import {
   AdminUser,
   AdminSessionUser,
   UserRole,
+  SiteTextRecord,
+  OrderableEntity,
 } from '@/lib/types';
 import { useToast } from '@/components/Toast';
 
@@ -31,6 +33,8 @@ import { RutasManager } from './_components/RutasManager';
 import { QRGenerator } from './_components/QRGenerator';
 import { BackupManager } from './_components/BackupManager';
 import { UserManager } from './_components/UserManager';
+import { SiteTextsManager } from './_components/SiteTextsManager';
+import { OrdenPortadaManager } from './_components/OrdenPortadaManager';
 import { DestinoModal } from './_components/modals/DestinoModal';
 import { RestauranteModal } from './_components/modals/RestauranteModal';
 import { AlojamientoModal } from './_components/modals/AlojamientoModal';
@@ -61,6 +65,8 @@ interface Props {
   initialSession?: AdminSessionUser | null;
   initialUsers?: AdminUser[];
   initialAuthenticated?: boolean;
+  /** Textos del sitio que fueron modificados desde el CMS. */
+  initialSiteTexts?: SiteTextRecord[];
 }
 
 export default function AdminClient({
@@ -73,6 +79,7 @@ export default function AdminClient({
   initialSession = null,
   initialUsers = [],
   initialAuthenticated = false,
+  initialSiteTexts = [],
 }: Props) {
   const { showToast } = useToast();
   const [session, setSession] = useState<AdminSessionUser | null>(initialSession);
@@ -115,6 +122,24 @@ export default function AdminClient({
   const alojamientos = useAlojamientos(initialAlojamientos, { showToast, onAuthError: handleAuthError });
   const eventos = useEventos(initialEventos, { showToast, onAuthError: handleAuthError });
   const rutas = useRutas(initialRutas, { showToast, onAuthError: handleAuthError });
+
+  /**
+   * Deja las listas del panel en el mismo orden que se acaba de guardar, para
+   * que las tablas no queden mostrando el orden anterior hasta recargar.
+   */
+  const handleReordered = (tipo: OrderableEntity, orderedIds: string[]) => {
+    const reordenar = <T extends { id: string }>(items: T[]): T[] => {
+      const posicion = new Map(orderedIds.map((id, i) => [id, i]));
+      return [...items].sort(
+        (a, b) => (posicion.get(a.id) ?? Infinity) - (posicion.get(b.id) ?? Infinity)
+      );
+    };
+
+    if (tipo === 'destinos') destinos.setDestinos((prev) => reordenar(prev));
+    if (tipo === 'restaurantes') restaurantes.setRestaurantes((prev) => reordenar(prev));
+    if (tipo === 'alojamientos') alojamientos.setAlojamientos((prev) => reordenar(prev));
+    if (tipo === 'eventos') eventos.setEventos((prev) => reordenar(prev));
+  };
 
   const isAnyPending =
     destinos.isPending ||
@@ -270,6 +295,7 @@ export default function AdminClient({
           eventos: eventos.eventos.length,
           rutas: rutas.rutas.length,
           usuarios: users.length,
+          textos: initialSiteTexts.length,
         }}
         currentUser={session}
         onChangePassword={() => setIsChangePasswordOpen(true)}
@@ -336,6 +362,8 @@ export default function AdminClient({
           {/* Tables for Destinos, Restaurantes, Alojamientos, Eventos */}
           {activeSection !== 'dashboard' &&
             activeSection !== 'rutas' &&
+            activeSection !== 'textos' &&
+            activeSection !== 'orden' &&
             activeSection !== 'qrcodes' &&
             activeSection !== 'backups' &&
             activeSection !== 'usuarios' && (
@@ -371,6 +399,30 @@ export default function AdminClient({
                 }}
               />
             )}
+
+          {/* Textos editables del sitio publico */}
+          {activeSection === 'textos' && (
+            <SiteTextsManager
+              overrides={initialSiteTexts}
+              role={role}
+              showToast={showToast}
+              onAuthError={handleAuthError}
+            />
+          )}
+
+          {/* Orden con que se muestran los catastros en la portada */}
+          {activeSection === 'orden' && (
+            <OrdenPortadaManager
+              destinos={destinos.destinos}
+              restaurantes={restaurantes.restaurantes}
+              alojamientos={alojamientos.alojamientos}
+              eventos={eventos.eventos}
+              role={role}
+              showToast={showToast}
+              onAuthError={handleAuthError}
+              onReordered={handleReordered}
+            />
+          )}
 
           {/* QR Code Generator */}
           {activeSection === 'qrcodes' && (

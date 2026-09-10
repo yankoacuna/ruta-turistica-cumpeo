@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { UtensilsCrossed, BedDouble, Camera } from 'lucide-react';
 import {
   Destination,
   Accommodation,
@@ -9,8 +8,10 @@ import {
   AppConfig,
   EmergencyContact,
   CumpeoEvent,
+  TourRoute,
 } from '@/lib/types';
 import { useToast } from '@/components/Toast';
+import { Editable } from '@/components/site-text';
 import { useNearbyDestinations } from '@/hooks/useNearbyDestinations';
 
 // Componentes modulares de la portada
@@ -19,6 +20,7 @@ import { QuickActions } from '@/components/home/QuickActions';
 import { NearbySection } from '@/components/home/NearbySection';
 import { RutaShowcase } from '@/components/home/RutaShowcase';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
+import { ServicesSection } from '@/components/home/ServicesSection';
 import { CatalogSection } from '@/components/home/CatalogSection';
 import { EventsSection } from '@/components/home/EventsSection';
 import { MunicipalBanner } from '@/components/home/MunicipalBanner';
@@ -37,6 +39,7 @@ interface HomeClientProps {
   initialRestaurants: Restaurant[];
   initialEmergency?: EmergencyContact[];
   initialEvents?: CumpeoEvent[];
+  initialRoutes?: TourRoute[];
 }
 
 export default function HomeClient({
@@ -47,6 +50,7 @@ export default function HomeClient({
   initialRestaurants,
   initialEmergency = [],
   initialEvents = [],
+  initialRoutes = [],
 }: HomeClientProps) {
   const { showToast } = useToast();
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
@@ -76,75 +80,76 @@ export default function HomeClient({
     [initialDestinations]
   );
 
+  // Ruta a mostrar en el bloque de acento: la marcada como destacada, o la primera.
+  const featuredRoute = useMemo(
+    () => initialRoutes.find((r) => r.destacada) || initialRoutes[0] || null,
+    [initialRoutes]
+  );
+
+  // Resuelve los poiIds de la ruta, en su orden, para listar las paradas por
+  // nombre. Igual que /ruta, se busca contra los tres catastros: una parada
+  // puede ser un destino, un restaurante o un alojamiento. Solo los destinos
+  // tienen ficha propia (/destino/[slug]), asi que el resto va sin enlace.
+  const routeStops = useMemo(() => {
+    if (!featuredRoute?.poiIds?.length) return [];
+    const byId = new Map<string, { nombre: string; href?: string }>();
+    initialDestinations.forEach((d) => byId.set(d.id, { nombre: d.nombre, href: `/destino/${d.slug}` }));
+    initialRestaurants.forEach((r) => byId.set(r.id, { nombre: r.nombre }));
+    initialAccommodations.forEach((a) => byId.set(a.id, { nombre: a.nombre }));
+
+    return featuredRoute.poiIds.flatMap((id) => {
+      const poi = byId.get(id);
+      return poi ? [{ id, nombre: poi.nombre, href: poi.href }] : [];
+    });
+  }, [featuredRoute, initialDestinations, initialRestaurants, initialAccommodations]);
+
   const openEmergencyModal = useCallback(() => setShowEmergencyModal(true), []);
 
   return (
     <div className="w-full bg-bg">
-      {/* 1. Hero compacto: identidad + buscador. Nada mas compite por la pantalla. */}
+      {/* 1. Hero: identidad + una sola accion primaria (la Ruta). */}
       <HeroSection destinations={initialDestinations} />
 
-      {/* 2. Accesos directos superpuestos al borde del hero */}
+      {/* 2. Orientacion para quien llega escaneando un QR en la calle. */}
       <QuickActions
         onGPSClick={locate}
         isLocating={isLocating}
         onOpenEmergencyModal={openEmergencyModal}
       />
 
-      {/* 3. Resultados GPS (solo tras pedir ubicacion) */}
+      {/* 3. Respuesta del GPS, pegada al boton que la dispara. */}
       {hasGPS && <NearbySection nearbyList={nearbyList} onRefresh={locate} />}
 
-      {/* 4. Bloque de acento: el producto estrella de la comuna */}
-      <RutaShowcase />
+      {/* 4. La Ruta: el producto del proyecto, con datos reales del catastro.
+             Subio de la posicion 4 a ser el primer bloque de contenido. */}
+      <RutaShowcase route={featuredRoute} stops={routeStops} />
 
-      {/* 5. Destacados en carrusel */}
+      {/* 5. Destacados en composicion editorial (1 grande + filas). */}
       <FeaturedSection featured={initialFeatured} />
 
-      {/* 6-8. Catastro comunal, acotado: 3 tarjetas + "ver mas" en cada bloque */}
-      <CatalogSection
-        id="section-comer"
-        tone="soft"
-        eyebrow="Gastronomia Local"
-        icon={UtensilsCrossed}
-        title="Donde Comer"
-        subtitle="Restaurantes criollos y picadas registradas en el catastro comunal."
-        items={restaurantCards}
-        initialCount={3}
-        cols={3}
-        nounPlural="locales"
-      />
+      {/* 6. Servicios: comer y dormir unificados en pestañas y filas compactas.
+             Antes eran dos secciones de tarjetas-foto casi identicas. */}
+      <ServicesSection restaurants={restaurantCards} lodging={lodgingCards} />
 
-      <CatalogSection
-        id="section-dormir"
-        tone="base"
-        eyebrow="Hospedaje"
-        icon={BedDouble}
-        title="Donde Dormir"
-        subtitle="Cabañas y hospedajes campesinos para quedarse mas de un dia."
-        items={lodgingCards}
-        initialCount={3}
-        cols={3}
-        nounPlural="alojamientos"
-      />
-
+      {/* 7. Catastro turistico completo, filtrable. */}
       <CatalogSection
         id="section-destinos"
-        tone="soft"
-        eyebrow="Explorar por Categoria"
-        icon={Camera}
-        title="Todos los Destinos"
-        subtitle="Filtra el catastro turistico completo de la comuna."
+        tone="paper"
+        kicker={<Editable k="home.catalogo.kicker" />}
+        title={<Editable k="home.catalogo.titulo" />}
+        lead={<Editable k="home.catalogo.lead" multiline />}
         items={destinationCards}
         filters={categories}
         initialCount={6}
         cols={3}
-        action={{ href: '/mapa', label: 'Abrir mapa GPS' }}
+        action={{ href: '/mapa', label: <Editable k="home.catalogo.accion" /> }}
         nounPlural="destinos"
       />
 
-      {/* 9. Calendario tradicional */}
+      {/* 8. Calendario tradicional en formato agenda. */}
       <EventsSection events={initialEvents} />
 
-      {/* 10. Cierre institucional */}
+      {/* 9. Cierre institucional. */}
       <MunicipalBanner onOpenEmergencyModal={openEmergencyModal} />
 
       <EmergencyModal

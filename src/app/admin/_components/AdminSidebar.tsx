@@ -11,6 +11,8 @@ import {
   Compass,
   QrCode,
   Database,
+  Type,
+  ListOrdered,
   ExternalLink,
   LogOut,
   X,
@@ -34,6 +36,8 @@ interface AdminSidebarProps {
     eventos: number;
     rutas: number;
     usuarios?: number;
+    /** Cuántos textos del sitio fueron modificados desde el CMS. */
+    textos?: number;
   };
   currentUser?: AdminSessionUser | null;
   onChangePassword?: () => void;
@@ -134,6 +138,20 @@ export function AdminSidebar({
           icon: Compass,
           count: counts.rutas,
           color: 'text-purple-500',
+        },
+        {
+          id: 'textos' as AdminSection,
+          label: 'Textos del Sitio',
+          icon: Type,
+          count: counts.textos,
+          color: 'text-sky-500',
+        },
+        {
+          id: 'orden' as AdminSection,
+          label: 'Orden de la Portada',
+          icon: ListOrdered,
+          count: undefined,
+          color: 'text-tierra-dark',
         },
       ],
     },
