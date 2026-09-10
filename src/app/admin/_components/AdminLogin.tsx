@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Loader2, AlertCircle, Lock, Mail, KeyRound } from 'lucide-react';
 import { Field, inputCls } from './Field';
+import { PasswordInput } from './PasswordInput';
 
 interface AdminLoginProps {
   onLogin: (identifier: string, password?: string) => Promise<boolean | void>;
@@ -97,37 +98,27 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
                 </Field>
 
                 <Field label="Contraseña" required>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      className={inputCls}
-                      placeholder="Ingresa tu contraseña personal..."
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        setError(null);
-                      }}
-                    />
-                    <Lock size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
-                  </div>
+                  <PasswordInput
+                    placeholder="Ingresa tu contraseña personal..."
+                    value={password}
+                    onChange={(v) => {
+                      setPassword(v);
+                      setError(null);
+                    }}
+                  />
                 </Field>
               </>
             ) : (
               <Field label="Clave Maestra de Respaldo" required>
-                <div className="relative">
-                  <input
-                    type="password"
-                    className={inputCls}
-                    placeholder="Clave maestra de emergencia..."
-                    value={emergencyPass}
-                    onChange={(e) => {
-                      setEmergencyPass(e.target.value);
-                      setError(null);
-                    }}
-                    autoFocus
-                  />
-                  <KeyRound size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-500" />
-                </div>
+                <PasswordInput
+                  placeholder="Clave maestra de emergencia..."
+                  value={emergencyPass}
+                  onChange={(v) => {
+                    setEmergencyPass(v);
+                    setError(null);
+                  }}
+                  autoFocus
+                />
                 <p className="text-[11px] text-text-muted mt-1.5 leading-relaxed">
                   Modo de acceso directo usando la clave maestra de configuración.
                 </p>

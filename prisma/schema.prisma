@@ -142,14 +142,17 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  nombre    String
-  password  String
-  role      Role     @default(LECTOR)
-  activo    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  nombre              String
+  password            String
+  role                Role     @default(LECTOR)
+  activo              Boolean  @default(true)
+  /// true cuando la contraseña actual fue asignada por un admin (alta o reseteo)
+  /// y el usuario todavía no elige la suya: se le exige cambiarla al entrar.
+  mustChangePassword  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 /// Textos editables del sitio público.

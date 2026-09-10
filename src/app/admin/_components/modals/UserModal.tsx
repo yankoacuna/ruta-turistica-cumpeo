@@ -1,12 +1,12 @@
 import React from 'react';
-import { Shield, ShieldAlert, Eye, UserCheck, Key } from 'lucide-react';
+import { Shield, ShieldAlert, Eye, UserCheck, KeyRound, Info } from 'lucide-react';
 import { AdminUser, UserRole } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, selectCls } from '../Field';
 
 interface UserModalProps {
-  editing: Partial<AdminUser> & { password?: string };
-  onChange: (updated: Partial<AdminUser> & { password?: string }) => void;
+  editing: Partial<AdminUser> & { resetPassword?: boolean };
+  onChange: (updated: Partial<AdminUser> & { resetPassword?: boolean }) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
   isPending: boolean;
@@ -19,7 +19,7 @@ export function UserModal({
   onClose,
   isPending,
 }: UserModalProps) {
-  const set = (patch: Partial<AdminUser> & { password?: string }) =>
+  const set = (patch: Partial<AdminUser> & { resetPassword?: boolean }) =>
     onChange({ ...editing, ...patch });
 
   const isEditing = Boolean(editing.id);
@@ -104,29 +104,38 @@ export function UserModal({
           )}
         </div>
 
-        {/* Contraseña */}
-        <Field
-          label={isEditing ? 'Nueva Contraseña (Opcional)' : 'Contraseña de Acceso'}
-          required={!isEditing}
-          hint={
-            isEditing
-              ? 'Déjala en blanco si deseas mantener la contraseña actual del usuario.'
-              : 'Mínimo 6 caracteres.'
-          }
-        >
-          <div className="relative">
-            <input
-              type="password"
-              required={!isEditing}
-              minLength={isEditing ? undefined : 6}
-              className={inputCls}
-              placeholder={isEditing ? '•••••••• (sin cambios)' : 'Ingresa una contraseña segura...'}
-              value={editing.password || ''}
-              onChange={(e) => set({ password: e.target.value })}
-            />
-            <Key size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+        {/* Contraseña: nunca la escribe el admin, se genera automáticamente */}
+        {isEditing ? (
+          <div className="rounded-xl border border-border overflow-hidden">
+            <label className="flex items-center justify-between gap-3 p-3.5 cursor-pointer select-none hover:bg-surface-soft transition-colors">
+              <span className="flex items-start gap-2.5">
+                <KeyRound size={16} className="text-text-muted shrink-0 mt-0.5" />
+                <span>
+                  <span className="block text-xs font-bold text-text-primary">
+                    Restablecer con una contraseña temporal
+                  </span>
+                  <span className="block text-[11px] text-text-muted mt-0.5">
+                    Se genera una nueva clave al guardar; el usuario deberá cambiarla en su próximo ingreso.
+                  </span>
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={editing.resetPassword ?? false}
+                onChange={(e) => set({ resetPassword: e.target.checked })}
+                className="w-4 h-4 accent-rojo rounded cursor-pointer shrink-0"
+              />
+            </label>
           </div>
-        </Field>
+        ) : (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl border border-border bg-[#FAF8F5] text-xs">
+            <Info size={16} className="text-text-muted shrink-0 mt-0.5" />
+            <span className="text-text-secondary">
+              Se generará una contraseña temporal automáticamente al crear el usuario, para copiarla y
+              entregársela. Deberá cambiarla al iniciar sesión por primera vez.
+            </span>
+          </div>
+        )}
 
         {/* Estado Activo / Inactivo */}
         {isEditing && (

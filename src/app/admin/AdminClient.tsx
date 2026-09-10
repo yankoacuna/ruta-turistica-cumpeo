@@ -42,6 +42,8 @@ import { EventoModal } from './_components/modals/EventoModal';
 import { RutaModal } from './_components/modals/RutaModal';
 import { UserModal } from './_components/modals/UserModal';
 import { ChangePasswordModal } from './_components/modals/ChangePasswordModal';
+import { GeneratedPasswordModal } from './_components/modals/GeneratedPasswordModal';
+import { ForcedPasswordChangeScreen } from './_components/ForcedPasswordChangeScreen';
 import { SessionExpiredModal } from './_components/modals/SessionExpiredModal';
 import { runTour, TourId } from './_components/adminTour';
 import {
@@ -93,10 +95,13 @@ export default function AdminClient({
   // Users management state
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [editingUser, setEditingUser] = useState<
-    (Partial<AdminUser> & { password?: string }) | null
+    (Partial<AdminUser> & { resetPassword?: boolean }) | null
   >(null);
   const [isUserPending, setIsUserPending] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [generatedCredential, setGeneratedCredential] = useState<
+    { email: string; nombre: string; password: string } | null
+  >(null);
 
   // Role permissions (Fail-secure: si no hay sesión, asume LECTOR)
   const role: UserRole = session?.role || 'LECTOR';
@@ -196,13 +201,12 @@ export default function AdminClient({
       nombre: '',
       email: '',
       role: 'LECTOR',
-      password: '',
       activo: true,
     });
   };
 
   const handleEditUser = (user: AdminUser) => {
-    setEditingUser({ ...user, password: '' });
+    setEditingUser({ ...user, resetPassword: false });
   };
 
   const handleSaveUser = async (e: React.FormEvent) => {
@@ -212,27 +216,30 @@ export default function AdminClient({
     setIsUserPending(true);
     try {
       if (editingUser.id) {
-        const updated = await updateAdminUser(editingUser.id, {
+        const { user: updated, temporaryPassword } = await updateAdminUser(editingUser.id, {
           nombre: editingUser.nombre,
           role: editingUser.role,
           activo: editingUser.activo,
-          password: editingUser.password || undefined,
+          resetPassword: editingUser.resetPassword,
         });
         setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+        if (temporaryPassword) {
+          setGeneratedCredential({ email: updated.email, nombre: updated.nombre, password: temporaryPassword });
+        }
         showToast(`Usuario "${updated.nombre}" actualizado con éxito`, 'success');
       } else {
-        if (!editingUser.email || !editingUser.nombre || !editingUser.password) {
+        if (!editingUser.email || !editingUser.nombre) {
           showToast('Por favor completa todos los campos obligatorios', 'error');
           setIsUserPending(false);
           return;
         }
-        const created = await createAdminUser({
+        const { user: created, temporaryPassword } = await createAdminUser({
           email: editingUser.email,
           nombre: editingUser.nombre,
-          password: editingUser.password,
           role: editingUser.role || 'LECTOR',
         });
         setUsers((prev) => [...prev, created]);
+        setGeneratedCredential({ email: created.email, nombre: created.nombre, password: temporaryPassword });
         showToast(`Usuario "${created.nombre}" creado exitosamente`, 'success');
       }
       setEditingUser(null);
@@ -245,7 +252,7 @@ export default function AdminClient({
 
   const handleToggleUserStatus = async (user: AdminUser) => {
     try {
-      const updated = await updateAdminUser(user.id, {
+      const { user: updated } = await updateAdminUser(user.id, {
         activo: !user.activo,
       });
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
@@ -283,6 +290,15 @@ export default function AdminClient({
   };
 
   if (!isAuthenticated) return <AdminLogin onLogin={handleLogin} />;
+
+  if (session?.mustChangePassword) {
+    return (
+      <ForcedPasswordChangeScreen
+        currentUser={session}
+        onSuccess={() => setSession({ ...session, mustChangePassword: false })}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex">
@@ -517,6 +533,14 @@ export default function AdminClient({
           )}
           {isChangePasswordOpen && (
             <ChangePasswordModal onClose={() => setIsChangePasswordOpen(false)} />
+          )}
+          {generatedCredential && (
+            <GeneratedPasswordModal
+              nombre={generatedCredential.nombre}
+              email={generatedCredential.email}
+              password={generatedCredential.password}
+              onClose={() => setGeneratedCredential(null)}
+            />
           )}
 
           {/* Modal de re-autenticación cuando expira la sesión */}

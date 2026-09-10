@@ -215,6 +215,8 @@ export interface AdminUser {
   nombre: string;
   role: UserRole;
   activo: boolean;
+  /** true si la contraseña actual la asignó un admin (alta o reseteo) y falta que el usuario la cambie. */
+  mustChangePassword?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -224,6 +226,7 @@ export interface AdminSessionUser {
   email: string;
   nombre: string;
   role: UserRole;
+  mustChangePassword?: boolean;
 }
 
 // ─── TEXTOS EDITABLES DEL SITIO ───────────────────────────────────────────────

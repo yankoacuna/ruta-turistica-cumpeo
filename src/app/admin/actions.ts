@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, UserRole, AdminUser, AdminSessionUser, OrderableEntity } from '@/lib/types';
-import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, shouldRefreshToken, SESSION_COOKIE_NAME } from '@/lib/auth';
+import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, shouldRefreshToken, generateTemporaryPassword, SESSION_COOKIE_NAME } from '@/lib/auth';
 
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
@@ -108,7 +108,7 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
   try {
     const user = await prisma.user.findUnique({
       where: { id: session.id },
-      select: { id: true, email: true, nombre: true, role: true, activo: true },
+      select: { id: true, email: true, nombre: true, role: true, activo: true, mustChangePassword: true },
     });
     if (!user || !user.activo) {
       return null;
@@ -118,6 +118,7 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
       email: user.email,
       nombre: user.nombre,
       role: user.role as UserRole,
+      mustChangePassword: user.mustChangePassword,
     };
 
     // Renovación deslizante automática (Sliding Session) si quedan menos de 3 días
@@ -203,6 +204,7 @@ export async function loginAdmin(
         email: user.email,
         nombre: user.nombre,
         role: user.role as UserRole,
+        mustChangePassword: user.mustChangePassword,
       };
     } else {
       sessionUser = await getMasterAdminUser();
@@ -246,6 +248,7 @@ export async function loginAdmin(
     email: user.email,
     nombre: user.nombre,
     role: user.role as UserRole,
+    mustChangePassword: user.mustChangePassword,
   };
 
   const token = createSessionToken(sessionUser);
@@ -1134,6 +1137,7 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
       nombre: true,
       role: true,
       activo: true,
+      mustChangePassword: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -1145,9 +1149,8 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
 export async function createAdminUser(data: {
   email: string;
   nombre: string;
-  password: string;
   role: UserRole;
-}): Promise<AdminUser> {
+}): Promise<{ user: AdminUser; temporaryPassword: string }> {
   await requireRole(['ADMIN']);
 
   const email = data.email.trim().toLowerCase();
@@ -1157,22 +1160,24 @@ export async function createAdminUser(data: {
   if (!data.nombre || data.nombre.trim().length === 0) {
     throw new Error('El nombre es requerido');
   }
-  if (!data.password || data.password.length < 6) {
-    throw new Error('La contraseña debe tener al menos 6 caracteres');
-  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     throw new Error('Ya existe un usuario con este correo electrónico');
   }
 
+  // El admin no elige la clave del nuevo usuario: se genera una temporal que
+  // deberá entregarle, y el sistema exige cambiarla en el primer ingreso.
+  const temporaryPassword = generateTemporaryPassword(email);
+
   const user = await prisma.user.create({
     data: {
       email,
       nombre: data.nombre.trim(),
-      password: hashPassword(data.password),
+      password: hashPassword(temporaryPassword),
       role: data.role,
       activo: true,
+      mustChangePassword: true,
     },
     select: {
       id: true,
@@ -1180,13 +1185,14 @@ export async function createAdminUser(data: {
       nombre: true,
       role: true,
       activo: true,
+      mustChangePassword: true,
       createdAt: true,
       updatedAt: true,
     },
   });
 
   revalidatePath('/admin');
-  return user as unknown as AdminUser;
+  return { user: user as unknown as AdminUser, temporaryPassword };
 }
 
 export async function updateAdminUser(
@@ -1195,9 +1201,10 @@ export async function updateAdminUser(
     nombre?: string;
     role?: UserRole;
     activo?: boolean;
-    password?: string;
+    /** El admin no escribe la clave: pide generar una nueva temporal para este usuario. */
+    resetPassword?: boolean;
   }
-): Promise<AdminUser> {
+): Promise<{ user: AdminUser; temporaryPassword?: string }> {
   const currentSession = await requireRole(['ADMIN']);
 
   // Prevenir que el único admin activo se auto-desactive o se cambie a lector/editor
@@ -1214,8 +1221,15 @@ export async function updateAdminUser(
   if (data.nombre) updateData.nombre = data.nombre.trim();
   if (data.role) updateData.role = data.role;
   if (typeof data.activo === 'boolean') updateData.activo = data.activo;
-  if (data.password && data.password.trim().length >= 6) {
-    updateData.password = hashPassword(data.password.trim());
+
+  let temporaryPassword: string | undefined;
+  if (data.resetPassword) {
+    // Reseteo: se genera una clave temporal nueva, no la elige el admin.
+    const target = await prisma.user.findUnique({ where: { id }, select: { email: true } });
+    if (!target) throw new Error('Usuario no encontrado');
+    temporaryPassword = generateTemporaryPassword(target.email);
+    updateData.password = hashPassword(temporaryPassword);
+    updateData.mustChangePassword = true;
   }
 
   const user = await prisma.user.update({
@@ -1227,13 +1241,14 @@ export async function updateAdminUser(
       nombre: true,
       role: true,
       activo: true,
+      mustChangePassword: true,
       createdAt: true,
       updatedAt: true,
     },
   });
 
   revalidatePath('/admin');
-  return user as unknown as AdminUser;
+  return { user: user as unknown as AdminUser, temporaryPassword };
 }
 
 export async function deleteAdminUser(id: string): Promise<boolean> {
@@ -1290,7 +1305,7 @@ export async function changeOwnPassword(
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { password: hashPassword(newPassword) },
+    data: { password: hashPassword(newPassword), mustChangePassword: false },
   });
 
   return { success: true };
