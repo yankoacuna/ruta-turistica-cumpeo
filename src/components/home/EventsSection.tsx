@@ -1,75 +1,100 @@
 import React from 'react';
 import Link from 'next/link';
-import { CalendarDays, Clock, MapPin, ArrowRight } from 'lucide-react';
+import { CalendarDays, MapPin, Repeat, ArrowRight } from 'lucide-react';
 import { CumpeoEvent } from '@/lib/types';
 import { Section, SectionHeader } from './Section';
-import { HorizontalScroller } from './HorizontalScroller';
+import { Editable } from '@/components/site-text';
 
 interface EventsSectionProps {
   events: CumpeoEvent[];
 }
 
+/**
+ * Calendario comunal en formato agenda.
+ *
+ * Antes era otro carrusel de tarjetas blancas (el cuarto de la portada) y
+ * ademas usaba colores crudos de Tailwind (amber-50, emerald-50) que no
+ * existen en el sistema, sumando dos hues mas al desorden. Una agenda es una
+ * lista con fechas: leerla en filas es mas rapido y le da a la seccion una
+ * forma propia dentro de la pagina.
+ */
 export function EventsSection({ events }: EventsSectionProps) {
   if (!events || events.length === 0) return null;
 
   return (
-    <Section id="section-eventos" tone="soft">
+    <Section id="section-eventos" tone="warm">
       <SectionHeader
-        eyebrow="Calendario Tradicional"
-        icon={CalendarDays}
-        title="Eventos y Fiestas Costumbristas"
-        subtitle="Festividades religiosas, ferias artesanales y celebraciones tipicas de Cumpeo."
-        action={{ href: '/mapa', label: 'Ver en el mapa' }}
+        kicker={<Editable k="home.eventos.kicker" />}
+        title={<Editable k="home.eventos.titulo" />}
+        lead={<Editable k="home.eventos.lead" multiline />}
+        action={{ href: '/mapa', label: <Editable k="home.eventos.accion" /> }}
       />
 
-      <HorizontalScroller cols={3}>
-        {events.slice(0, 6).map((ev) => (
-          <article
-            key={ev.id}
-            className="w-full bg-white border border-border rounded-2xl shadow-sm hover:border-rojo hover:shadow-md transition-all flex flex-col justify-between p-5"
-          >
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                  <CalendarDays size={12} className="text-amber-600" />
-                  <span>{ev.fecha || 'Fecha por confirmar'}</span>
-                </span>
-                {ev.recurrente && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    <Clock size={10} /> Tradicion Anual
+      <div className="px-4">
+        <ol className="bg-white border-[1.5px] border-border rounded-xl divide-y divide-border overflow-hidden">
+          {events.slice(0, 6).map((ev) => (
+            <li
+              key={ev.id}
+              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-paper-warm transition-colors"
+            >
+              {/* Bloque de fecha: el ancla visual de una agenda. */}
+              <div className="sm:w-[132px] shrink-0">
+                <div className="inline-flex sm:flex sm:flex-col items-center sm:items-start gap-2 sm:gap-1 px-3 py-2 rounded-lg bg-sol/15 border border-sol/40 w-full">
+                  <CalendarDays size={15} className="text-tierra-dark shrink-0" />
+                  {ev.fecha ? (
+                    <span className="font-display font-bold text-sm text-text-primary leading-tight">
+                      {ev.fecha}
+                    </span>
+                  ) : (
+                    <Editable
+                      k="home.eventos.sinFecha"
+                      className="font-display font-bold text-sm text-text-primary leading-tight"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-display font-bold text-base text-text-primary leading-snug">
+                    {ev.nombre}
+                  </h3>
+                  {ev.recurrente && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted border border-border rounded-full px-2 py-0.5">
+                      <Repeat size={11} /> Anual
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    {ev.tipo.replace(/-/g, ' ')}
                   </span>
+                  {ev.direccion && (
+                    <span className="text-xs text-text-muted flex items-center gap-1.5 min-w-0">
+                      <MapPin size={12} className="shrink-0" />
+                      <span className="truncate">{ev.direccion}</span>
+                    </span>
+                  )}
+                </div>
+
+                {ev.descripcion && (
+                  <p className="text-sm text-text-secondary mt-2 leading-relaxed line-clamp-2">
+                    {ev.descripcion}
+                  </p>
                 )}
               </div>
 
-              <h3 className="font-display font-bold text-base text-text-primary mb-1">{ev.nombre}</h3>
-
-              {ev.direccion && (
-                <div className="text-xs text-text-muted mb-2 flex items-center gap-1">
-                  <MapPin size={11} className="text-rojo shrink-0" />
-                  <span className="truncate">{ev.direccion}</span>
-                </div>
-              )}
-
-              <p className="text-xs text-text-secondary leading-relaxed line-clamp-3">
-                {ev.descripcion}
-              </p>
-            </div>
-
-            <div className="pt-3 mt-4 border-t border-border flex items-center justify-between text-xs">
-              <span className="capitalize font-semibold text-text-muted text-[11px]">
-                {ev.tipo.replace(/-/g, ' ')}
-              </span>
               <Link
                 href="/mapa"
-                className="font-bold text-rojo hover:text-rojo-dark inline-flex items-center gap-1 no-underline text-xs"
+                className="shrink-0 self-start sm:self-center min-h-[44px] px-4 inline-flex items-center gap-1.5 rounded-full text-sm font-bold text-text-primary bg-paper-warm border-[1.5px] border-border hover:border-ink no-underline transition-colors"
               >
-                <span>Ubicacion</span>
-                <ArrowRight size={12} />
+                <Editable k="home.eventos.ubicacion" /> <ArrowRight size={14} />
               </Link>
-            </div>
-          </article>
-        ))}
-      </HorizontalScroller>
+            </li>
+          ))}
+        </ol>
+      </div>
     </Section>
   );
 }

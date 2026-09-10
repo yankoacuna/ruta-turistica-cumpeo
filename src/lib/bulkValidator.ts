@@ -28,7 +28,7 @@ export interface ValidationSummary {
 }
 
 // Coordenadas céntricas por defecto de Cumpeo, Maule
-const DEFAULT_CUMPEO_COORDS = { lat: -35.267, lng: -71.250 };
+const DEFAULT_CUMPEO_COORDS = { lat: -35.281739, lng: -71.258714 };
 
 /**
  * Normaliza claves de encabezados para soportar variaciones comunes de los usuarios
@@ -175,7 +175,7 @@ export function validateDestinationRow(
   } else if (isDefault) {
     issues.push({
       field: 'coordenadas',
-      message: 'Sin coordenadas GPS: Se asignaron las coordenadas céntricas de Cumpeo (-35.267, -71.250).',
+      message: 'Sin coordenadas GPS: Se asignaron las coordenadas céntricas de Cumpeo (-35.281739, -71.258714).',
       severity: 'WARNING',
     });
   }
@@ -754,7 +754,7 @@ export function downloadEntityTemplate(entityType: BulkEntityType, format: 'xlsx
     },
     {
       Instrucción: '2. Formato de Coordenadas',
-      Detalle: 'Indicar valores decimales en Latitud y Longitud (Ej: -35.267, -71.250). Si se omite, se usa el centro de Cumpeo.',
+      Detalle: 'Indicar valores decimales en Latitud y Longitud (Ej: -35.281739, -71.258714). Si se omite, se usa el centro de Cumpeo.',
     },
     {
       Instrucción: '3. Valores Sí / No',

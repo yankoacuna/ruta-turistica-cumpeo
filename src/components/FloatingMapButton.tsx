@@ -16,11 +16,11 @@ export default function FloatingMapButton() {
   return (
     <Link
       href="/mapa"
-      className="fixed bottom-[calc(64px+env(safe-area-inset-bottom,0px)+12px)] md:bottom-5 right-5 w-13 h-13 p-3 rounded-full bg-sol text-text-primary border-2 border-[#1E1E24] flex items-center justify-center shadow-lg z-30 hover:scale-110 hover:bg-sol-dark transition-all no-underline"
+      className="fixed bottom-[calc(64px+env(safe-area-inset-bottom,0px)+12px)] md:bottom-5 right-5 w-13 h-13 p-3 rounded-full bg-sol text-text-primary border-2 border-ink flex items-center justify-center shadow-lg z-30 hover:scale-110 hover:bg-sol-dark transition-all no-underline"
       title="Abrir Mapa Interactivo GPS"
       aria-label="Abrir Mapa Interactivo"
     >
-      <Map size={22} className="text-[#1E1E24]" />
+      <Map size={22} className="text-ink" />
     </Link>
   );
 }

@@ -36,7 +36,7 @@ interface MapaClientProps {
   initialTourRoutes: TourRoute[];
 }
 
-const CUMPEO_CENTER = { lat: -35.267, lng: -71.25 };
+const CUMPEO_CENTER = { lat: -35.281739, lng: -71.258714 };
 
 /**
  * Badge "Abierto/Cerrado" en pildora, para la ficha del POI seleccionado.

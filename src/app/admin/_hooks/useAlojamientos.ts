@@ -7,7 +7,7 @@ const emptyAcc = (): Partial<Accommodation> => ({
   nombre: '',
   tipo: '',
   descripcion: '',
-  coordenadas: { lat: -35.267, lng: -71.25 },
+  coordenadas: { lat: -35.281739, lng: -71.258714 },
   direccion: '',
   servicios: [],
   imagenPrincipal: '',
@@ -67,5 +67,5 @@ export function useAlojamientos(initial: Accommodation[], { showToast, onAuthErr
     });
   };
 
-  return { alojamientos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return { alojamientos, setAlojamientos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
 }

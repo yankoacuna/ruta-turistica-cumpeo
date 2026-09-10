@@ -33,37 +33,68 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: Stale-While-Revalidate with network fallback
+// Fetch: Network-First for HTML pages, Stale-While-Revalidate for static assets
 self.addEventListener('fetch', (event) => {
-  // Ignore non-GET requests or admin mutations
+  // Ignore non-GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Do not cache admin routes or chrome-extensions
-  if (url.pathname.startsWith('/admin') || !url.protocol.startsWith('http')) {
+  // Do not cache admin routes, API endpoints, or non-http protocols
+  if (
+    url.pathname.startsWith('/admin') ||
+    url.pathname.startsWith('/api') ||
+    !url.protocol.startsWith('http')
+  ) {
     return;
   }
 
+  // Network-First for HTML navigations / pages
+  const isNavigation =
+    event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    (event.request.headers.get('accept') &&
+      event.request.headers.get('accept').includes('text/html'));
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          // If offline or network error, fallback to cached version
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(event.request);
+          if (cachedResponse) return cachedResponse;
+          return cache.match('/');
+        })
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate for other static assets (images, icons, styles)
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cachedResponse = await cache.match(event.request);
 
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          // If response is valid, update cache in background
           if (networkResponse && networkResponse.status === 200) {
             cache.put(event.request, networkResponse.clone());
           }
           return networkResponse;
         })
-        .catch(() => {
-          // If offline and no match, return cached response if available
-          return cachedResponse;
-        });
+        .catch(() => cachedResponse);
 
-      // Return cached version immediately if exists, or wait for network
       return cachedResponse || fetchPromise;
     })
   );
 });
+

@@ -10,7 +10,7 @@ const emptyDest = (): Partial<Destination> => ({
   descripcionCorta: '',
   descripcionLarga: '',
   historia: '',
-  coordenadas: { lat: -35.267, lng: -71.25 },
+  coordenadas: { lat: -35.281739, lng: -71.258714 },
   direccion: '',
   horario: '',
   duracionVisita: '',
@@ -70,5 +70,5 @@ export function useDestinos(initial: Destination[], { showToast, onAuthError }: 
     });
   };
 
-  return { destinos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return { destinos, setDestinos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
 }

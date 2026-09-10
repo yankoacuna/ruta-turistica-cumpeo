@@ -21,8 +21,8 @@ export function CoordinatesPicker({
 }: CoordinatesPickerProps) {
   const [isMapOpen, setIsMapOpen] = useState(false);
 
-  const lat = coordinates?.lat ?? -35.267;
-  const lng = coordinates?.lng ?? -71.25;
+  const lat = coordinates?.lat ?? -35.281739;
+  const lng = coordinates?.lng ?? -71.258714;
 
   const handleLatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
@@ -36,7 +36,7 @@ export function CoordinatesPicker({
 
   const hasCustomCoordinates =
     Boolean(coordinates) &&
-    (coordinates?.lat !== -35.267 || coordinates?.lng !== -71.25);
+    (coordinates?.lat !== -35.281739 || coordinates?.lng !== -71.258714);
 
   return (
     <div className="rounded-xl border border-border bg-white p-3.5 flex flex-col gap-3">

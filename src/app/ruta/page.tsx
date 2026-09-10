@@ -1,7 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { getAllPOIs, getTourRoutes, formatImgUrl } from '@/lib/data';
+import { getAllPOIs, getTourRoutes, formatImgUrl, getResolvedSiteTexts } from '@/lib/data';
+import { Editable } from '@/components/site-text';
 import {
   Map as MapIcon,
   MapPin,
@@ -31,9 +32,12 @@ interface RutaPageProps {
 
 export default async function RutaPage({ searchParams }: RutaPageProps) {
   // ── CARGA DINÁMICA DE LA BASE DE DATOS Y CONFIGURACIÓN ──
-  const [routes, allPois] = await Promise.all([
+  const [routes, allPois, textos] = await Promise.all([
     getTourRoutes(),
     getAllPOIs(),
+    // Los textos de respaldo (cuando la ruta no trae nombre o descripcion) se
+    // leen resueltos porque esta es una pagina de servidor: no hay hooks aca.
+    getResolvedSiteTexts(),
   ]);
 
   const targetSlug = searchParams?.slug || searchParams?.ruta;
@@ -82,15 +86,14 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-sol text-[#1E1E24] mb-3 shadow-sm">
-                <Compass size={14} /> Circuito Turístico Oficial
+                <Compass size={14} /> <Editable k="ruta.hero.kicker" />
               </div>
               <h1 className="font-display font-black text-3xl sm:text-4xl md:text-5xl leading-tight text-white mb-3">
-                {currentRoute?.nombre || 'Circuito Turístico de Cumpeo'} <br />
-                <span className="text-sol">Río Claro, Maule</span>
+                {currentRoute?.nombre || textos['ruta.hero.tituloFallback']} <br />
+                <Editable k="ruta.hero.ubicacion" className="text-sol" />
               </h1>
               <p className="text-sm md:text-base text-gray-300 leading-relaxed max-w-xl">
-                {currentRoute?.descripcion ||
-                  'Descubre los hitos patrimoniales, gastronómicos y culturales de Cumpeo, ambientados en las tradiciones maulinas y la historieta de Condorito.'}
+                {currentRoute?.descripcion || textos['ruta.hero.descripcionFallback']}
               </p>
 
               {/* Indicadores clave configurables */}
@@ -115,14 +118,14 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
                   href={`/mapa?ruta=${currentRoute?.slug || currentRoute?.id}`}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-extrabold bg-rojo text-white hover:bg-rojo-dark transition-all shadow-md text-sm no-underline"
                 >
-                  <MapIcon size={18} /> Navegar en Mapa GPS en Vivo
+                  <MapIcon size={18} /> <Editable k="ruta.hero.ctaMapa" />
                 </Link>
                 {currentRoute?.mapaImagen && (
                   <a
                     href="#mapa-oficial"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all text-sm no-underline"
                   >
-                    Ver Mapa Ilustrado ↓
+                    <Editable k="ruta.hero.ctaMapaIlustrado" />
                   </a>
                 )}
               </div>
@@ -130,9 +133,11 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
 
             {/* Sello de respaldo municipal */}
             <div className="bg-white/5 border border-white/10 p-5 rounded-2xl md:max-w-[280px] shrink-0 backdrop-blur-sm">
-              <div className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2">
-                Iniciativa Turística Oficial
-              </div>
+              <Editable
+                k="ruta.hero.selloKicker"
+                as="div"
+                className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2"
+              />
               <div className="flex items-center gap-3">
                 <img
                   src="/assets/images/logo-muni-rio-claro.png"
@@ -140,9 +145,12 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
                   className="h-10 object-contain brightness-110"
                 />
               </div>
-              <p className="text-[0.75rem] text-gray-300 mt-2.5 leading-snug">
-                Coordinado por la Ilustre Municipalidad de Río Claro para el fomento del turismo comunal y el comercio local.
-              </p>
+              <Editable
+                k="ruta.hero.selloTexto"
+                as="p"
+                className="text-[0.75rem] text-gray-300 mt-2.5 leading-snug"
+                multiline
+              />
             </div>
           </div>
         </div>
@@ -153,7 +161,7 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
         <section className="w-full bg-[#F5F4F0] border-b border-border py-4">
           <div className="max-w-[1200px] mx-auto px-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <span className="text-xs font-bold text-text-muted uppercase tracking-wider shrink-0 flex items-center gap-1.5">
-              <Sparkles size={14} className="text-rojo" /> Circuitos Disponibles:
+              <Sparkles size={14} className="text-rojo" /> <Editable k="ruta.selector" />
             </span>
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
               {routes.map((r) => {
@@ -191,14 +199,19 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
               <div>
                 <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-rojo uppercase tracking-wider mb-1">
-                  <Compass size={14} /> Mapa Cartográfico Patrimonial
+                  <Compass size={14} /> <Editable k="ruta.mapa.kicker" />
                 </div>
-                <h2 className="font-display font-extrabold text-2xl md:text-3xl text-text-primary">
-                  El Mapa Ilustrado del Circuito
-                </h2>
-                <p className="text-sm text-text-secondary mt-1 max-w-xl">
-                  Guía cartográfica oficial de los hitos y paradas desde el acceso en Camarico (Ruta 5 Sur Km 222) hasta el centro cívico de Cumpeo.
-                </p>
+                <Editable
+                  k="ruta.mapa.titulo"
+                  as="h2"
+                  className="font-display font-extrabold text-2xl md:text-3xl text-text-primary"
+                />
+                <Editable
+                  k="ruta.mapa.lead"
+                  as="p"
+                  className="text-sm text-text-secondary mt-1 max-w-xl"
+                  multiline
+                />
               </div>
 
               <a
@@ -208,7 +221,7 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-rojo hover:text-rojo-dark bg-[#FFF0F1] hover:bg-[#FFE0E2] border border-[#FFCCD0] px-4 py-2 rounded-full transition-all self-start md:self-auto no-underline"
                 title="Abrir imagen en alta resolución"
               >
-                <ExternalLink size={14} /> Abrir mapa en tamaño completo
+                <ExternalLink size={14} /> <Editable k="ruta.mapa.abrir" />
               </a>
             </div>
 
@@ -220,7 +233,7 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
                 className="w-full h-auto object-contain max-h-[550px] mx-auto transition-transform duration-300 group-hover:scale-[1.01]"
               />
               <div className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
-                <span>Ilustración oficial comunal</span>
+                <Editable k="ruta.mapa.pie" />
               </div>
             </div>
 
@@ -249,14 +262,20 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-rojo uppercase tracking-wider mb-1">
-              <MapPin size={14} /> Itinerario Oficial ({stops.length} Paradas Configuradas)
+              <MapPin size={14} /> <Editable k="ruta.paradas.kicker" /> ({stops.length}{' '}
+              <Editable k="ruta.paradas.kickerSufijo" />)
             </div>
-            <h2 className="font-display font-extrabold text-2xl md:text-3xl text-text-primary">
-              Las Paradas del Circuito
-            </h2>
-            <p className="text-sm text-text-secondary mt-1 max-w-xl">
-              Recorrido sugerido en orden secuencial. Configurado en la base de datos y administrable por el equipo de turismo.
-            </p>
+            <Editable
+              k="ruta.paradas.titulo"
+              as="h2"
+              className="font-display font-extrabold text-2xl md:text-3xl text-text-primary"
+            />
+            <Editable
+              k="ruta.paradas.lead"
+              as="p"
+              className="text-sm text-text-secondary mt-1 max-w-xl"
+              multiline
+            />
           </div>
 
           <Link
@@ -264,7 +283,7 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold bg-[#1E1E24] hover:bg-black text-white transition-all shadow-sm self-start sm:self-auto no-underline"
           >
             <MapIcon size={15} />
-            <span>Ver paradas en Mapa Interactivo</span>
+            <Editable k="ruta.paradas.cta" />
             <ArrowRight size={14} />
           </Link>
         </div>
@@ -272,12 +291,17 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
         {stops.length === 0 ? (
           <div className="bg-white border-2 border-dashed border-border rounded-3xl p-10 text-center text-text-muted">
             <Compass size={32} className="mx-auto mb-2 text-text-muted opacity-50" />
-            <div className="font-bold text-base text-text-primary mb-1">
-              Aún no hay paradas configuradas en este circuito
-            </div>
-            <p className="text-xs max-w-md mx-auto">
-              Puedes agregar o reordenar los destinos, restaurantes y locales para esta ruta ingresando al Panel de Administración.
-            </p>
+            <Editable
+              k="ruta.paradas.vacioTitulo"
+              as="div"
+              className="font-bold text-base text-text-primary mb-1"
+            />
+            <Editable
+              k="ruta.paradas.vacioTexto"
+              as="p"
+              className="text-xs max-w-md mx-auto"
+              multiline
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -322,7 +346,7 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
                       href={`/destino/${parada.id}`}
                       className="inline-flex items-center gap-1 text-xs font-bold text-rojo hover:text-rojo-dark transition-colors no-underline"
                     >
-                      Ver ficha completa <ArrowRight size={12} />
+                      <Editable k="ruta.paradas.verFicha" /> <ArrowRight size={12} />
                     </Link>
 
                     <a
@@ -331,7 +355,7 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-semibold text-text-secondary hover:text-sky-700 transition-colors no-underline"
                     >
-                      <Navigation size={12} /> Cómo llegar
+                      <Navigation size={12} /> <Editable k="ruta.paradas.comoLlegar" />
                     </a>
                   </div>
                 </div>
@@ -346,11 +370,13 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
         <section className="py-8 w-full max-w-[1200px] mx-auto px-4">
           <div className="bg-[#FFFDF7] border-2 border-[#FFE8A3] rounded-3xl p-6 md:p-8 shadow-sm">
             <div className="flex items-center gap-2 text-xs font-extrabold text-[#B47900] uppercase tracking-wider mb-2">
-              <Info size={16} /> Consejos Prácticos para tu Visita
+              <Info size={16} /> <Editable k="ruta.consejos.kicker" />
             </div>
-            <h3 className="font-display font-extrabold text-xl text-text-primary mb-4">
-              Recomendaciones para recorrer este circuito
-            </h3>
+            <Editable
+              k="ruta.consejos.titulo"
+              as="h3"
+              className="font-display font-extrabold text-xl text-text-primary mb-4"
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs sm:text-sm text-text-secondary">
               {currentRoute.consejos.map((tip: any, idx: number) => (

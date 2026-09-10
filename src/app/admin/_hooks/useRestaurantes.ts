@@ -7,7 +7,7 @@ const emptyRest = (): Partial<Restaurant> => ({
   nombre: '',
   descripcion: '',
   especialidad: '',
-  coordenadas: { lat: -35.267, lng: -71.25 },
+  coordenadas: { lat: -35.281739, lng: -71.258714 },
   direccion: '',
   horario: { apertura: '', cierre: '', descripcion: '' },
   contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '' },
@@ -70,5 +70,5 @@ export function useRestaurantes(initial: Restaurant[], { showToast, onAuthError 
     });
   };
 
-  return { restaurantes, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return { restaurantes, setRestaurantes, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
 }

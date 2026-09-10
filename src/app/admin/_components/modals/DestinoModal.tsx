@@ -4,12 +4,13 @@ import { Destination } from '@/lib/types';
 import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImageUploadField } from '../ImageUploadField';
-import { GalleryField } from '../GalleryField';
 import {
   CoordinatesPicker,
   SlugField,
   CommaSeparatedField,
+  MediaFields,
+  DireccionField,
+  HorarioField,
 } from './common';
 
 interface DestinoModalProps {
@@ -114,22 +115,11 @@ export function DestinoModal({
 
         {/* Datos prácticos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Dirección">
-            <input
-              className={inputCls}
-              placeholder="Calle / Localidad, Cumpeo"
-              value={editing.direccion || ''}
-              onChange={(e) => set({ direccion: e.target.value })}
-            />
-          </Field>
-          <Field label="Horario">
-            <input
-              className={inputCls}
-              placeholder="Lun–Dom 9:00–18:00"
-              value={editing.horario || ''}
-              onChange={(e) => set({ horario: e.target.value })}
-            />
-          </Field>
+          <DireccionField
+            value={editing.direccion}
+            onChange={(direccion) => set({ direccion })}
+            placeholder="Calle / Localidad, Cumpeo"
+          />
           <Field label="Duración Sugerida">
             <input
               className={inputCls}
@@ -139,6 +129,9 @@ export function DestinoModal({
             />
           </Field>
         </div>
+
+        {/* Horario de Atención */}
+        <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
 
         {/* Cómo llegar */}
         <Field label="Cómo Llegar">
@@ -158,18 +151,12 @@ export function DestinoModal({
           modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
         />
 
-        <div id="tour-dest-image">
-          <ImageUploadField
-            label="Imagen Principal"
-            value={editing.imagenPrincipal || ''}
-            onChange={(url) => set({ imagenPrincipal: url })}
-          />
-        </div>
-
-        {/* Galería de fotos */}
-        <GalleryField
-          images={editing.galeria || []}
-          onChange={(images) => set({ galeria: images })}
+        <MediaFields
+          imagenWrapperId="tour-dest-image"
+          imagenPrincipal={editing.imagenPrincipal}
+          onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
+          galeria={editing.galeria}
+          onGaleriaChange={(galeria) => set({ galeria })}
         />
 
         {/* Tags Refactorizado */}
