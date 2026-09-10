@@ -1,38 +1,56 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fredoka:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fredoka:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Variables CSS (compatibilidad con código existente) ──────── */
+/* ── Variables CSS (compatibilidad con código existente) ──────────────
+   Sistema "Papel de Historieta": tinta cálida + papel crema + rojo Condorito.
+   Los valores se mantienen sincronizados con tailwind.config.ts.
+   ------------------------------------------------------------------- */
 :root {
-  /* Rojo Condorito (Iconico) */
+  /* Dominante */
   --color-rojo: #E63946;
-  --color-rojo-light: #FF4D5A;
+  --color-rojo-light: #FF5A66;
   --color-rojo-dark: #C1121F;
+  /* Acento */
   --color-sol: #FFC300;
-  --color-sol-light: #FFD166;
+  --color-sol-light: #FFD54A;
   --color-sol-dark: #E0A900;
+  /* Tinta y papel */
+  --color-ink: #231F20;
+  --color-ink-soft: #3D3733;
+  --color-ink-line: #C9BFA8;
+  --color-paper: #F7F3E8;
+  --color-paper-warm: #FDFBF4;
+  --color-paper-deep: #EFE8D6;
+  /* Semánticos de datos (mapa / categorías) */
   --color-cielo: #0077B6;
   --color-cielo-light: #0096C7;
   --color-cielo-dark: #023E8A;
   --color-verde: #2A9D8F;
   --color-tierra: #D97706;
   --color-tierra-dark: #B45309;
-  --color-bg: #F4F3EF;
+  /* Roles */
+  --color-bg: #F7F3E8;
   --color-surface: #FFFFFF;
-  --color-surface-soft: #FAF8F5;
-  --color-surface-hover: #F0EDE6;
-  --color-text-primary: #1E1E24;
-  --color-text-secondary: #4A4E69;
-  --color-text-muted: #8D99AE;
-  --color-border: #E2E0D8;
+  --color-surface-soft: #FDFBF4;
+  --color-surface-hover: #EFE8D6;
+  --color-text-primary: #231F20;
+  --color-text-secondary: #574F45;
+  --color-text-muted: #6B6055;
+  --color-border: #E0D8C6;
+  --color-border-strong: #C9BFA8;
   --color-border-hover: #E63946;
   --font-body: 'Outfit', system-ui, sans-serif;
   --font-display: 'Fredoka', 'Outfit', sans-serif;
 }
 
-/* The rest of the styling is done via Tailwind CSS utility classes in the components. */
+/* Fredoka es una tipografía redonda: a tamaño display necesita tracking
+   negativo para no verse infantil y suelta. */
+.font-display {
+  letter-spacing: -0.015em;
+}
 
 /* ── Utilidades ──────────────────────────────────────────────── */
 @layer utilities {
@@ -43,6 +61,51 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Trama de puntos (halftone) de historieta. Textura de marca, cuesta 0 bytes
+     y es lo que diferencia el sitio de un template genérico. */
+  .bg-halftone {
+    background-image: radial-gradient(rgba(35, 31, 32, 0.14) 1px, transparent 1.3px);
+    background-size: 7px 7px;
+  }
+  .bg-halftone-sol {
+    background-image: radial-gradient(rgba(255, 195, 0, 0.22) 1px, transparent 1.3px);
+    background-size: 7px 7px;
+  }
+  .bg-halftone-white {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1.3px);
+    background-size: 7px 7px;
+  }
+
+  /* Grano de papel de imprenta, muy sutil, sobre el fondo crema. */
+  .bg-paper-grain {
+    background-image:
+      radial-gradient(rgba(35, 31, 32, 0.035) 0.5px, transparent 0.6px),
+      radial-gradient(rgba(35, 31, 32, 0.025) 0.5px, transparent 0.6px);
+    background-size: 4px 4px, 7px 7px;
+    background-position: 0 0, 2px 3px;
+  }
+
+  /* Borde de viñeta: línea de tinta en reposo, tinta plena al hover. */
+  .panel-ink {
+    border: 1.5px solid var(--color-border);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .panel-ink:hover {
+    border-color: var(--color-ink);
+  }
+
+  /* Título de sección subrayado con regla de tinta (reemplaza el patrón
+     eyebrow+ícono repetido en todas las secciones). */
+  .rule-ink::after {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 4px;
+    margin-top: 0.75rem;
+    border-radius: 2px;
+    background: var(--color-rojo);
   }
 }
 
