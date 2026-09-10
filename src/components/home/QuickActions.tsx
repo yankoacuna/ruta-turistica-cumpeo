@@ -63,7 +63,7 @@ export function QuickActions({ onGPSClick, isLocating, onOpenEmergencyModal }: Q
             <ChevronRight size={16} className="text-text-muted shrink-0" />
           </button>
 
-          <Link href="#section-servicios" className={ROW}>
+          <Link href="#section-comer" className={ROW}>
             <span className={ICON_BOX}>
               <UtensilsCrossed size={20} />
             </span>
@@ -80,7 +80,7 @@ export function QuickActions({ onGPSClick, isLocating, onOpenEmergencyModal }: Q
             <ChevronRight size={16} className="text-text-muted shrink-0" />
           </Link>
 
-          <Link href="#section-servicios" className={ROW}>
+          <Link href="#section-dormir" className={ROW}>
             <span className={ICON_BOX}>
               <BedDouble size={20} />
             </span>

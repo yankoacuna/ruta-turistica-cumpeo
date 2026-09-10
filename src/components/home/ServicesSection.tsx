@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Section, SectionHeader } from './Section';
 import { ServiceRow } from './ServiceRow';
@@ -26,6 +26,14 @@ const INITIAL = 4;
 export function ServicesSection({ restaurants, lodging }: ServicesSectionProps) {
   const [tab, setTab] = useState<'comer' | 'dormir'>('comer');
   const [expanded, setExpanded] = useState(false);
+
+  // Los accesos rápidos de la portada ("Dónde comer" / "Dónde dormir") enlazan
+  // a #section-comer / #section-dormir: al llegar por ese enlace, la pestaña
+  // debe abrir en la que corresponde, no siempre en "Comer".
+  useEffect(() => {
+    if (window.location.hash === '#section-dormir') setTab('dormir');
+    else if (window.location.hash === '#section-comer') setTab('comer');
+  }, []);
 
   if (restaurants.length === 0 && lodging.length === 0) return null;
 

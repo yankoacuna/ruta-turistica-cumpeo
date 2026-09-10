@@ -4,13 +4,12 @@ import { Restaurant } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import {
-  CoordinatesPicker,
+  LocationField,
   ContactoSection,
   ActivoToggle,
   HorarioField,
   MediaFields,
   PropietarioField,
-  DireccionField,
 } from './common';
 
 interface RestauranteModalProps {
@@ -101,8 +100,14 @@ export function RestauranteModal({
           />
         </Field>
 
-        {/* Dirección */}
-        <DireccionField value={editing.direccion} onChange={(direccion) => set({ direccion })} />
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
+        />
 
         {/* Horario de Atención */}
         <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
@@ -154,13 +159,6 @@ export function RestauranteModal({
             onChange={(e) => set({ menuUrl: e.target.value })}
           />
         </Field>
-
-        {/* Coordenadas Refactorizadas con Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas}
-          onChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
-        />
 
         <MediaFields
           imagenPrincipal={editing.imagenPrincipal}

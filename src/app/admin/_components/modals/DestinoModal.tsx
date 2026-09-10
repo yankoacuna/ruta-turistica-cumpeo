@@ -5,10 +5,9 @@ import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import {
-  CoordinatesPicker,
+  LocationField,
   CommaSeparatedField,
   MediaFields,
-  DireccionField,
   HorarioField,
 } from './common';
 
@@ -102,22 +101,25 @@ export function DestinoModal({
           </Field>
         </div>
 
-        {/* Datos prácticos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <DireccionField
-            value={editing.direccion}
-            onChange={(direccion) => set({ direccion })}
-            placeholder="Calle / Localidad, Cumpeo"
+        {/* Duración */}
+        <Field label="Duración Sugerida">
+          <input
+            className={inputCls}
+            placeholder="Ej: 45 minutos"
+            value={editing.duracionVisita || ''}
+            onChange={(e) => set({ duracionVisita: e.target.value })}
           />
-          <Field label="Duración Sugerida">
-            <input
-              className={inputCls}
-              placeholder="Ej: 45 minutos"
-              value={editing.duracionVisita || ''}
-              onChange={(e) => set({ duracionVisita: e.target.value })}
-            />
-          </Field>
-        </div>
+        </Field>
+
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          direccionPlaceholder="Calle / Localidad, Cumpeo"
+          modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
+        />
 
         {/* Horario de Atención */}
         <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
@@ -132,13 +134,6 @@ export function DestinoModal({
             onChange={(e) => set({ comoLlegar: e.target.value })}
           />
         </Field>
-
-        {/* Coordenadas Refactorizadas con Selector de Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas}
-          onChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
-        />
 
         <MediaFields
           imagenWrapperId="tour-dest-image"

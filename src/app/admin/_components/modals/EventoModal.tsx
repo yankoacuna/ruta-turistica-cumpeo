@@ -1,9 +1,9 @@
 import React from 'react';
-import { Calendar, MapPin, Tag } from 'lucide-react';
+import { Calendar, Tag } from 'lucide-react';
 import { CumpeoEvent } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { CoordinatesPicker, CommaSeparatedField, MediaFields, DireccionField } from './common';
+import { LocationField, CommaSeparatedField, MediaFields } from './common';
 
 interface EventoModalProps {
   editing: Partial<CumpeoEvent>;
@@ -88,19 +88,13 @@ export function EventoModal({
           />
         </Field>
 
-        {/* Dirección */}
-        <DireccionField
-          label="Lugar / Dirección"
-          icon={<MapPin size={14} />}
-          placeholder="Ej: Plaza de Cumpeo / Alameda"
-          value={editing.direccion}
-          onChange={(direccion) => set({ direccion })}
-        />
-
-        {/* Coordenadas Refactorizadas con Selector de Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas as any}
-          onChange={(coordenadas) => set({ coordenadas: coordenadas as any })}
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          direccionPlaceholder="Ej: Plaza de Cumpeo / Alameda"
           modalTitle={`Ubicación de ${editing.nombre || 'Evento'}`}
         />
 

@@ -3,13 +3,12 @@ import { Accommodation } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import {
-  CoordinatesPicker,
+  LocationField,
   ContactoSection,
   ActivoToggle,
   CommaSeparatedField,
   MediaFields,
   PropietarioField,
-  DireccionField,
 } from './common';
 
 interface AlojamientoModalProps {
@@ -86,17 +85,23 @@ export function AlojamientoModal({
           />
         </Field>
 
-        {/* Dirección + Servicios */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <DireccionField value={editing.direccion} onChange={(direccion) => set({ direccion })} />
-          <CommaSeparatedField
-            label="Servicios"
-            placeholder="WiFi, Estacionamiento, Piscina, Quincho…"
-            hint="Separados por coma"
-            value={editing.servicios || []}
-            onChange={(servicios) => set({ servicios })}
-          />
-        </div>
+        {/* Servicios */}
+        <CommaSeparatedField
+          label="Servicios"
+          placeholder="WiFi, Estacionamiento, Piscina, Quincho…"
+          hint="Separados por coma"
+          value={editing.servicios || []}
+          onChange={(servicios) => set({ servicios })}
+        />
+
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Alojamiento'}`}
+        />
 
         {/* Contacto Refactorizado */}
         <ContactoSection
@@ -107,13 +112,6 @@ export function AlojamientoModal({
             set({ contacto, telefono, whatsapp })
           }
           instagramPlaceholder="@nombre_hospedaje"
-        />
-
-        {/* Coordenadas Refactorizadas con Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas}
-          onChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Alojamiento'}`}
         />
 
         <MediaFields
