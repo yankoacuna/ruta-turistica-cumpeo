@@ -16,7 +16,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { getDestinationByIdOrSlug, getDestinations, getCategoryColorClass, formatImgUrl } from '@/lib/data';
-import { getOpeningStatus } from '@/lib/openingHours';
+import { getOpeningStatus, formatHorario } from '@/lib/openingHours';
 
 const BADGE_STYLES: Record<string, string> = {
   rojo:       'bg-[#FFE0E2] text-[#C1121F] border-[#FFA8AE]',
@@ -106,7 +106,7 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
               <div className="text-[0.75rem] uppercase text-text-muted font-bold flex items-center gap-1">
                 <Clock size={13} className="text-rojo" /> Horario
               </div>
-              <div className="font-semibold mt-1 text-[0.95rem]">{destination.horario || 'Abierto todo el día'}</div>
+              <div className="font-semibold mt-1 text-[0.95rem]">{formatHorario(destination.horario) || 'Abierto todo el día'}</div>
               {(() => {
                 const opening = getOpeningStatus(destination.horario);
                 if (opening.isOpen === null) return null;

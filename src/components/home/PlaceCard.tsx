@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { MapPin, Phone, MessageCircle, Navigation, User, ArrowRight } from 'lucide-react';
 import { formatImgUrl } from '@/lib/data';
 import { useOpeningStatus } from '@/hooks/useOpeningStatus';
+import { Horario } from '@/lib/types';
 
 export interface PlaceCardItem {
   id: string;
@@ -25,7 +26,7 @@ export interface PlaceCardItem {
    * despues del montaje, para no generar mismatches de hidratacion: ese estado
    * depende de la hora actual y no puede evaluarse igual en servidor y cliente.
    */
-  horario?: string | Record<string, unknown> | null;
+  horario?: Horario | string | null;
   /** Distancia ya formateada (solo modo GPS) */
   distancia?: string | null;
 }

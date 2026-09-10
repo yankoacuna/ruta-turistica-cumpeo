@@ -3,9 +3,7 @@ import { Calendar, MapPin, Tag } from 'lucide-react';
 import { CumpeoEvent } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImageUploadField } from '../ImageUploadField';
-import { GalleryField } from '../GalleryField';
-import { CoordinatesPicker, CommaSeparatedField } from './common';
+import { CoordinatesPicker, CommaSeparatedField, MediaFields, DireccionField } from './common';
 
 interface EventoModalProps {
   editing: Partial<CumpeoEvent>;
@@ -93,17 +91,13 @@ export function EventoModal({
         </Field>
 
         {/* Dirección */}
-        <Field label="Lugar / Dirección">
-          <div className="relative">
-            <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input
-              className={inputCls + ' pl-8'}
-              placeholder="Ej: Plaza de Cumpeo / Alameda"
-              value={editing.direccion || ''}
-              onChange={(e) => set({ direccion: e.target.value })}
-            />
-          </div>
-        </Field>
+        <DireccionField
+          label="Lugar / Dirección"
+          icon={<MapPin size={14} />}
+          placeholder="Ej: Plaza de Cumpeo / Alameda"
+          value={editing.direccion}
+          onChange={(direccion) => set({ direccion })}
+        />
 
         {/* Coordenadas Refactorizadas con Selector de Mapa */}
         <CoordinatesPicker
@@ -158,16 +152,11 @@ export function EventoModal({
           </div>
         </div>
 
-        <ImageUploadField
-          label="Imagen Principal"
-          value={editing.imagenPrincipal || ''}
-          onChange={(url) => set({ imagenPrincipal: url })}
-        />
-
-        {/* Galería */}
-        <GalleryField
-          images={editing.galeria || []}
-          onChange={(images) => set({ galeria: images })}
+        <MediaFields
+          imagenPrincipal={editing.imagenPrincipal}
+          onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
+          galeria={editing.galeria}
+          onGaleriaChange={(galeria) => set({ galeria })}
         />
 
         <ModalActions onClose={onClose} isPending={isPending} />

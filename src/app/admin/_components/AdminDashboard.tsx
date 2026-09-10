@@ -24,6 +24,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser } from '@/lib/types';
+import { formatHorario } from '@/lib/openingHours';
 import { StatCard } from './StatCard';
 import { AdminSection } from '../_types';
 import { TourId } from './adminTour';
@@ -379,10 +380,10 @@ export function AdminDashboard({
                     </div>
                     <div className="text-[11px] text-text-muted capitalize flex items-center gap-2">
                       <span>{d.categoria}</span>
-                      {d.horario && (
+                      {formatHorario(d.horario) && (
                         <>
                           <span className="text-border">/</span>
-                          <span className="truncate">{d.horario}</span>
+                          <span className="truncate">{formatHorario(d.horario)}</span>
                         </>
                       )}
                     </div>
