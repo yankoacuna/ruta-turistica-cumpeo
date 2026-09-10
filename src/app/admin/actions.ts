@@ -10,6 +10,18 @@ import crypto from 'crypto';
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD;
 
+/**
+ * Próximo valor de `orden` para una ficha nueva: el mayor actual + 1.
+ * Sin esto, una ficha nueva nace en 0 y salta al primer lugar de la portada,
+ * por delante de todo lo que el municipio ya ordenó a mano.
+ */
+async function nextOrden(
+  model: 'destination' | 'restaurant' | 'accommodation' | 'event'
+): Promise<number> {
+  const agg = await (prisma[model] as any).aggregate({ _max: { orden: true } });
+  return (agg._max.orden ?? -1) + 1;
+}
+
 // ─── AUTHENTICATION HELPERS & ROLE MANAGEMENT ───────────────────────────────
 
 /**
@@ -359,6 +371,7 @@ export async function saveDestination(
       rating: data.rating,
       destacado: data.destacado || false,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('destination')) } as any),
     },
   });
 
@@ -436,6 +449,7 @@ export async function saveRestaurant(
       menuUrl: data.menuUrl,
       contacto: data.contacto as any,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('restaurant')) } as any),
     },
   });
 
@@ -504,6 +518,7 @@ export async function saveAccommodation(
       galeria: data.galeria ?? [],
       contacto: data.contacto as any,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('accommodation')) } as any),
     },
   });
 
@@ -959,7 +974,7 @@ export async function saveEvent(
     create: {
       id,
       nombre: data.nombre || 'Nuevo Evento',
-      tipo: data.tipo || 'cultural',
+      tipo: data.tipo || 'ferias-libres',
       descripcion: data.descripcion || '',
       descripcionLarga: data.descripcionLarga,
       fecha: data.fecha,
@@ -971,6 +986,7 @@ export async function saveEvent(
       tags: data.tags ?? [],
       destacado: data.destacado ?? false,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('event')) } as any),
     },
   });
 
