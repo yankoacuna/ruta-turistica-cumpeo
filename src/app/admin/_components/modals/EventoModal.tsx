@@ -48,11 +48,9 @@ export function EventoModal({
               onChange={(e) => set({ tipo: e.target.value })}
             >
               <option value="">Seleccionar tipo…</option>
-              <option value="fiesta-religiosa">Fiesta Religiosa</option>
-              <option value="feria">Feria / Mercado</option>
-              <option value="centro-evento">Centro de Eventos</option>
-              <option value="cultural">Cultural</option>
-              <option value="deportivo">Deportivo</option>
+              <option value="fiestas-religiosas">Fiestas Religiosas</option>
+              <option value="ferias-libres">Ferias Libres</option>
+              <option value="centros-de-evento">Centros de Evento</option>
             </select>
           </Field>
           <Field label="Fecha" hint="Ej: 20 de enero / Fines de semana">

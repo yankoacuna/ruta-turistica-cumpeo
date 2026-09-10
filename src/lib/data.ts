@@ -97,10 +97,11 @@ export async function getEmergencyContacts(): Promise<EmergencyContact[]> {
 }
 
 export async function getAllPOIs(): Promise<POI[]> {
-  const [dests, accomm, rests] = await Promise.all([
+  const [dests, accomm, rests, events] = await Promise.all([
     getDestinations(),
     getAccommodations(),
-    getRestaurants()
+    getRestaurants(),
+    getEvents(),
   ]);
 
   const pois: POI[] = [
@@ -136,7 +137,20 @@ export async function getAllPOIs(): Promise<POI[]> {
       imagenPrincipal: r.imagenPrincipal ?? undefined,
       rating: null,
       _original: r
-    }))
+    })),
+    ...events
+      .filter((e): e is CumpeoEvent & { coordenadas: Coordinates } => Boolean(e.coordenadas))
+      .map(e => ({
+        id: e.id,
+        nombre: e.nombre,
+        descripcionCorta: e.descripcion,
+        categoria: e.tipo,
+        tipo: 'evento' as const,
+        coordenadas: e.coordenadas,
+        imagenPrincipal: e.imagenPrincipal ?? undefined,
+        rating: null,
+        _original: e
+      }))
   ];
 
   return pois;

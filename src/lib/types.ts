@@ -122,7 +122,8 @@ export interface EmergencyContact {
 export interface CumpeoEvent {
   id: string;
   nombre: string;
-  tipo: 'fiesta-religiosa' | 'feria' | 'centro-evento' | 'cultural' | string;
+  /** Categorías tal como las entregó el catastro municipal (excel). */
+  tipo: 'fiestas-religiosas' | 'ferias-libres' | 'centros-de-evento' | string;
   descripcion: string;
   descripcionLarga?: string | null;
   fecha?: string | null;       // "20 de enero" / "Fines de semana"

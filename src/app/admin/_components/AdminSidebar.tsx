@@ -113,14 +113,14 @@ export function AdminSidebar({
         },
         {
           id: 'restaurantes' as AdminSection,
-          label: 'Restaurantes y Picadas',
+          label: 'Comidas',
           icon: UtensilsCrossed,
           count: counts.restaurantes,
           color: 'text-rojo',
         },
         {
           id: 'alojamientos' as AdminSection,
-          label: 'Alojamientos y Cabañas',
+          label: 'Alojamientos',
           icon: BedDouble,
           count: counts.alojamientos,
           color: 'text-cielo',

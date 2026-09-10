@@ -638,7 +638,7 @@ export function AdminTable({
     destinos: 'Administra los puntos de interés, esculturas de Condorito y atractivos turísticos.',
     restaurantes: 'Gestiona la oferta gastronómica típica, horarios de atención y contactos.',
     alojamientos: 'Administra hoteles, cabañas y opciones de hospedaje en Cumpeo.',
-    eventos: 'Programa fiestas costumbristas, ferias tradicionales y actividades culturales.',
+    eventos: 'Programa fiestas religiosas, ferias libres y centros de evento.',
   }[activeSection];
 
   const rangeStart = totalFiltered === 0 ? 0 : (safePage - 1) * pageSize + 1;
