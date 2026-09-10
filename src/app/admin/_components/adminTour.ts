@@ -4,7 +4,7 @@ import { driver, DriveStep } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { AdminSection } from '../_types';
 
-export type TourId = 'general' | 'create-destino' | 'create-ruta';
+export type TourId = 'general' | 'create-destino' | 'create-ruta' | 'create-comida';
 
 export interface TourHandlers {
   activeSection: AdminSection;
@@ -13,6 +13,8 @@ export interface TourHandlers {
   closeDestino?: () => void;
   openNewRuta?: () => void;
   closeRuta?: () => void;
+  openNewRestaurante?: () => void;
+  closeRestaurante?: () => void;
 }
 
 function makeIconSvg(path: string, size = 15): string {
@@ -282,6 +284,89 @@ export function startCreateRutaTour({
 }
 
 /**
+ * 4. TOUR: CÓMO CREAR UNA COMIDA (RESTAURANTE / PICADA)
+ * Guía interactiva paso a paso, con énfasis en fijar la ubicación en el mapa.
+ */
+export function startCreateComidaTour({
+  activeSection,
+  onNavigate,
+  openNewRestaurante,
+  closeRestaurante,
+}: TourHandlers) {
+  if (activeSection !== 'restaurantes') {
+    onNavigate('restaurantes');
+  }
+
+  setTimeout(() => {
+    openNewRestaurante?.();
+  }, 100);
+
+  const steps: DriveStep[] = [
+    {
+      element: '#tour-rest-nombre',
+      popover: {
+        title: tourTitle(TOUR_ICONS.tag, '1. Nombre y Tipo de Local'),
+        description:
+          'Escribe el nombre del restaurante o picada y selecciona el tipo de local que corresponde (restaurante, picada, cafetería, etc.).',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+    {
+      element: '#tour-rest-desc',
+      popover: {
+        title: tourTitle(TOUR_ICONS.fileText, '2. Descripción'),
+        description: 'Cuenta brevemente qué ofrece el local y su propuesta gastronómica.',
+        side: 'top',
+        align: 'start',
+      },
+    },
+    {
+      element: '#tour-rest-ubicacion',
+      popover: {
+        title: tourTitle(TOUR_ICONS.mapPin, '3. Ubicación en el Mapa'),
+        description:
+          'La dirección ya no se escribe a mano: haz clic en "Buscar en el mapa", ubica el local (por nombre, dirección o haciendo clic directo en el mapa) y confirma. La dirección se completa sola. Si el lugar no existe en Google Maps, el mismo selector te deja escribirla a mano.',
+        side: 'top',
+        align: 'start',
+      },
+    },
+    {
+      element: '#tour-rest-image',
+      popover: {
+        title: tourTitle(TOUR_ICONS.image, '4. Fotografía Principal'),
+        description: 'Sube una foto del local o pega el enlace de una imagen ya publicada en internet.',
+        side: 'top',
+        align: 'start',
+      },
+    },
+    {
+      element: '#tour-rest-actions',
+      popover: {
+        title: tourTitle(TOUR_ICONS.checkCircle, '5. Guardar Registro'),
+        description:
+          'Al presionar "Guardar Cambios", el local queda publicado de inmediato en la pestaña "Comidas" del sitio y visible en el mapa turístico.',
+        side: 'top',
+        align: 'end',
+      },
+    },
+  ];
+
+  const instance = driver({
+    ...baseDriverConfig,
+    doneBtnText: `<span style="display:inline-flex;align-items:center;gap:4px;">${TOUR_ICONS.check} Entendido</span>`,
+    steps,
+    onDestroyed: () => {
+      closeRestaurante?.();
+    },
+  });
+
+  setTimeout(() => {
+    instance.drive();
+  }, 250);
+}
+
+/**
  * Función unificada para lanzar cualquier tour por ID
  */
 export function runTour(tourId: TourId, handlers: TourHandlers) {
@@ -291,6 +376,9 @@ export function runTour(tourId: TourId, handlers: TourHandlers) {
       break;
     case 'create-ruta':
       startCreateRutaTour(handlers);
+      break;
+    case 'create-comida':
+      startCreateComidaTour(handlers);
       break;
     case 'general':
     default:

@@ -94,7 +94,6 @@ export function EventoModal({
           onDireccionChange={(direccion) => set({ direccion })}
           coordinates={editing.coordenadas}
           onCoordinatesChange={(coordenadas) => set({ coordenadas })}
-          direccionPlaceholder="Ej: Plaza de Cumpeo / Alameda"
           modalTitle={`Ubicación de ${editing.nombre || 'Evento'}`}
         />
 

@@ -117,7 +117,6 @@ export function DestinoModal({
           onDireccionChange={(direccion) => set({ direccion })}
           coordinates={editing.coordenadas}
           onCoordinatesChange={(coordenadas) => set({ coordenadas })}
-          direccionPlaceholder="Calle / Localidad, Cumpeo"
           modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
         />
 

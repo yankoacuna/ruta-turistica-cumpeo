@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MapPin, Search, Check } from 'lucide-react';
+import { MapPin, Search, Pencil } from 'lucide-react';
 import { Coordinates } from '@/lib/types';
-import { inputCls } from '../../Field';
 import { LocationMapPickerModal, DEFAULT_CUMPEO_COORDS } from './LocationMapPickerModal';
 
 interface LocationFieldProps {
@@ -11,22 +10,23 @@ interface LocationFieldProps {
   onDireccionChange: (direccion: string) => void;
   coordinates?: Coordinates | null;
   onCoordinatesChange: (coords: Coordinates) => void;
-  direccionPlaceholder?: string;
   modalTitle?: string;
 }
 
 /**
- * Dirección + ubicación en el mapa, como un solo dato para quien edita: escribe la
- * dirección a mano, o la busca/ajusta en el mapa y ambas quedan sincronizadas.
- * Las coordenadas GPS no se muestran como algo que haya que tocar — quedan
- * guardadas por dentro, no todas las direcciones existen en Google Maps.
+ * Dirección + ubicación en el mapa, como un solo dato para quien edita.
+ *
+ * La dirección ya no se escribe a mano acá: se fija buscando un lugar o
+ * marcando el punto en el mapa, y ambas quedan sincronizadas siempre. Si el
+ * punto no tiene una dirección que Google reconozca, el propio selector de
+ * mapa ofrece escribirla a mano ahí mismo (no acá, para no tentar a que se
+ * desincronice del pin).
  */
 export function LocationField({
   direccion,
   onDireccionChange,
   coordinates,
   onCoordinatesChange,
-  direccionPlaceholder = 'Calle / Localidad',
   modalTitle = 'Buscar dirección o seleccionar en el mapa',
 }: LocationFieldProps) {
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -37,7 +37,7 @@ export function LocationField({
 
   const handleMapConfirm = (coords: Coordinates, address?: string) => {
     onCoordinatesChange(coords);
-    if (address) onDireccionChange(address);
+    onDireccionChange(address || '');
   };
 
   return (
@@ -49,13 +49,18 @@ export function LocationField({
         <span className="text-xs font-bold text-text-primary">Ubicación</span>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <input
-          className={`${inputCls} flex-1`}
-          placeholder={direccionPlaceholder}
-          value={direccion || ''}
-          onChange={(e) => onDireccionChange(e.target.value)}
-        />
+      <div className="flex items-center gap-2.5 p-3 bg-surface-soft rounded-lg border border-border">
+        <div className="min-w-0 flex-1">
+          {direccion ? (
+            <span className="text-sm font-semibold text-text-primary block truncate" title={direccion}>
+              {direccion}
+            </span>
+          ) : (
+            <span className="text-sm text-text-muted">
+              {hasCoords ? 'Ubicación fijada, sin dirección reconocible' : 'Sin ubicación — búscala en el mapa'}
+            </span>
+          )}
+        </div>
         <button
           type="button"
           onClick={(e) => {
@@ -65,26 +70,16 @@ export function LocationField({
           }}
           className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#1E1E24] hover:bg-black text-white shadow-xs transition-all cursor-pointer shrink-0"
         >
-          <Search size={14} className="text-sol" />
-          <span>Buscar o ajustar en el mapa</span>
+          {direccion ? <Pencil size={13} /> : <Search size={14} className="text-sol" />}
+          <span>{direccion ? 'Ajustar en el mapa' : 'Buscar en el mapa'}</span>
         </button>
       </div>
-
-      <span className="text-[11px] text-text-muted flex items-center gap-1">
-        {hasCoords ? (
-          <>
-            <Check size={12} className="text-emerald-600 shrink-0" />
-            Ubicación fijada en el mapa
-          </>
-        ) : (
-          'Escribe la dirección o ajústala en el mapa — no todas las direcciones se encuentran automáticamente.'
-        )}
-      </span>
 
       <LocationMapPickerModal
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
         initialCoordinates={coordinates}
+        initialDireccion={direccion}
         onConfirm={handleMapConfirm}
         title={modalTitle}
       />

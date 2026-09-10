@@ -17,6 +17,7 @@ import {
   Compass,
   MapPin,
   LayoutDashboard,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { AdminSection, AdminSessionUser } from '../_types';
 import { TourId } from './adminTour';
@@ -186,6 +187,23 @@ export function AdminTopBar({
                     <div>
                       <div className="text-xs font-bold">Cómo Crear una Ruta</div>
                       <div className="text-[10px] text-text-muted">Diseño de circuitos con paradas GPS</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTourMenuOpen(false);
+                      onStartTour('create-comida');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-100">
+                      <UtensilsCrossed size={14} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">Cómo Crear una Comida</div>
+                      <div className="text-[10px] text-text-muted">Restaurante o picada, con ubicación en el mapa</div>
                     </div>
                   </button>
                 </div>

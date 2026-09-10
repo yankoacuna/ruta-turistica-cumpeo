@@ -277,6 +277,8 @@ export default function AdminClient({
       closeDestino: destinos.close,
       openNewRuta: canEdit ? rutas.openNew : undefined,
       closeRuta: rutas.close,
+      openNewRestaurante: canEdit ? restaurantes.openNew : undefined,
+      closeRestaurante: restaurantes.close,
     });
   };
 

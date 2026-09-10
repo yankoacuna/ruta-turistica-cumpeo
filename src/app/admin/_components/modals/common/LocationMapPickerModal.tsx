@@ -27,7 +27,9 @@ interface LocationMapPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialCoordinates?: Coordinates | null;
-  /** `direccion` viene con la mejor dirección disponible (buscada o geocodificada); puede venir vacía si el punto no tiene una dirección reconocible. */
+  /** Dirección ya confirmada previamente (si se está ajustando una ubicación existente). */
+  initialDireccion?: string | null;
+  /** `direccion` viene con la mejor dirección disponible (buscada, geocodificada o escrita a mano); puede venir vacía si el punto no tiene una dirección reconocible y tampoco se escribió una manual. */
   onConfirm: (coords: Coordinates, direccion?: string) => void;
   title?: string;
 }
@@ -40,6 +42,7 @@ export const DEFAULT_CUMPEO_COORDS: Coordinates = {
 // ── Componente Interno con acceso al contexto de Google Maps ─────────
 interface InnerMapPickerProps {
   initialCoords: Coordinates;
+  initialDireccion?: string | null;
   onClose: () => void;
   onConfirm: (coords: Coordinates, direccion?: string) => void;
   title: string;
@@ -47,6 +50,7 @@ interface InnerMapPickerProps {
 
 function InnerMapPicker({
   initialCoords,
+  initialDireccion,
   onClose,
   onConfirm,
   title,
@@ -61,8 +65,10 @@ function InnerMapPicker({
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isGettingGps, setIsGettingGps] = useState(false);
   /** Mejor dirección disponible para el punto actual. null = el punto no tiene una dirección reconocible (ej: un rincón de una plaza). */
-  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(initialDireccion || null);
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
+  /** Cuando el punto no tiene dirección reconocible, se ofrece escribirla a mano acá mismo. */
+  const [manualAddress, setManualAddress] = useState('');
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -86,6 +92,7 @@ function InnerMapPicker({
     async (point: Coordinates) => {
       if (!geocodingLib) return;
       setIsResolvingAddress(true);
+      setManualAddress('');
       try {
         const geocoder = new geocodingLib.Geocoder();
         const address = await new Promise<string | null>((resolve) => {
@@ -330,7 +337,7 @@ function InnerMapPicker({
   const handleConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onConfirm(coords, resolvedAddress || undefined);
+    onConfirm(coords, resolvedAddress || manualAddress.trim() || undefined);
     onClose();
   };
 
@@ -342,7 +349,7 @@ function InnerMapPicker({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-start justify-center p-3 sm:p-4 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -372,11 +379,11 @@ function InnerMapPicker({
       `}</style>
 
       <div
-        className="bg-white w-full max-w-[760px] rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col my-4"
+        className="bg-white w-full max-w-[760px] rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col my-4 max-h-[calc(100vh-2rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-5 py-3.5 border-b border-border bg-white sticky top-0 z-10">
+        <div className="flex justify-between items-center px-5 py-3.5 border-b border-border bg-white shrink-0">
           <div>
             <h3 className="font-display font-bold text-base sm:text-lg text-text-primary flex items-center gap-2">
               <MapPin size={20} className="text-rojo" />
@@ -389,14 +396,14 @@ function InnerMapPicker({
           <button
             type="button"
             onClick={handleCancel}
-            className="text-text-muted hover:text-rojo hover:bg-[#FFE0E2] transition-all p-1.5 rounded-lg"
+            className="text-text-muted hover:text-rojo hover:bg-[#FFE0E2] transition-all p-1.5 rounded-lg shrink-0"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Cuerpo del Modal (IMPORTANTE: NO USAR <form> para evitar submits anidados) */}
-        <div className="p-4 sm:p-5 flex flex-col gap-3">
+        <div className="p-4 sm:p-5 flex flex-col gap-3 overflow-y-auto">
           {/* Barra de Búsqueda con Google Places Autocomplete */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
@@ -510,31 +517,43 @@ function InnerMapPicker({
           </div>
 
           {/* Punto seleccionado: la dirección es el dato que le importa al usuario; las coordenadas quedan como detalle secundario */}
-          <div className="flex items-center gap-2.5 p-3 bg-surface-soft rounded-xl border border-border">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <div className="min-w-0 flex-1">
-              {isResolvingAddress ? (
-                <div className="text-xs text-text-muted flex items-center gap-1.5">
-                  <Loader2 size={12} className="animate-spin" /> Buscando la dirección de este punto…
+          <div className="flex flex-col gap-2 p-3 bg-surface-soft rounded-xl border border-border">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <div className="min-w-0 flex-1">
+                {isResolvingAddress ? (
+                  <div className="text-xs text-text-muted flex items-center gap-1.5">
+                    <Loader2 size={12} className="animate-spin" /> Buscando la dirección de este punto…
+                  </div>
+                ) : resolvedAddress ? (
+                  <div className="text-xs font-semibold text-text-primary truncate" title={resolvedAddress}>
+                    {resolvedAddress}
+                  </div>
+                ) : (
+                  <div className="text-xs text-text-muted">
+                    Google no reconoce una dirección para este punto — puedes escribirla a mano abajo.
+                  </div>
+                )}
+                <div className="text-[10px] font-mono text-text-muted mt-0.5">
+                  {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
                 </div>
-              ) : resolvedAddress ? (
-                <div className="text-xs font-semibold text-text-primary truncate" title={resolvedAddress}>
-                  {resolvedAddress}
-                </div>
-              ) : (
-                <div className="text-xs text-text-muted">
-                  Sin dirección reconocible para este punto — se usará solo la ubicación en el mapa.
-                </div>
-              )}
-              <div className="text-[10px] font-mono text-text-muted mt-0.5">
-                {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
               </div>
             </div>
+
+            {!isResolvingAddress && !resolvedAddress && (
+              <input
+                type="text"
+                className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-white focus:border-rojo focus:ring-2 focus:ring-rojo/10 outline-none transition-all placeholder:text-text-muted/70"
+                placeholder="Escribe la dirección de este punto a mano (opcional)"
+                value={manualAddress}
+                onChange={(e) => setManualAddress(e.target.value)}
+              />
+            )}
           </div>
         </div>
 
         {/* Footer con acciones */}
-        <div className="flex items-center justify-end gap-2.5 px-5 py-3.5 border-t border-border bg-gray-50/70">
+        <div className="flex items-center justify-end gap-2.5 px-5 py-3.5 border-t border-border bg-gray-50/70 shrink-0">
           <button
             type="button"
             onClick={handleCancel}
@@ -561,6 +580,7 @@ export function LocationMapPickerModal({
   isOpen,
   onClose,
   initialCoordinates,
+  initialDireccion,
   onConfirm,
   title = 'Seleccionar Ubicación Geográfica',
 }: LocationMapPickerModalProps) {
@@ -589,6 +609,7 @@ export function LocationMapPickerModal({
     <APIProvider apiKey={apiKey} libraries={['places', 'marker', 'geocoding']}>
       <InnerMapPicker
         initialCoords={validCoords}
+        initialDireccion={initialDireccion}
         onClose={onClose}
         onConfirm={onConfirm}
         title={title}

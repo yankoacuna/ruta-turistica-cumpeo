@@ -171,11 +171,6 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
         label: 'Buscador: texto de ayuda',
         value: 'Buscar un lugar de Cumpeo...',
       },
-      {
-        key: 'home.hero.qrAviso',
-        label: 'Aviso del QR (solo escritorio)',
-        value: 'Escanea el QR de cada señalética para llegar aquí',
-      },
     ],
   },
   {
@@ -273,8 +268,8 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
           'Locales y hospedajes registrados por la Oficina de Turismo. Llama o pide indicaciones directamente desde aquí.',
         multiline: true,
       },
-      { key: 'home.servicios.tabComer', label: 'Pestaña comer', value: 'Comer' },
-      { key: 'home.servicios.tabDormir', label: 'Pestaña dormir', value: 'Dormir' },
+      { key: 'home.servicios.tabComer', label: 'Pestaña comer', value: 'Comidas' },
+      { key: 'home.servicios.tabDormir', label: 'Pestaña dormir', value: 'Alojamiento' },
     ],
   },
   {
