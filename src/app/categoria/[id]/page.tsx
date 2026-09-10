@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const cat = config.categorias?.find((c: any) => c.id === params.id);
   if (!cat) return { title: 'Categoría no encontrada' };
   return {
-    title: `${cat.nombre} en Cumpeo — Cumpeo Turismo`,
+    title: `${cat.nombre} en Cumpeo — Turismo Cumpeo`,
     description: `Explora todos los lugares de ${cat.nombre} en el pueblo temático de Condorito, Región del Maule.`,
   };
 }

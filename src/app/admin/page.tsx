@@ -1,7 +1,8 @@
 import { getDestinations, getAccommodations, getRestaurants, getTourRoutes, getAllPOIs } from '@/lib/data';
 import { getAdminSession, getEvents, getAdminUsers } from './actions';
+import { getSiteTextsAdmin } from './siteTextActions';
 import AdminClient from './AdminClient';
-import { AdminUser } from '@/lib/types';
+import { AdminUser, SiteTextRecord } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,17 @@ export default async function AdminPage() {
     }
   }
 
+  // Textos del sitio ya modificados. Solo se piden con sesion: sin ella el
+  // panel muestra el login y no hay nada que listar.
+  let initialSiteTexts: SiteTextRecord[] = [];
+  if (session) {
+    try {
+      initialSiteTexts = await getSiteTextsAdmin();
+    } catch (e) {
+      console.error('Error fetching site texts:', e);
+    }
+  }
+
   return (
     <AdminClient
       initialDestinos={destinos}
@@ -35,6 +47,7 @@ export default async function AdminPage() {
       allPois={allPois}
       initialSession={session}
       initialUsers={initialUsers}
+      initialSiteTexts={initialSiteTexts}
     />
   );
 }

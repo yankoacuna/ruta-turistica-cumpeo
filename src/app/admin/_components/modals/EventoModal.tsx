@@ -1,11 +1,9 @@
 import React from 'react';
-import { Calendar, MapPin, Tag } from 'lucide-react';
+import { Calendar, Tag } from 'lucide-react';
 import { CumpeoEvent } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImageUploadField } from '../ImageUploadField';
-import { GalleryField } from '../GalleryField';
-import { CoordinatesPicker, CommaSeparatedField } from './common';
+import { LocationField, CommaSeparatedField, MediaFields } from './common';
 
 interface EventoModalProps {
   editing: Partial<CumpeoEvent>;
@@ -50,11 +48,9 @@ export function EventoModal({
               onChange={(e) => set({ tipo: e.target.value })}
             >
               <option value="">Seleccionar tipo…</option>
-              <option value="fiesta-religiosa">Fiesta Religiosa</option>
-              <option value="feria">Feria / Mercado</option>
-              <option value="centro-evento">Centro de Eventos</option>
-              <option value="cultural">Cultural</option>
-              <option value="deportivo">Deportivo</option>
+              <option value="fiestas-religiosas">Fiestas Religiosas</option>
+              <option value="ferias-libres">Ferias Libres</option>
+              <option value="centros-de-evento">Centros de Evento</option>
             </select>
           </Field>
           <Field label="Fecha" hint="Ej: 20 de enero / Fines de semana">
@@ -92,23 +88,13 @@ export function EventoModal({
           />
         </Field>
 
-        {/* Dirección */}
-        <Field label="Lugar / Dirección">
-          <div className="relative">
-            <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input
-              className={inputCls + ' pl-8'}
-              placeholder="Ej: Plaza de Cumpeo / Alameda"
-              value={editing.direccion || ''}
-              onChange={(e) => set({ direccion: e.target.value })}
-            />
-          </div>
-        </Field>
-
-        {/* Coordenadas Refactorizadas con Selector de Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas as any}
-          onChange={(coordenadas) => set({ coordenadas: coordenadas as any })}
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          direccionPlaceholder="Ej: Plaza de Cumpeo / Alameda"
           modalTitle={`Ubicación de ${editing.nombre || 'Evento'}`}
         />
 
@@ -158,16 +144,11 @@ export function EventoModal({
           </div>
         </div>
 
-        <ImageUploadField
-          label="Imagen Principal"
-          value={editing.imagenPrincipal || ''}
-          onChange={(url) => set({ imagenPrincipal: url })}
-        />
-
-        {/* Galería */}
-        <GalleryField
-          images={editing.galeria || []}
-          onChange={(images) => set({ galeria: images })}
+        <MediaFields
+          imagenPrincipal={editing.imagenPrincipal}
+          onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
+          galeria={editing.galeria}
+          onGaleriaChange={(galeria) => set({ galeria })}
         />
 
         <ModalActions onClose={onClose} isPending={isPending} />

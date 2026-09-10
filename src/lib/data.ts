@@ -1,3 +1,5 @@
+import { unstable_cache } from 'next/cache';
+import { SITE_TEXT_DEFAULTS, SiteTexts, isKnownSiteTextKey } from './siteTexts';
 import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates, TourRoute, CumpeoEvent, EmergencyContact } from './types';
 import { prisma } from './prisma';
 
@@ -8,7 +10,7 @@ export async function getConfig(): Promise<AppConfig> {
 }
 
 export async function getDestinations(): Promise<Destination[]> {
-  const data = await prisma.destination.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } });
+  const data = await prisma.destination.findMany({ where: { activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
@@ -28,7 +30,7 @@ export async function getDestinationByIdOrSlug(idOrSlug: string): Promise<Destin
 
 export async function getDestinationsByCategory(categoria: string): Promise<Destination[]> {
   if (!categoria || categoria === 'todos') return getDestinations();
-  const data = await prisma.destination.findMany({ where: { categoria, activo: true }, orderBy: { nombre: 'asc' } });
+  const data = await prisma.destination.findMany({ where: { categoria, activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
@@ -36,7 +38,7 @@ export async function getDestinationsByCategory(categoria: string): Promise<Dest
 }
 
 export async function getFeaturedDestinations(): Promise<Destination[]> {
-  const data = await prisma.destination.findMany({ where: { destacado: true, activo: true }, orderBy: { nombre: 'asc' } });
+  const data = await prisma.destination.findMany({ where: { destacado: true, activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
@@ -44,7 +46,7 @@ export async function getFeaturedDestinations(): Promise<Destination[]> {
 }
 
 export async function getAccommodations(): Promise<Accommodation[]> {
-  const data = await prisma.accommodation.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } });
+  const data = await prisma.accommodation.findMany({ where: { activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((a) => ({
     ...a,
     coordenadas: a.coordenadas as unknown as Coordinates,
@@ -53,7 +55,7 @@ export async function getAccommodations(): Promise<Accommodation[]> {
 }
 
 export async function getRestaurants(): Promise<Restaurant[]> {
-  const data = await prisma.restaurant.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } });
+  const data = await prisma.restaurant.findMany({ where: { activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((r) => ({
     ...r,
     coordenadas: r.coordenadas as unknown as Coordinates,
@@ -66,7 +68,7 @@ export async function getEvents(): Promise<CumpeoEvent[]> {
   try {
     const data = await prisma.event.findMany({
       where: { activo: true },
-      orderBy: { nombre: 'asc' },
+      orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
     });
     return data.map((e) => ({
       ...e,
@@ -95,10 +97,11 @@ export async function getEmergencyContacts(): Promise<EmergencyContact[]> {
 }
 
 export async function getAllPOIs(): Promise<POI[]> {
-  const [dests, accomm, rests] = await Promise.all([
+  const [dests, accomm, rests, events] = await Promise.all([
     getDestinations(),
     getAccommodations(),
-    getRestaurants()
+    getRestaurants(),
+    getEvents(),
   ]);
 
   const pois: POI[] = [
@@ -134,7 +137,20 @@ export async function getAllPOIs(): Promise<POI[]> {
       imagenPrincipal: r.imagenPrincipal ?? undefined,
       rating: null,
       _original: r
-    }))
+    })),
+    ...events
+      .filter((e): e is CumpeoEvent & { coordenadas: Coordinates } => Boolean(e.coordenadas))
+      .map(e => ({
+        id: e.id,
+        nombre: e.nombre,
+        descripcionCorta: e.descripcion,
+        categoria: e.tipo,
+        tipo: 'evento' as const,
+        coordenadas: e.coordenadas,
+        imagenPrincipal: e.imagenPrincipal ?? undefined,
+        rating: null,
+        _original: e
+      }))
   ];
 
   return pois;
@@ -227,3 +243,51 @@ export async function getTourRouteByIdOrSlug(idOrSlug: string): Promise<TourRout
   return routes.find((r) => r.id === idOrSlug || r.slug === idOrSlug) || null;
 }
 
+
+// ─── TEXTOS EDITABLES DEL SITIO ───────────────────────────────────────────────
+
+/**
+ * Lee los textos que un editor cambió desde el CMS.
+ *
+ * Va envuelto en unstable_cache y no lee cookies, para que las páginas que hoy
+ * se generan estáticamente (/historia, /contacto) sigan haciéndolo: la consulta
+ * se resuelve una vez y se invalida sola cuando alguien guarda un texto
+ * (revalidateTag(SITE_TEXTS_TAG) en las server actions).
+ *
+ * Si la tabla no existe todavía o la base está caída devuelve {}, de modo que
+ * el sitio siempre cae a los valores por defecto del código en vez de romperse.
+ */
+export const SITE_TEXTS_TAG = 'site-texts';
+
+export const getSiteTexts = unstable_cache(
+  async (): Promise<SiteTexts> => {
+    try {
+      const rows = await prisma.siteText.findMany({ select: { key: true, value: true } });
+      const out: SiteTexts = {};
+      rows.forEach((r) => {
+        // Filtra claves huérfanas: textos guardados cuya clave ya no existe en
+        // el registro del código no deben llegar a la página.
+        if (isKnownSiteTextKey(r.key)) out[r.key] = r.value;
+      });
+      return out;
+    } catch (error) {
+      console.warn('Error fetching site texts from DB:', error);
+      return {};
+    }
+  },
+  ['site-texts'],
+  { tags: [SITE_TEXTS_TAG] }
+);
+
+/**
+ * Textos ya resueltos para renderizar: los valores por defecto del código con
+ * los cambios del CMS aplicados encima.
+ *
+ * Es lo que recibe el proveedor del layout. Se envían resueltos (y no el
+ * registro completo con etiquetas y ayudas) para no cargar al navegador del
+ * visitante con datos que solo necesita el panel de administración.
+ */
+export async function getResolvedSiteTexts(): Promise<SiteTexts> {
+  const overrides = await getSiteTexts();
+  return { ...SITE_TEXT_DEFAULTS, ...overrides };
+}

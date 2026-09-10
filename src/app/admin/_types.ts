@@ -5,6 +5,8 @@ export type AdminSection =
   | 'restaurantes'
   | 'alojamientos'
   | 'eventos'
+  | 'textos'
+  | 'orden'
   | 'qrcodes'
   | 'backups'
   | 'usuarios';

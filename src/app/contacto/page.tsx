@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, CheckCircle2, Send, Loader2 } from 'lucide-react';
+import { Editable, useSiteText } from '@/components/site-text';
 
 export default function ContactoPage() {
+  const { get } = useSiteText();
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -38,12 +40,17 @@ export default function ContactoPage() {
       <section className="relative h-[35vh] min-h-[260px] flex items-center justify-center text-center bg-[#1E1E24] text-white px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-[#1E1E24] via-[#1E1E24]/80 to-transparent z-10" />
         <div className="relative z-20 max-w-2xl mx-auto pt-6">
-          <h1 className="font-display font-black text-3xl md:text-4xl text-sol mb-2">
-            Contacto Turístico
-          </h1>
-          <p className="text-sm md:text-base text-gray-300">
-            ¿Tienes dudas sobre cómo llegar, dónde alojar o qué comer? El equipo de turismo de Cumpeo está a tu disposición.
-          </p>
+          <Editable
+            k="contacto.hero.titulo"
+            as="h1"
+            className="font-display font-black text-3xl md:text-4xl text-sol mb-2"
+          />
+          <Editable
+            k="contacto.hero.bajada"
+            as="p"
+            className="text-sm md:text-base text-gray-300"
+            multiline
+          />
         </div>
       </section>
 
@@ -53,12 +60,17 @@ export default function ContactoPage() {
           {/* Lado Izquierdo: Info de Contacto */}
           <div className="flex flex-col gap-6">
             <div>
-              <h2 className="font-display font-bold text-2xl text-text-primary mb-2">
-                Información del Visitante
-              </h2>
-              <p className="text-sm text-text-secondary">
-                La oficina de turismo municipal de Cumpeo te espera para orientarte en tu recorrido por Pelotillehue.
-              </p>
+              <Editable
+                k="contacto.info.titulo"
+                as="h2"
+                className="font-display font-bold text-2xl text-text-primary mb-2"
+              />
+              <Editable
+                k="contacto.info.texto"
+                as="p"
+                className="text-sm text-text-secondary"
+                multiline
+              />
             </div>
 
             <div className="flex flex-col gap-4">
@@ -67,11 +79,17 @@ export default function ContactoPage() {
                   <MapPin size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-text-primary mb-0.5">Dirección Oficial</h4>
-                  <p className="text-xs text-text-secondary leading-relaxed">
-                    Plaza de Armas S/N, Cumpeo.<br />
-                    Comuna de Río Claro, Región del Maule.
-                  </p>
+                  <Editable
+                    k="contacto.info.direccionTitulo"
+                    as="h4"
+                    className="text-sm font-bold text-text-primary mb-0.5"
+                  />
+                  <Editable
+                    k="contacto.info.direccionTexto"
+                    as="p"
+                    className="text-xs text-text-secondary leading-relaxed"
+                    multiline
+                  />
                 </div>
               </div>
 
@@ -80,8 +98,16 @@ export default function ContactoPage() {
                   <Phone size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-text-primary mb-0.5">Teléfono Municipal</h4>
-                  <p className="text-xs text-text-secondary">+56 71 254 1200</p>
+                  <Editable
+                    k="contacto.info.telefonoTitulo"
+                    as="h4"
+                    className="text-sm font-bold text-text-primary mb-0.5"
+                  />
+                  <Editable
+                    k="contacto.info.telefonoValor"
+                    as="p"
+                    className="text-xs text-text-secondary"
+                  />
                 </div>
               </div>
 
@@ -90,35 +116,57 @@ export default function ContactoPage() {
                   <Mail size={20} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-text-primary mb-0.5">Correo Electrónico</h4>
-                  <p className="text-xs text-text-secondary">turismo@rioclaro.cl</p>
+                  <Editable
+                    k="contacto.info.emailTitulo"
+                    as="h4"
+                    className="text-sm font-bold text-text-primary mb-0.5"
+                  />
+                  <Editable
+                    k="contacto.info.emailValor"
+                    as="p"
+                    className="text-xs text-text-secondary"
+                  />
                 </div>
               </div>
             </div>
 
             <div className="mt-auto pt-6 border-t border-border">
-              <h4 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
-                Horario de Atención
-              </h4>
-              <p className="text-xs text-text-muted">
-                Lunes a Viernes de 08:30 a 17:30 hrs. Sábados y Domingos atención en módulos de Plaza de Armas.
-              </p>
+              <Editable
+                k="contacto.info.horarioTitulo"
+                as="h4"
+                className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2"
+              />
+              <Editable
+                k="contacto.info.horarioTexto"
+                as="p"
+                className="text-xs text-text-muted"
+                multiline
+              />
             </div>
           </div>
 
           {/* Lado Derecho: Formulario */}
           <div className="bg-surface-soft p-6 sm:p-7 rounded-xl border border-border flex flex-col justify-center">
-            <h3 className="font-display font-bold text-lg text-text-primary mb-4">
-              Envíanos un Mensaje
-            </h3>
+            <Editable
+              k="contacto.form.titulo"
+              as="h3"
+              className="font-display font-bold text-lg text-text-primary mb-4"
+            />
 
             {isSuccess ? (
               <div className="bg-green-50 border border-green-200 p-6 rounded-xl text-center flex flex-col items-center gap-2">
                 <CheckCircle2 size={36} className="text-green-600 mb-1" />
-                <h4 className="text-base font-bold text-green-800">¡Mensaje enviado con éxito!</h4>
-                <p className="text-xs text-green-700">
-                  Gracias por comunicarte con nosotros. Te responderemos a la brevedad posible.
-                </p>
+                <Editable
+                  k="contacto.form.exitoTitulo"
+                  as="h4"
+                  className="text-base font-bold text-green-800"
+                />
+                <Editable
+                  k="contacto.form.exitoTexto"
+                  as="p"
+                  className="text-xs text-green-700"
+                  multiline
+                />
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
@@ -198,12 +246,12 @@ export default function ContactoPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      <span>Enviando mensaje…</span>
+                      <Editable k="contacto.form.enviando" />
                     </>
                   ) : (
                     <>
                       <Send size={16} />
-                      <span>Enviar Mensaje</span>
+                      <Editable k="contacto.form.boton" />
                     </>
                   )}
                 </button>

@@ -1,14 +1,15 @@
 import React from 'react';
-import { User, CreditCard } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { Restaurant } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImageUploadField } from '../ImageUploadField';
-import { GalleryField } from '../GalleryField';
 import {
-  CoordinatesPicker,
+  LocationField,
   ContactoSection,
   ActivoToggle,
+  HorarioField,
+  MediaFields,
+  PropietarioField,
 } from './common';
 
 interface RestauranteModalProps {
@@ -27,10 +28,6 @@ export function RestauranteModal({
   isPending,
 }: RestauranteModalProps) {
   const set = (patch: Partial<Restaurant>) => onChange({ ...editing, ...patch });
-
-  const horario = (editing.horario as any) || {};
-  const setHorario = (patch: Record<string, string>) =>
-    set({ horario: { ...horario, ...patch } });
 
   return (
     <ModalWrapper
@@ -76,17 +73,10 @@ export function RestauranteModal({
               <option value="minimarket">Minimarket</option>
             </select>
           </Field>
-          <Field label="Propietario" hint="Nombre del dueño o encargado">
-            <div className="relative">
-              <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-              <input
-                className={inputCls + ' pl-8'}
-                placeholder="Ej: Juan Pérez"
-                value={editing.propietario || ''}
-                onChange={(e) => set({ propietario: e.target.value })}
-              />
-            </div>
-          </Field>
+          <PropietarioField
+            value={editing.propietario}
+            onChange={(propietario) => set({ propietario })}
+          />
         </div>
 
         {/* Especialidad (Plato estrella eliminado) */}
@@ -110,25 +100,17 @@ export function RestauranteModal({
           />
         </Field>
 
-        {/* Dirección + Horario */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Dirección">
-            <input
-              className={inputCls}
-              placeholder="Calle / Localidad"
-              value={editing.direccion || ''}
-              onChange={(e) => set({ direccion: e.target.value })}
-            />
-          </Field>
-          <Field label="Horario de Atención">
-            <input
-              className={inputCls}
-              placeholder="Lun–Dom 12:00–22:00"
-              value={horario.descripcion || ''}
-              onChange={(e) => setHorario({ descripcion: e.target.value })}
-            />
-          </Field>
-        </div>
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
+        />
+
+        {/* Horario de Atención */}
+        <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
 
         {/* Medios de Pago */}
         <div className="rounded-xl border border-border overflow-hidden">
@@ -178,23 +160,11 @@ export function RestauranteModal({
           />
         </Field>
 
-        {/* Coordenadas Refactorizadas con Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas}
-          onChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
-        />
-
-        <ImageUploadField
-          label="Imagen Principal"
-          value={editing.imagenPrincipal || ''}
-          onChange={(url) => set({ imagenPrincipal: url })}
-        />
-
-        {/* Galería de fotos del local */}
-        <GalleryField
-          images={editing.galeria || []}
-          onChange={(images) => set({ galeria: images })}
+        <MediaFields
+          imagenPrincipal={editing.imagenPrincipal}
+          onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
+          galeria={editing.galeria}
+          onGaleriaChange={(galeria) => set({ galeria })}
         />
 
         <ModalActions onClose={onClose} isPending={isPending} />

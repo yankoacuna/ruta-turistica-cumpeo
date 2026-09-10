@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, UserRole, AdminUser, AdminSessionUser } from '@/lib/types';
+import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, UserRole, AdminUser, AdminSessionUser, OrderableEntity } from '@/lib/types';
 import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, shouldRefreshToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 
 import { revalidatePath } from 'next/cache';
@@ -330,7 +330,7 @@ export async function saveDestination(
       historia: data.historia,
       coordenadas: data.coordenadas as any,
       direccion: data.direccion,
-      horario: data.horario,
+      horario: data.horario as any,
       duracionVisita: data.duracionVisita,
       comoLlegar: data.comoLlegar,
       tags: data.tags,
@@ -348,9 +348,9 @@ export async function saveDestination(
       descripcionCorta: data.descripcionCorta || '',
       descripcionLarga: data.descripcionLarga,
       historia: data.historia,
-      coordenadas: (data.coordenadas as any) || { lat: -35.267, lng: -71.25 },
+      coordenadas: (data.coordenadas as any) || { lat: -35.281739, lng: -71.258714 },
       direccion: data.direccion,
-      horario: data.horario,
+      horario: data.horario as any,
       duracionVisita: data.duracionVisita,
       comoLlegar: data.comoLlegar,
       tags: data.tags || [],
@@ -424,7 +424,7 @@ export async function saveRestaurant(
       descripcion: data.descripcion || '',
       especialidad: data.especialidad,
       propietario: data.propietario,
-      coordenadas: (data.coordenadas as any) || { lat: -35.267, lng: -71.25 },
+      coordenadas: (data.coordenadas as any) || { lat: -35.281739, lng: -71.258714 },
       direccion: data.direccion,
       telefono: data.telefono,
       whatsapp: data.whatsapp,
@@ -495,7 +495,7 @@ export async function saveAccommodation(
       tipo: data.tipo,
       propietario: data.propietario,
       descripcion: data.descripcion || '',
-      coordenadas: (data.coordenadas as any) || { lat: -35.267, lng: -71.25 },
+      coordenadas: (data.coordenadas as any) || { lat: -35.281739, lng: -71.258714 },
       direccion: data.direccion,
       telefono: data.telefono,
       whatsapp: data.whatsapp,
@@ -550,7 +550,7 @@ export async function exportDatabaseBackup(token?: string) {
   return {
     version: '1.2',
     exportDate: new Date().toISOString(),
-    site: 'Cumpeo Turismo',
+    site: 'Turismo Cumpeo',
     data: {
       destinations,
       restaurants,
@@ -870,10 +870,60 @@ export async function bulkImportEntitiesAction(
   };
 }
 
+// ─── ORDEN DE LOS CATASTROS EN LA PORTADA ─────────────────────────────────────
+
+/**
+ * Guarda el orden manual con que se muestran los catastros en la portada.
+ *
+ * Recibe los ids en el orden deseado y escribe la posicion (0, 1, 2...) en el
+ * campo `orden` de cada registro. Las consultas publicas ordenan por
+ * [orden asc, nombre asc], asi que un registro nuevo (orden 0) aparece arriba
+ * y los empates siguen resolviendose alfabeticamente como antes.
+ *
+ * Se hace en una transaccion: o queda todo el orden nuevo, o no queda nada.
+ * Un orden a medio aplicar seria peor que el anterior.
+ */
+export async function updateEntityOrder(
+  tipo: OrderableEntity,
+  orderedIds: string[]
+): Promise<{ actualizados: number }> {
+  await requireRole(['ADMIN', 'EDITOR']);
+
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    return { actualizados: 0 };
+  }
+
+  // Ids repetidos dejarian dos registros con la misma posicion.
+  const ids = Array.from(new Set(orderedIds.filter((id) => typeof id === 'string' && id)));
+
+  const updates = ids.map((id, index) => {
+    const data = { orden: index };
+    switch (tipo) {
+      case 'destinos':
+        return prisma.destination.update({ where: { id }, data });
+      case 'restaurantes':
+        return prisma.restaurant.update({ where: { id }, data });
+      case 'alojamientos':
+        return prisma.accommodation.update({ where: { id }, data });
+      case 'eventos':
+        return prisma.event.update({ where: { id }, data });
+      default:
+        throw new Error(`Catastro desconocido: ${tipo}`);
+    }
+  });
+
+  await prisma.$transaction(updates);
+
+  revalidatePath('/');
+  revalidatePath('/admin');
+  revalidatePath('/mapa');
+  return { actualizados: ids.length };
+}
+
 // ─── EVENTS ───────────────────────────────────────────────────────────────────
 
 export async function getEvents() {
-  return prisma.event.findMany({ orderBy: { nombre: 'asc' } });
+  return prisma.event.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
 }
 
 export async function saveEvent(

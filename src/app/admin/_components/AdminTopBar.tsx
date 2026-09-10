@@ -49,6 +49,8 @@ export function AdminTopBar({
     alojamientos: { category: 'Contenido Editable', label: 'Alojamientos y Cabañas' },
     eventos: { category: 'Contenido Editable', label: 'Eventos y Festividades' },
     rutas: { category: 'Contenido Editable', label: 'Circuitos y Rutas' },
+    textos: { category: 'Contenido Editable', label: 'Textos del Sitio' },
+    orden: { category: 'Contenido Editable', label: 'Orden de la Portada' },
     qrcodes: { category: 'Herramientas', label: 'Generador de Códigos QR' },
     backups: { category: 'Sistema', label: 'Copias de Seguridad (Backup)' },
     usuarios: { category: 'Sistema', label: 'Usuarios y Permisos' },

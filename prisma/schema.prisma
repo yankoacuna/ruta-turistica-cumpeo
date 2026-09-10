@@ -18,7 +18,7 @@ model Destination {
   historia         String?
   coordenadas      Json     // { "lat": -35.267, "lng": -71.250 }
   direccion        String?
-  horario          String?
+  horario          Json?
   precio           String?
   duracionVisita   String?
   comoLlegar       String?
@@ -28,6 +28,7 @@ model Destination {
   rating           Float?
   destacado        Boolean  @default(false)
   activo           Boolean  @default(true)
+  orden            Int      @default(0) // orden manual en la portada (menor primero)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -52,6 +53,7 @@ model Restaurant {
   menuUrl          String?
   contacto         Json?    // e.g. { "telefono": "..." }
   activo           Boolean  @default(true)
+  orden            Int      @default(0) // orden manual en la portada (menor primero)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -72,6 +74,7 @@ model Accommodation {
   galeria          String[]
   contacto         Json?
   activo           Boolean  @default(true)
+  orden            Int      @default(0) // orden manual en la portada (menor primero)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -91,6 +94,7 @@ model Event {
   tags             String[]
   destacado        Boolean  @default(false)
   activo           Boolean  @default(true)
+  orden            Int      @default(0) // orden manual en la portada (menor primero)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -146,4 +150,33 @@ model User {
   activo    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Textos editables del sitio público.
+/// Solo guarda los textos que un editor cambió: el valor por defecto vive en
+/// el código (src/lib/siteTexts.ts). Si esta tabla está vacía, el sitio se ve
+/// exactamente igual que sin la funcionalidad.
+model SiteText {
+  key             String   @id
+  value           String
+  updatedAt       DateTime @updatedAt
+  updatedById     String?
+  updatedByEmail  String?
+  updatedByNombre String?
+}
+
+/// Bitácora de cada cambio de texto: quién, cuándo, valor anterior y nuevo.
+/// Permite auditar y restaurar cualquier versión previa.
+model SiteTextRevision {
+  id            String   @id @default(cuid())
+  key           String
+  valorAnterior String?
+  valorNuevo    String
+  accion        String   @default("editar") // editar | restaurar | original
+  autorId       String?
+  autorEmail    String?
+  autorNombre   String?
+  createdAt     DateTime @default(now())
+
+  @@index([key, createdAt])
 }

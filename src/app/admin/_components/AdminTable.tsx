@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types';
+import { formatHorario } from '@/lib/openingHours';
 import { AdminSection } from '../_types';
 
 interface EntityHandlers<T> {
@@ -271,9 +272,9 @@ export function AdminTable({
             sortable: true,
             filterable: true,
             filterType: 'text',
-            getSortValue: (d: Destination) => (d.horario || '').toLowerCase(),
-            getFilterValue: (d: Destination) => d.horario || '',
-            render: (d: Destination) => d.horario || <span className="text-text-muted">No especificado</span>,
+            getSortValue: (d: Destination) => formatHorario(d.horario).toLowerCase(),
+            getFilterValue: (d: Destination) => formatHorario(d.horario),
+            render: (d: Destination) => formatHorario(d.horario) || <span className="text-text-muted">No especificado</span>,
           },
           {
             key: 'destacado',
@@ -370,9 +371,9 @@ export function AdminTable({
             sortable: true,
             filterable: true,
             filterType: 'text',
-            getSortValue: (r: Restaurant) => ((r.horario as any)?.descripcion || '').toLowerCase(),
-            getFilterValue: (r: Restaurant) => (r.horario as any)?.descripcion || '',
-            render: (r: Restaurant) => (r.horario as any)?.descripcion || <span className="text-text-muted">—</span>,
+            getSortValue: (r: Restaurant) => formatHorario(r.horario).toLowerCase(),
+            getFilterValue: (r: Restaurant) => formatHorario(r.horario),
+            render: (r: Restaurant) => formatHorario(r.horario) || <span className="text-text-muted">—</span>,
           },
           {
             key: 'estado',
@@ -637,7 +638,7 @@ export function AdminTable({
     destinos: 'Administra los puntos de interés, esculturas de Condorito y atractivos turísticos.',
     restaurantes: 'Gestiona la oferta gastronómica típica, horarios de atención y contactos.',
     alojamientos: 'Administra hoteles, cabañas y opciones de hospedaje en Cumpeo.',
-    eventos: 'Programa fiestas costumbristas, ferias tradicionales y actividades culturales.',
+    eventos: 'Programa fiestas religiosas, ferias libres y centros de evento.',
   }[activeSection];
 
   const rangeStart = totalFiltered === 0 ? 0 : (safePage - 1) * pageSize + 1;

@@ -27,20 +27,21 @@ interface LocationMapPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialCoordinates?: Coordinates | null;
-  onConfirm: (coords: Coordinates) => void;
+  /** `direccion` viene con la mejor dirección disponible (buscada o geocodificada); puede venir vacía si el punto no tiene una dirección reconocible. */
+  onConfirm: (coords: Coordinates, direccion?: string) => void;
   title?: string;
 }
 
-const DEFAULT_CUMPEO_COORDS: Coordinates = {
-  lat: -35.267,
-  lng: -71.25,
+export const DEFAULT_CUMPEO_COORDS: Coordinates = {
+  lat: -35.281739,
+  lng: -71.258714,
 };
 
 // ── Componente Interno con acceso al contexto de Google Maps ─────────
 interface InnerMapPickerProps {
   initialCoords: Coordinates;
   onClose: () => void;
-  onConfirm: (coords: Coordinates) => void;
+  onConfirm: (coords: Coordinates, direccion?: string) => void;
   title: string;
 }
 
@@ -59,6 +60,9 @@ function InnerMapPicker({
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isGettingGps, setIsGettingGps] = useState(false);
+  /** Mejor dirección disponible para el punto actual. null = el punto no tiene una dirección reconocible (ej: un rincón de una plaza). */
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+  const [isResolvingAddress, setIsResolvingAddress] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -73,6 +77,34 @@ function InnerMapPicker({
       }
     },
     [map]
+  );
+
+  // Geocodificación inversa: dado un punto, intenta obtener la dirección más cercana.
+  // No todos los puntos tienen una (ej: un rincón de una plaza sin numeración), y eso es
+  // esperado: en ese caso resolvedAddress queda en null y no se sobrescribe la dirección.
+  const reverseGeocode = useCallback(
+    async (point: Coordinates) => {
+      if (!geocodingLib) return;
+      setIsResolvingAddress(true);
+      try {
+        const geocoder = new geocodingLib.Geocoder();
+        const address = await new Promise<string | null>((resolve) => {
+          geocoder.geocode({ location: point }, (results, status) => {
+            if (status === 'OK' && results && results[0]?.formatted_address) {
+              resolve(results[0].formatted_address);
+            } else {
+              resolve(null);
+            }
+          });
+        });
+        setResolvedAddress(address);
+      } catch {
+        setResolvedAddress(null);
+      } finally {
+        setIsResolvingAddress(false);
+      }
+    },
+    [geocodingLib]
   );
 
   // Inicializar Google Places Autocomplete cuando la librería esté lista
@@ -100,6 +132,7 @@ function InnerMapPicker({
         };
         panToCoords(found, 17);
         setSearchError(null);
+        setResolvedAddress(place.formatted_address || null);
         if (place.formatted_address || place.name) {
           setSearchQuery(place.name || place.formatted_address || '');
         }
@@ -132,6 +165,7 @@ function InnerMapPicker({
       };
       setCoords(clickedCoords);
       setSearchError(null);
+      reverseGeocode(clickedCoords);
     }
   };
 
@@ -154,7 +188,10 @@ function InnerMapPicker({
       if (placesLib && map) {
         try {
           const service = new placesLib.PlacesService(map);
-          const cumpeoCenter = new google.maps.LatLng(-35.267, -71.25);
+          const cumpeoCenter = new google.maps.LatLng(
+            DEFAULT_CUMPEO_COORDS.lat,
+            DEFAULT_CUMPEO_COORDS.lng
+          );
 
           const placeQuery =
             query.toLowerCase().includes('cumpeo') || query.toLowerCase().includes('chile')
@@ -245,6 +282,7 @@ function InnerMapPicker({
           lng: Number(foundLocation.lng.toFixed(6)),
         };
         panToCoords(rounded, 17);
+        reverseGeocode(rounded);
       } else {
         setSearchError('No se encontró ese lugar en Google Maps. Puedes buscar una calle cercana o hacer clic directamente en el mapa para ubicar el pin.');
       }
@@ -259,7 +297,7 @@ function InnerMapPicker({
   const handleCenterCumpeo = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    panToCoords(DEFAULT_CUMPEO_COORDS, 15);
+    panToCoords(DEFAULT_CUMPEO_COORDS, 16);
   };
 
   // Obtener GPS del usuario
@@ -279,6 +317,7 @@ function InnerMapPicker({
           lng: Number(pos.coords.longitude.toFixed(6)),
         };
         panToCoords(userLoc, 17);
+        reverseGeocode(userLoc);
       },
       () => {
         setIsGettingGps(false);
@@ -291,7 +330,7 @@ function InnerMapPicker({
   const handleConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onConfirm(coords);
+    onConfirm(coords, resolvedAddress || undefined);
     onClose();
   };
 
@@ -445,10 +484,12 @@ function InnerMapPicker({
                 draggable={true}
                 onDragEnd={(e) => {
                   if (e.latLng) {
-                    setCoords({
+                    const dragged: Coordinates = {
                       lat: Number(e.latLng.lat().toFixed(6)),
                       lng: Number(e.latLng.lng().toFixed(6)),
-                    });
+                    };
+                    setCoords(dragged);
+                    reverseGeocode(dragged);
                   }
                 }}
               >
@@ -468,18 +509,26 @@ function InnerMapPicker({
             </div>
           </div>
 
-          {/* Barra de Coordenadas Seleccionadas */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-surface-soft rounded-xl border border-border">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <div className="text-xs font-mono text-text-secondary">
-                <span className="font-bold text-text-primary">Lat:</span> {coords.lat.toFixed(6)}{' '}
-                <span className="text-text-muted">|</span>{' '}
-                <span className="font-bold text-text-primary">Lng:</span> {coords.lng.toFixed(6)}
+          {/* Punto seleccionado: la dirección es el dato que le importa al usuario; las coordenadas quedan como detalle secundario */}
+          <div className="flex items-center gap-2.5 p-3 bg-surface-soft rounded-xl border border-border">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <div className="min-w-0 flex-1">
+              {isResolvingAddress ? (
+                <div className="text-xs text-text-muted flex items-center gap-1.5">
+                  <Loader2 size={12} className="animate-spin" /> Buscando la dirección de este punto…
+                </div>
+              ) : resolvedAddress ? (
+                <div className="text-xs font-semibold text-text-primary truncate" title={resolvedAddress}>
+                  {resolvedAddress}
+                </div>
+              ) : (
+                <div className="text-xs text-text-muted">
+                  Sin dirección reconocible para este punto — se usará solo la ubicación en el mapa.
+                </div>
+              )}
+              <div className="text-[10px] font-mono text-text-muted mt-0.5">
+                {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
               </div>
-            </div>
-            <div className="text-[11px] text-text-muted">
-              Punto seleccionado listo para aplicar
             </div>
           </div>
         </div>

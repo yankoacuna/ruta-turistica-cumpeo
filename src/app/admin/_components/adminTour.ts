@@ -154,17 +154,7 @@ export function startCreateDestinoTour({
       popover: {
         title: tourTitle(TOUR_ICONS.tag, '1. Nombre y Categoría'),
         description:
-          'Escribe el nombre del lugar turístico (por ejemplo: "Mural de Condorito") y selecciona su categoría correspondiente (Cultural, Histórico, Gastronomía, etc.).',
-        side: 'bottom',
-        align: 'start',
-      },
-    },
-    {
-      element: '#tour-dest-slug',
-      popover: {
-        title: tourTitle(TOUR_ICONS.link, '2. Dirección Web Pública (Enlace)'),
-        description:
-          'Es el enlace web directo con el que los visitantes abrirán este atractivo en el navegador. Se genera a partir del nombre y puedes personalizarlo si lo prefieres.',
+          'Escribe el nombre del lugar turístico (por ejemplo: "Mural de Condorito") y selecciona su categoría correspondiente (Cultural, Histórico, Gastronomía, etc.). El enlace web se genera automáticamente.',
         side: 'bottom',
         align: 'start',
       },
@@ -172,7 +162,7 @@ export function startCreateDestinoTour({
     {
       element: '#tour-dest-desc',
       popover: {
-        title: tourTitle(TOUR_ICONS.fileText, '3. Descripciones e Información'),
+        title: tourTitle(TOUR_ICONS.fileText, '2. Descripciones e Información'),
         description:
           'Redacta un resumen breve para las tarjetas de búsqueda y una descripción completa con la historia y detalles del atractivo.',
         side: 'top',
@@ -182,7 +172,7 @@ export function startCreateDestinoTour({
     {
       element: '#tour-dest-image',
       popover: {
-        title: tourTitle(TOUR_ICONS.image, '4. Fotografía de Portada'),
+        title: tourTitle(TOUR_ICONS.image, '3. Fotografía de Portada'),
         description:
           'Selecciona la pestaña "Subir desde mi equipo" para cargar una foto local, o "Pegar enlace web" para usar una imagen directa de internet.',
         side: 'top',
@@ -192,7 +182,7 @@ export function startCreateDestinoTour({
     {
       element: '#tour-dest-actions',
       popover: {
-        title: tourTitle(TOUR_ICONS.checkCircle, '5. Guardar Registro'),
+        title: tourTitle(TOUR_ICONS.checkCircle, '4. Guardar Registro'),
         description:
           'Al presionar "Guardar Destino", el atractivo quedará publicado de inmediato en la aplicación móvil y en el mapa turístico de Cumpeo.',
         side: 'top',

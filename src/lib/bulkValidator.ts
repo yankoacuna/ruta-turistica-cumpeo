@@ -28,7 +28,7 @@ export interface ValidationSummary {
 }
 
 // Coordenadas céntricas por defecto de Cumpeo, Maule
-const DEFAULT_CUMPEO_COORDS = { lat: -35.267, lng: -71.250 };
+const DEFAULT_CUMPEO_COORDS = { lat: -35.281739, lng: -71.258714 };
 
 /**
  * Normaliza claves de encabezados para soportar variaciones comunes de los usuarios
@@ -175,7 +175,7 @@ export function validateDestinationRow(
   } else if (isDefault) {
     issues.push({
       field: 'coordenadas',
-      message: 'Sin coordenadas GPS: Se asignaron las coordenadas céntricas de Cumpeo (-35.267, -71.250).',
+      message: 'Sin coordenadas GPS: Se asignaron las coordenadas céntricas de Cumpeo (-35.281739, -71.258714).',
       severity: 'WARNING',
     });
   }
@@ -397,7 +397,7 @@ export function validateEventRow(
   }
 
   const rawTipo = getColValue(row, ['tipo', 'categoria']);
-  const tipo = rawTipo ? String(rawTipo).trim().toLowerCase() : 'cultural';
+  const tipo = rawTipo ? String(rawTipo).trim().toLowerCase() : 'ferias-libres';
 
   const rawDesc = getColValue(row, ['descripcion', 'detalle', 'resumen']);
   const descripcion = rawDesc ? String(rawDesc).trim() : '';
@@ -684,7 +684,7 @@ export const TEMPLATE_SCHEMAS: Record<
     filename: 'plantilla-cumpeo-eventos.xlsx',
     headers: [
       'Nombre*',
-      'Tipo (fiesta-religiosa/feria/cultural/centro-evento)*',
+      'Tipo (fiestas-religiosas/ferias-libres/centros-de-evento)*',
       'Descripcion*',
       'Fecha',
       'Recurrente (SI/NO)',
@@ -698,7 +698,7 @@ export const TEMPLATE_SCHEMAS: Record<
     sampleRows: [
       {
         'Nombre*': 'Fiesta de la Vendimia de Río Claro',
-        'Tipo (fiesta-religiosa/feria/cultural/centro-evento)*': 'cultural',
+        'Tipo (fiestas-religiosas/ferias-libres/centros-de-evento)*': 'ferias-libres',
         'Descripcion*': 'Celebración anual con degustación de vinos locales, música folclórica y gastronomía típica.',
         Fecha: 'Fines de Marzo',
         'Recurrente (SI/NO)': 'SI',
@@ -754,7 +754,7 @@ export function downloadEntityTemplate(entityType: BulkEntityType, format: 'xlsx
     },
     {
       Instrucción: '2. Formato de Coordenadas',
-      Detalle: 'Indicar valores decimales en Latitud y Longitud (Ej: -35.267, -71.250). Si se omite, se usa el centro de Cumpeo.',
+      Detalle: 'Indicar valores decimales en Latitud y Longitud (Ej: -35.281739, -71.258714). Si se omite, se usa el centro de Cumpeo.',
     },
     {
       Instrucción: '3. Valores Sí / No',

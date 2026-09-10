@@ -1,4 +1,4 @@
-# Cumpeo Turismo — Guía Turística Interactiva 🦅🇨🇱
+# Turismo Cumpeo — Guía Turística Interactiva 🦅🇨🇱
 
 Plataforma web turística oficial para la localidad de Cumpeo (Río Claro, Región del Maule), conocida como el pueblo temático de Condorito. La aplicación permite a los turistas explorar destinos, rutas, restaurantes y alojamientos utilizando geolocalización en tiempo real.
 

@@ -1,15 +1,14 @@
 import React from 'react';
-import { User } from 'lucide-react';
 import { Accommodation } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImageUploadField } from '../ImageUploadField';
-import { GalleryField } from '../GalleryField';
 import {
-  CoordinatesPicker,
+  LocationField,
   ContactoSection,
   ActivoToggle,
   CommaSeparatedField,
+  MediaFields,
+  PropietarioField,
 } from './common';
 
 interface AlojamientoModalProps {
@@ -69,17 +68,11 @@ export function AlojamientoModal({
         </div>
 
         {/* Propietario */}
-        <Field label="Propietario" hint="Nombre del dueño o encargado">
-          <div className="relative">
-            <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input
-              className={inputCls + ' pl-8'}
-              placeholder="Ej: Patricia Navarro Troncoso"
-              value={editing.propietario || ''}
-              onChange={(e) => set({ propietario: e.target.value })}
-            />
-          </div>
-        </Field>
+        <PropietarioField
+          value={editing.propietario}
+          onChange={(propietario) => set({ propietario })}
+          placeholder="Ej: Patricia Navarro Troncoso"
+        />
 
         {/* Descripción */}
         <Field label="Descripción" required>
@@ -92,24 +85,23 @@ export function AlojamientoModal({
           />
         </Field>
 
-        {/* Dirección + Servicios */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Dirección">
-            <input
-              className={inputCls}
-              placeholder="Calle / Localidad"
-              value={editing.direccion || ''}
-              onChange={(e) => set({ direccion: e.target.value })}
-            />
-          </Field>
-          <CommaSeparatedField
-            label="Servicios"
-            placeholder="WiFi, Estacionamiento, Piscina, Quincho…"
-            hint="Separados por coma"
-            value={editing.servicios || []}
-            onChange={(servicios) => set({ servicios })}
-          />
-        </div>
+        {/* Servicios */}
+        <CommaSeparatedField
+          label="Servicios"
+          placeholder="WiFi, Estacionamiento, Piscina, Quincho…"
+          hint="Separados por coma"
+          value={editing.servicios || []}
+          onChange={(servicios) => set({ servicios })}
+        />
+
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Alojamiento'}`}
+        />
 
         {/* Contacto Refactorizado */}
         <ContactoSection
@@ -122,23 +114,11 @@ export function AlojamientoModal({
           instagramPlaceholder="@nombre_hospedaje"
         />
 
-        {/* Coordenadas Refactorizadas con Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas}
-          onChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Alojamiento'}`}
-        />
-
-        <ImageUploadField
-          label="Imagen Principal"
-          value={editing.imagenPrincipal || ''}
-          onChange={(url) => set({ imagenPrincipal: url })}
-        />
-
-        {/* Galería de fotos */}
-        <GalleryField
-          images={editing.galeria || []}
-          onChange={(images) => set({ galeria: images })}
+        <MediaFields
+          imagenPrincipal={editing.imagenPrincipal}
+          onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
+          galeria={editing.galeria}
+          onGaleriaChange={(galeria) => set({ galeria })}
         />
 
         <ModalActions onClose={onClose} isPending={isPending} />

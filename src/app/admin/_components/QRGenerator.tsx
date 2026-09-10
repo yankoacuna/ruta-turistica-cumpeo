@@ -25,7 +25,7 @@ export function QRGenerator({
   const [selectedId, setSelectedId] = useState<string>(destinos[0]?.id || '');
   const [customUrl, setCustomUrl] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
-  const [signTitle, setSignTitle] = useState<string>('Cumpeo Turismo');
+  const [signTitle, setSignTitle] = useState<string>('Turismo Cumpeo');
   const [signSubtitle, setSignSubtitle] = useState<string>('Escanea con tu celular para ver la historia oficial');
 
   // Determine current target URL
@@ -304,7 +304,7 @@ export function QRGenerator({
                   }}
                 />
                 <span className="font-display font-black text-sm text-sol tracking-wide uppercase">
-                  Cumpeo Turismo
+                  Turismo Cumpeo
                 </span>
               </div>
 

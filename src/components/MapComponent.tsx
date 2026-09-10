@@ -255,7 +255,7 @@ export default function MapComponent({
   selectedPoi,
   onSelectPoi,
   userCoords,
-  initialCenter = { lat: -35.267, lng: -71.25 },
+  initialCenter = { lat: -35.281739, lng: -71.258714 },
   initialZoom = 14,
   activeRoute,
   resetCenterTrigger,

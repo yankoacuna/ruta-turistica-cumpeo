@@ -16,7 +16,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { getDestinationByIdOrSlug, getDestinations, getCategoryColorClass, formatImgUrl } from '@/lib/data';
-import { getOpeningStatus } from '@/lib/openingHours';
+import { getOpeningStatus, formatHorario } from '@/lib/openingHours';
 
 const BADGE_STYLES: Record<string, string> = {
   rojo:       'bg-[#FFE0E2] text-[#C1121F] border-[#FFA8AE]',
@@ -106,7 +106,7 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
               <div className="text-[0.75rem] uppercase text-text-muted font-bold flex items-center gap-1">
                 <Clock size={13} className="text-rojo" /> Horario
               </div>
-              <div className="font-semibold mt-1 text-[0.95rem]">{destination.horario || 'Abierto todo el día'}</div>
+              <div className="font-semibold mt-1 text-[0.95rem]">{formatHorario(destination.horario) || 'Abierto todo el día'}</div>
               {(() => {
                 const opening = getOpeningStatus(destination.horario);
                 if (opening.isOpen === null) return null;
@@ -202,7 +202,7 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
                   <MapPin size={16} /> Waze
                 </a>
                 <a
-                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Descubre este lugar en Cumpeo Turismo! ${destination.nombre} en https://cumpeo-turismo.vercel.app/destino/${destination.slug || destination.id}`)}`}
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Descubre este lugar en Turismo Cumpeo! ${destination.nombre} en https://cumpeo-turismo.vercel.app/destino/${destination.slug || destination.id}`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 py-2.5 px-5 rounded-full font-bold text-sm text-green-700 bg-green-50 border-2 border-green-300 hover:bg-green-100 transition-all no-underline"

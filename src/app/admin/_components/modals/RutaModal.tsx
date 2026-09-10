@@ -4,7 +4,6 @@ import { TourRoute, POI } from '@/lib/types';
 import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { SlugField } from './common';
 
 interface RutaModalProps {
   editing: Partial<TourRoute>;
@@ -28,9 +27,8 @@ export function RutaModal({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editing.slug && editing.nombre) {
-      onChange({ ...editing, slug: slugify(editing.nombre) });
-    }
+    const finalSlug = slugify(editing.nombre || '') || editing.slug || 'ruta';
+    onChange({ ...editing, slug: finalSlug });
     onSubmit(e);
   };
 
@@ -74,21 +72,12 @@ export function RutaModal({
               className={inputCls}
               placeholder="Ej: La Ruta Oficial de Condorito"
               value={editing.nombre || ''}
-              onChange={(e) => set({ nombre: e.target.value })}
+              onChange={(e) => {
+                const nombre = e.target.value;
+                set({ nombre, slug: slugify(nombre) });
+              }}
             />
           </Field>
-        </div>
-
-        {/* Dirección Web Pública (URL / Slug) Refactorizada */}
-        <div id="tour-ruta-slug">
-          <SlugField
-            slug={editing.slug || ''}
-            baseName={editing.nombre || ''}
-            basePath="cumpeo.cl/ruta?slug="
-            onChange={(slug) => set({ slug })}
-            isEditing={Boolean(editing.id)}
-            helpText="Identificador con el que los turistas compartirán y abrirán esta ruta turística interactiva."
-          />
         </div>
 
         {/* Descripción */}

@@ -4,12 +4,11 @@ import { Destination } from '@/lib/types';
 import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
-import { ImageUploadField } from '../ImageUploadField';
-import { GalleryField } from '../GalleryField';
 import {
-  CoordinatesPicker,
-  SlugField,
+  LocationField,
   CommaSeparatedField,
+  MediaFields,
+  HorarioField,
 } from './common';
 
 interface DestinoModalProps {
@@ -31,9 +30,8 @@ export function DestinoModal({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editing.slug && editing.nombre) {
-      onChange({ ...editing, slug: slugify(editing.nombre) });
-    }
+    const finalSlug = slugify(editing.nombre || '') || editing.slug || 'destino';
+    onChange({ ...editing, slug: finalSlug });
     onSubmit(e);
   };
 
@@ -51,7 +49,10 @@ export function DestinoModal({
               className={inputCls}
               placeholder="Ej: Mural de Condorito"
               value={editing.nombre || ''}
-              onChange={(e) => set({ nombre: e.target.value })}
+              onChange={(e) => {
+                const nombre = e.target.value;
+                set({ nombre, slug: slugify(nombre) });
+              }}
             />
           </Field>
           <Field label="Categoría" required>
@@ -68,18 +69,6 @@ export function DestinoModal({
               <option value="entretencion">Entretención</option>
             </select>
           </Field>
-        </div>
-
-        {/* Dirección Web Pública (URL / Slug) Refactorizada */}
-        <div id="tour-dest-slug">
-          <SlugField
-            slug={editing.slug || ''}
-            baseName={editing.nombre || ''}
-            basePath="cumpeo.cl/destino/"
-            onChange={(slug) => set({ slug })}
-            isEditing={Boolean(editing.id)}
-            helpText="Este es el enlace directo con el que los visitantes verán la ficha de este destino en internet."
-          />
         </div>
 
         {/* Descripciones */}
@@ -112,33 +101,28 @@ export function DestinoModal({
           </Field>
         </div>
 
-        {/* Datos prácticos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Dirección">
-            <input
-              className={inputCls}
-              placeholder="Calle / Localidad, Cumpeo"
-              value={editing.direccion || ''}
-              onChange={(e) => set({ direccion: e.target.value })}
-            />
-          </Field>
-          <Field label="Horario">
-            <input
-              className={inputCls}
-              placeholder="Lun–Dom 9:00–18:00"
-              value={editing.horario || ''}
-              onChange={(e) => set({ horario: e.target.value })}
-            />
-          </Field>
-          <Field label="Duración Sugerida">
-            <input
-              className={inputCls}
-              placeholder="Ej: 45 minutos"
-              value={editing.duracionVisita || ''}
-              onChange={(e) => set({ duracionVisita: e.target.value })}
-            />
-          </Field>
-        </div>
+        {/* Duración */}
+        <Field label="Duración Sugerida">
+          <input
+            className={inputCls}
+            placeholder="Ej: 45 minutos"
+            value={editing.duracionVisita || ''}
+            onChange={(e) => set({ duracionVisita: e.target.value })}
+          />
+        </Field>
+
+        {/* Ubicación: dirección + mapa sincronizados */}
+        <LocationField
+          direccion={editing.direccion}
+          onDireccionChange={(direccion) => set({ direccion })}
+          coordinates={editing.coordenadas}
+          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+          direccionPlaceholder="Calle / Localidad, Cumpeo"
+          modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
+        />
+
+        {/* Horario de Atención */}
+        <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
 
         {/* Cómo llegar */}
         <Field label="Cómo Llegar">
@@ -151,25 +135,12 @@ export function DestinoModal({
           />
         </Field>
 
-        {/* Coordenadas Refactorizadas con Selector de Mapa */}
-        <CoordinatesPicker
-          coordinates={editing.coordenadas}
-          onChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
-        />
-
-        <div id="tour-dest-image">
-          <ImageUploadField
-            label="Imagen Principal"
-            value={editing.imagenPrincipal || ''}
-            onChange={(url) => set({ imagenPrincipal: url })}
-          />
-        </div>
-
-        {/* Galería de fotos */}
-        <GalleryField
-          images={editing.galeria || []}
-          onChange={(images) => set({ galeria: images })}
+        <MediaFields
+          imagenWrapperId="tour-dest-image"
+          imagenPrincipal={editing.imagenPrincipal}
+          onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
+          galeria={editing.galeria}
+          onGaleriaChange={(galeria) => set({ galeria })}
         />
 
         {/* Tags Refactorizado */}

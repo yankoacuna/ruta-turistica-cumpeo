@@ -10,7 +10,7 @@ const emptyEvento = (): Partial<CumpeoEvent> => ({
   descripcionLarga: '',
   fecha: '',
   recurrente: true,
-  coordenadas: { lat: -35.267, lng: -71.25 },
+  coordenadas: { lat: -35.281739, lng: -71.258714 },
   direccion: '',
   imagenPrincipal: '',
   galeria: [],
@@ -73,5 +73,5 @@ export function useEventos(initial: CumpeoEvent[], { showToast, onAuthError }: H
     });
   };
 
-  return { eventos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return { eventos, setEventos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
 }

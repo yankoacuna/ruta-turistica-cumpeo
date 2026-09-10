@@ -3,6 +3,25 @@ export interface Coordinates {
   lng: number;
 }
 
+export type DiaSemana = 'lun' | 'mar' | 'mie' | 'jue' | 'vie' | 'sab' | 'dom';
+
+/**
+ * Cómo funciona el horario de un lugar:
+ * - 'fijo': tiene apertura/cierre diarios (un restaurante, un local).
+ * - 'siempre-abierto': acceso libre sin horario (una plaza, un monumento).
+ * - 'consultar': variable o no aplica un horario diario (fechas de eventos, "según disponibilidad").
+ */
+export type HorarioModo = 'fijo' | 'siempre-abierto' | 'consultar';
+
+/** Horario de atención estructurado: usado por Restaurante y Destino. */
+export interface Horario {
+  modo?: HorarioModo; // por defecto: 'fijo' si hay apertura y cierre, si no 'consultar'
+  apertura?: string; // "10:00" (solo aplica con modo 'fijo')
+  cierre?: string; // "18:00" (solo aplica con modo 'fijo')
+  diasCierre?: DiaSemana[]; // días sin atención; vacío o ausente = abre todos los días (solo modo 'fijo')
+  descripcion?: string; // nota libre: excepciones (fijo), detalle de acceso (siempre-abierto) o instrucción (consultar)
+}
+
 export interface Destination {
   id: string;
   slug: string;
@@ -13,7 +32,7 @@ export interface Destination {
   historia: string;
   coordenadas: Coordinates;
   direccion: string;
-  horario: string;
+  horario?: Horario | string | null;
   duracionVisita?: string;
   comoLlegar?: string;
   tags?: string[];
@@ -24,6 +43,8 @@ export interface Destination {
   rating?: number;
   activo?: boolean;
   publicado?: boolean;
+  /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
+  orden?: number;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -50,6 +71,8 @@ export interface Accommodation {
   galeria?: string[];
   activo?: boolean;
   publicado?: boolean;
+  /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
+  orden?: number;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -73,18 +96,15 @@ export interface Restaurant {
     instagram?: string;
   } | null;
   mediosPago?: string[];      // desde catastro: ["Efectivo", "Débito"]
-  horario?: {
-    apertura?: string;
-    cierre?: string;
-    diasCierre?: string[];
-    descripcion?: string;
-  } | string | null;
+  horario?: Horario | string | null;
   imagenPrincipal?: string | null;
   galeria?: string[];
   menuUrl?: string | null;
   tags?: string[];
   activo?: boolean;
   publicado?: boolean;
+  /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
+  orden?: number;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -102,7 +122,8 @@ export interface EmergencyContact {
 export interface CumpeoEvent {
   id: string;
   nombre: string;
-  tipo: 'fiesta-religiosa' | 'feria' | 'centro-evento' | 'cultural' | string;
+  /** Categorías tal como las entregó el catastro municipal (excel). */
+  tipo: 'fiestas-religiosas' | 'ferias-libres' | 'centros-de-evento' | string;
   descripcion: string;
   descripcionLarga?: string | null;
   fecha?: string | null;       // "20 de enero" / "Fines de semana"
@@ -114,6 +135,8 @@ export interface CumpeoEvent {
   tags?: string[];
   destacado: boolean;
   activo: boolean;
+  /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
+  orden?: number;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -205,3 +228,51 @@ export interface AdminSessionUser {
   nombre: string;
   role: UserRole;
 }
+
+// ─── TEXTOS EDITABLES DEL SITIO ───────────────────────────────────────────────
+
+/** Un texto que fue modificado desde el CMS, con su última auditoría. */
+export interface SiteTextRecord {
+  key: string;
+  value: string;
+  /** ISO string: las fechas viajan serializadas al cliente. */
+  updatedAt: string;
+  updatedByEmail?: string | null;
+  updatedByNombre?: string | null;
+}
+
+/** Una entrada de la bitácora de cambios de un texto. */
+export interface SiteTextRevisionRecord {
+  id: string;
+  key: string;
+  valorAnterior: string | null;
+  valorNuevo: string;
+  /** editar | restaurar | original */
+  accion: string;
+  autorEmail?: string | null;
+  autorNombre?: string | null;
+  createdAt: string;
+}
+
+/**
+ * Resultado de guardar un texto. Devuelve el valor vigente resuelto para que
+ * quien llama no necesite conocer los valores por defecto del código.
+ */
+export interface SiteTextSaveResult {
+  key: string;
+  /** Lo que hay que mostrar ahora en el sitio. */
+  valorVigente: string;
+  /** true si el texto volvió al valor original del código. */
+  esOriginal: boolean;
+  /** El registro guardado, o null si se descartó el cambio. */
+  record: SiteTextRecord | null;
+}
+
+/** Respuesta al preguntar si quien mira el sitio puede editarlo en vivo. */
+export interface EditModeAccess {
+  canEdit: boolean;
+  user: { nombre: string; email: string; role: UserRole } | null;
+}
+
+/** Catastros cuyo orden en la portada se puede administrar. */
+export type OrderableEntity = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';

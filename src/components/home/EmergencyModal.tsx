@@ -3,6 +3,7 @@
 import React from 'react';
 import { ShieldAlert, X, Phone } from 'lucide-react';
 import { AppConfig, EmergencyContact } from '@/lib/types';
+import { Editable, useSiteText } from '@/components/site-text';
 
 interface EmergencyModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ export function EmergencyModal({
   config,
   emergencyContacts,
 }: EmergencyModalProps) {
+  const { get } = useSiteText();
+
   if (!isOpen) return null;
 
   return (
@@ -28,12 +31,16 @@ export function EmergencyModal({
               <ShieldAlert size={20} />
             </div>
             <div>
-              <h3 className="font-display font-extrabold text-lg text-text-primary">
-                Asistencia y Contacto Comunal
-              </h3>
-              <p className="text-xs text-text-secondary">
-                Ilustre Municipalidad de Rio Claro - Cumpeo
-              </p>
+              <Editable
+                k="emergencias.titulo"
+                as="h3"
+                className="font-display font-extrabold text-lg text-text-primary"
+              />
+              <Editable
+                k="emergencias.subtitulo"
+                as="p"
+                className="text-xs text-text-secondary"
+              />
             </div>
           </div>
           <button
@@ -48,16 +55,18 @@ export function EmergencyModal({
         <div className="mt-4 space-y-4">
           {/* Informacion Turistica Municipal */}
           <div className="p-4 rounded-2xl bg-[#FFF8F8] border border-[#FFE0E2]">
-            <div className="text-xs font-bold text-rojo uppercase tracking-wider mb-2">
-              Oficina de Turismo Municipal
-            </div>
+            <Editable
+              k="emergencias.oficinaKicker"
+              as="div"
+              className="text-xs font-bold text-rojo uppercase tracking-wider mb-2"
+            />
             <div className="space-y-1.5 text-xs text-text-secondary">
               <p className="font-medium text-text-primary">
-                {config?.informacionTuristica?.oficina || 'Oficina de Informaciones Turisticas (OIT)'}
+                {config?.informacionTuristica?.oficina || get('emergencias.oficinaNombre')}
               </p>
               <p>
                 <span className="font-semibold text-text-primary">Horario: </span>
-                {config?.informacionTuristica?.horario || 'Lunes a Viernes 08:30 - 17:30 hrs'}
+                {config?.informacionTuristica?.horario || get('emergencias.oficinaHorario')}
               </p>
               {config?.informacionTuristica?.telefono && (
                 <p>
@@ -80,55 +89,57 @@ export function EmergencyModal({
 
           {/* Telefonos de Emergencia */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-2">
-              Numeros de Emergencia
-            </h4>
+            <Editable
+              k="emergencias.numerosTitulo"
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-text-muted mb-2"
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {emergencyContacts.length > 0 ? (
                 emergencyContacts.map((contact) => (
                   <a
                     key={contact.id}
                     href={`tel:${contact.telefono}`}
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border border-border hover:border-rojo text-inherit no-underline transition-all"
+                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border-[1.5px] border-border hover:border-rojo text-inherit no-underline transition-colors min-h-[56px]"
                   >
                     <div>
-                      <div className="text-xs font-bold text-text-primary">{contact.institucion}</div>
-                      <div className="text-[11px] text-text-muted">{contact.telefono}</div>
+                      <div className="text-sm font-bold text-text-primary">{contact.institucion}</div>
+                      <div className="text-sm font-semibold text-text-secondary mt-0.5">{contact.telefono}</div>
                     </div>
-                    <Phone size={14} className="text-rojo shrink-0" />
+                    <Phone size={17} className="text-rojo shrink-0" />
                   </a>
                 ))
               ) : (
                 <>
                   <a
                     href="tel:133"
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border border-border hover:border-rojo text-inherit no-underline transition-all"
+                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border-[1.5px] border-border hover:border-rojo text-inherit no-underline transition-colors min-h-[56px]"
                   >
                     <div>
-                      <div className="text-xs font-bold text-text-primary">Carabineros de Chile</div>
-                      <div className="text-[11px] text-text-muted">Reten Cumpeo - 133</div>
+                      <div className="text-sm font-bold text-text-primary">Carabineros de Chile</div>
+                      <div className="text-sm font-semibold text-text-secondary mt-0.5">Reten Cumpeo - 133</div>
                     </div>
-                    <Phone size={14} className="text-rojo shrink-0" />
+                    <Phone size={17} className="text-rojo shrink-0" />
                   </a>
                   <a
                     href="tel:132"
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border border-border hover:border-rojo text-inherit no-underline transition-all"
+                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border-[1.5px] border-border hover:border-rojo text-inherit no-underline transition-colors min-h-[56px]"
                   >
                     <div>
-                      <div className="text-xs font-bold text-text-primary">Bomberos</div>
-                      <div className="text-[11px] text-text-muted">Cuerpo Bomberos Cumpeo - 132</div>
+                      <div className="text-sm font-bold text-text-primary">Bomberos</div>
+                      <div className="text-sm font-semibold text-text-secondary mt-0.5">Cuerpo Bomberos Cumpeo - 132</div>
                     </div>
-                    <Phone size={14} className="text-rojo shrink-0" />
+                    <Phone size={17} className="text-rojo shrink-0" />
                   </a>
                   <a
                     href="tel:131"
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border border-border hover:border-rojo text-inherit no-underline transition-all sm:col-span-2"
+                    className="flex items-center justify-between p-3 rounded-xl bg-surface-soft border-[1.5px] border-border hover:border-rojo text-inherit no-underline transition-colors min-h-[56px] sm:col-span-2"
                   >
                     <div>
-                      <div className="text-xs font-bold text-text-primary">Salud - Cesfam Rio Claro</div>
-                      <div className="text-[11px] text-text-muted">SAMU 131 - Urgencias Comunales</div>
+                      <div className="text-sm font-bold text-text-primary">Salud - Cesfam Rio Claro</div>
+                      <div className="text-sm font-semibold text-text-secondary mt-0.5">SAMU 131 - Urgencias Comunales</div>
                     </div>
-                    <Phone size={14} className="text-rojo shrink-0" />
+                    <Phone size={17} className="text-rojo shrink-0" />
                   </a>
                 </>
               )}
@@ -140,9 +151,9 @@ export function EmergencyModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-[#1E1E24] text-white text-xs font-bold hover:bg-black transition-all cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-ink text-white text-xs font-bold hover:bg-black transition-all cursor-pointer"
           >
-            Cerrar
+            <Editable k="emergencias.cerrar" />
           </button>
         </div>
       </div>
