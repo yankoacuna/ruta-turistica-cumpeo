@@ -32,8 +32,8 @@ interface LocationMapPickerModalProps {
 }
 
 const DEFAULT_CUMPEO_COORDS: Coordinates = {
-  lat: -35.267,
-  lng: -71.25,
+  lat: -35.281739,
+  lng: -71.258714,
 };
 
 // ── Componente Interno con acceso al contexto de Google Maps ─────────
@@ -154,7 +154,10 @@ function InnerMapPicker({
       if (placesLib && map) {
         try {
           const service = new placesLib.PlacesService(map);
-          const cumpeoCenter = new google.maps.LatLng(-35.267, -71.25);
+          const cumpeoCenter = new google.maps.LatLng(
+            DEFAULT_CUMPEO_COORDS.lat,
+            DEFAULT_CUMPEO_COORDS.lng
+          );
 
           const placeQuery =
             query.toLowerCase().includes('cumpeo') || query.toLowerCase().includes('chile')
@@ -259,7 +262,7 @@ function InnerMapPicker({
   const handleCenterCumpeo = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    panToCoords(DEFAULT_CUMPEO_COORDS, 15);
+    panToCoords(DEFAULT_CUMPEO_COORDS, 16);
   };
 
   // Obtener GPS del usuario
