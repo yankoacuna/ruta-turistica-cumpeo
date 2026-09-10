@@ -2,11 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import { join, basename } from "path";
 import { existsSync } from "fs";
+import sharp from "sharp";
 import { getAdminSession } from "@/app/admin/actions";
 
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
 const MAX_SIZE_MB = 5;
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/avif"];
+const MAX_DIMENSION = 1920;
+
+// La extensión final siempre sale de este mapa, nunca del nombre de archivo
+// que manda el cliente, para evitar que un mimetype falso cuele una extensión
+// ejecutable/peligrosa (.html, .svg, etc.) en public/uploads.
+const ALLOWED_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,7 +42,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No se recibio ningun archivo" }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const ext = ALLOWED_TYPES[file.type];
+    if (!ext) {
       return NextResponse.json({ error: "Tipo no permitido. Solo JPG, PNG, WebP, GIF, AVIF" }, { status: 400 });
     }
 
@@ -38,7 +52,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Archivo muy grande (${sizeMB.toFixed(1)}MB). Maximo: ${MAX_SIZE_MB}MB` }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const baseName = file.name
       .replace(/\.[^.]+$/, "")
       .replace(/[^a-zA-Z0-9_\-]/g, "-")
@@ -47,8 +60,28 @@ export async function POST(req: NextRequest) {
       .slice(0, 40);
     const filename = `${Date.now()}-${baseName}.${ext}`;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(join(UPLOAD_DIR, filename), buffer);
+    const inputBuffer = Buffer.from(await file.arrayBuffer());
+
+    // GIF se guarda tal cual para no perder la animación (sharp la aplanaría
+    // al primer frame). El resto se redimensiona/comprime al vuelo.
+    let outputBuffer: Buffer;
+    if (file.type === "image/gif") {
+      outputBuffer = inputBuffer;
+    } else {
+      let pipeline = sharp(inputBuffer).resize({
+        width: MAX_DIMENSION,
+        height: MAX_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      });
+      if (ext === "jpg") pipeline = pipeline.jpeg({ quality: 82 });
+      else if (ext === "png") pipeline = pipeline.png({ quality: 82 });
+      else if (ext === "webp") pipeline = pipeline.webp({ quality: 82 });
+      else if (ext === "avif") pipeline = pipeline.avif({ quality: 60 });
+      outputBuffer = await pipeline.toBuffer();
+    }
+
+    await writeFile(join(UPLOAD_DIR, filename), outputBuffer);
 
     return NextResponse.json({ url: `/uploads/${filename}`, filename });
   } catch (error) {
