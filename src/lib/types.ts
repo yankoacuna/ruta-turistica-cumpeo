@@ -42,7 +42,6 @@ export interface Destination {
   infoUtil?: Record<string, string>;
   rating?: number;
   activo?: boolean;
-  publicado?: boolean;
   /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
   orden?: number;
   createdAt?: string | Date;
@@ -70,7 +69,6 @@ export interface Accommodation {
   imagenPrincipal?: string | null;
   galeria?: string[];
   activo?: boolean;
-  publicado?: boolean;
   /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
   orden?: number;
   createdAt?: string | Date;
@@ -102,7 +100,6 @@ export interface Restaurant {
   menuUrl?: string | null;
   tags?: string[];
   activo?: boolean;
-  publicado?: boolean;
   /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
   orden?: number;
   createdAt?: string | Date;
