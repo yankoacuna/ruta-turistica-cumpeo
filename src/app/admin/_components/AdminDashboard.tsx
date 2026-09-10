@@ -23,9 +23,15 @@ import {
   ShieldAlert,
   Sparkles,
 } from 'lucide-react';
-import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser } from '@/lib/types';
+import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser, UserRole } from '@/lib/types';
 import { formatHorario } from '@/lib/openingHours';
 import { StatCard } from './StatCard';
+
+const ROLE_LABEL: Record<UserRole, string> = {
+  ADMIN: 'Administrador',
+  EDITOR: 'Editor',
+  LECTOR: 'Lector',
+};
 import { AdminSection } from '../_types';
 import { TourId } from './adminTour';
 
@@ -122,7 +128,7 @@ export function AdminDashboard({
             <span>Panel de Control Turístico Oficial</span>
             {currentUser?.role && (
               <span className="ml-1.5 px-2 py-0.2 rounded-full bg-white/30 text-[10px] font-extrabold uppercase tracking-wide">
-                Rol: {currentUser.role}
+                Rol: {ROLE_LABEL[currentUser.role]}
               </span>
             )}
           </div>

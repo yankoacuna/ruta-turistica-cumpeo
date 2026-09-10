@@ -159,7 +159,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       { key: 'home.hero.subtitulo', label: 'Subtitular', value: 'el pueblo de Condorito' },
       {
         key: 'home.hero.bajada',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value:
           'El único pueblo temático del mundo dedicado a la obra de Pepo. Esculturas a tamaño real, cocina criolla y campo maulino.',
         multiline: true,
@@ -187,7 +187,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       { key: 'home.orientacion.titulo', label: 'Título', value: '¿Recién llegaste a Cumpeo?' },
       {
         key: 'home.orientacion.bajada',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value: 'Empieza por aquí: lo que tienes al lado, dónde comer y a quién llamar.',
         multiline: true,
       },
@@ -212,7 +212,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Resultado del GPS',
     items: [
-      { key: 'home.cerca.kicker', label: 'Antetítulo', value: 'Según tu posición GPS' },
+      { key: 'home.cerca.kicker', label: 'Texto pequeño sobre el título', value: 'Según tu posición GPS' },
       { key: 'home.cerca.titulo', label: 'Título', value: 'Lo más cerca de ti' },
       { key: 'home.cerca.actualizar', label: 'Botón actualizar', value: 'Actualizar' },
     ],
@@ -223,7 +223,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Bloque de la Ruta',
     items: [
-      { key: 'home.ruta.kicker', label: 'Antetítulo', value: 'Circuito patrimonial' },
+      { key: 'home.ruta.kicker', label: 'Texto pequeño sobre el título', value: 'Circuito patrimonial' },
       {
         key: 'home.ruta.tituloFallback',
         label: 'Título (si no hay ruta destacada)',
@@ -246,11 +246,11 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Destacados',
     items: [
-      { key: 'home.destacados.kicker', label: 'Antetítulo', value: 'Galería patrimonial' },
+      { key: 'home.destacados.kicker', label: 'Texto pequeño sobre el título', value: 'Galería patrimonial' },
       { key: 'home.destacados.titulo', label: 'Título', value: 'Lo que no te puedes perder' },
       {
         key: 'home.destacados.lead',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value: 'Los hitos más emblemáticos del pueblo temático, elegidos por la Oficina de Turismo.',
         multiline: true,
       },
@@ -264,11 +264,11 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Comer y dormir',
     items: [
-      { key: 'home.servicios.kicker', label: 'Antetítulo', value: 'Catastro comunal' },
+      { key: 'home.servicios.kicker', label: 'Texto pequeño sobre el título', value: 'Catastro comunal' },
       { key: 'home.servicios.titulo', label: 'Título', value: 'Comer y dormir en Cumpeo' },
       {
         key: 'home.servicios.lead',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value:
           'Locales y hospedajes registrados por la Oficina de Turismo. Llama o pide indicaciones directamente desde aquí.',
         multiline: true,
@@ -283,11 +283,11 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Catastro de destinos',
     items: [
-      { key: 'home.catalogo.kicker', label: 'Antetítulo', value: 'Explorar por categoría' },
+      { key: 'home.catalogo.kicker', label: 'Texto pequeño sobre el título', value: 'Explorar por categoría' },
       { key: 'home.catalogo.titulo', label: 'Título', value: 'Todos los destinos' },
       {
         key: 'home.catalogo.lead',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value: 'El catastro turístico completo de la comuna, filtrable por categoría.',
         multiline: true,
       },
@@ -305,11 +305,11 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Fiestas y eventos',
     items: [
-      { key: 'home.eventos.kicker', label: 'Antetítulo', value: 'Calendario tradicional' },
+      { key: 'home.eventos.kicker', label: 'Texto pequeño sobre el título', value: 'Calendario tradicional' },
       { key: 'home.eventos.titulo', label: 'Título', value: 'Fiestas y eventos costumbristas' },
       {
         key: 'home.eventos.lead',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value: 'Festividades religiosas, ferias artesanales y celebraciones típicas de la comuna.',
         multiline: true,
       },
@@ -324,7 +324,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/',
     label: 'Aviso municipal (cierre)',
     items: [
-      { key: 'home.municipal.kicker', label: 'Antetítulo', value: 'Aviso municipal' },
+      { key: 'home.municipal.kicker', label: 'Texto pequeño sobre el título', value: 'Aviso municipal' },
       {
         key: 'home.municipal.titulo',
         label: 'Título',
@@ -359,7 +359,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       },
       {
         key: 'emergencias.oficinaKicker',
-        label: 'Oficina: antetítulo',
+        label: 'Oficina: texto pequeño sobre el título',
         value: 'Oficina de Turismo Municipal',
       },
       {
@@ -386,7 +386,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/ruta',
     label: 'Encabezado',
     items: [
-      { key: 'ruta.hero.kicker', label: 'Antetítulo', value: 'Circuito Turístico Oficial' },
+      { key: 'ruta.hero.kicker', label: 'Texto pequeño sobre el título', value: 'Circuito Turístico Oficial' },
       {
         key: 'ruta.hero.tituloFallback',
         label: 'Título (si la ruta no tiene nombre)',
@@ -402,7 +402,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       },
       { key: 'ruta.hero.ctaMapa', label: 'Botón del mapa', value: 'Navegar en Mapa GPS en Vivo' },
       { key: 'ruta.hero.ctaMapaIlustrado', label: 'Botón del mapa ilustrado', value: 'Ver Mapa Ilustrado ↓' },
-      { key: 'ruta.hero.selloKicker', label: 'Sello: antetítulo', value: 'Iniciativa Turística Oficial' },
+      { key: 'ruta.hero.selloKicker', label: 'Sello: texto pequeño sobre el título', value: 'Iniciativa Turística Oficial' },
       {
         key: 'ruta.hero.selloTexto',
         label: 'Sello: texto',
@@ -419,11 +419,11 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/ruta',
     label: 'Mapa ilustrado',
     items: [
-      { key: 'ruta.mapa.kicker', label: 'Antetítulo', value: 'Mapa Cartográfico Patrimonial' },
+      { key: 'ruta.mapa.kicker', label: 'Texto pequeño sobre el título', value: 'Mapa Cartográfico Patrimonial' },
       { key: 'ruta.mapa.titulo', label: 'Título', value: 'El Mapa Ilustrado del Circuito' },
       {
         key: 'ruta.mapa.lead',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value:
           'Guía cartográfica oficial de los hitos y paradas desde el acceso en Camarico (Ruta 5 Sur Km 222) hasta el centro cívico de Cumpeo.',
         multiline: true,
@@ -438,17 +438,17 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     path: '/ruta',
     label: 'Paradas del circuito',
     items: [
-      { key: 'ruta.paradas.kicker', label: 'Antetítulo', value: 'Itinerario Oficial' },
+      { key: 'ruta.paradas.kicker', label: 'Texto pequeño sobre el título', value: 'Itinerario Oficial' },
       {
         key: 'ruta.paradas.kickerSufijo',
-        label: 'Antetítulo: texto tras el número de paradas',
+        label: 'Texto que sigue al número de paradas',
         value: 'Paradas Configuradas',
         hint: 'Se muestra como "Itinerario Oficial (12 Paradas Configuradas)".',
       },
       { key: 'ruta.paradas.titulo', label: 'Título', value: 'Las Paradas del Circuito' },
       {
         key: 'ruta.paradas.lead',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value:
           'Recorrido sugerido en orden secuencial. Configurado en la base de datos y administrable por el equipo de turismo.',
         multiline: true,
@@ -468,7 +468,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       },
       { key: 'ruta.paradas.verFicha', label: 'Enlace de la ficha', value: 'Ver ficha completa' },
       { key: 'ruta.paradas.comoLlegar', label: 'Enlace de indicaciones', value: 'Cómo llegar' },
-      { key: 'ruta.consejos.kicker', label: 'Consejos: antetítulo', value: 'Consejos Prácticos para tu Visita' },
+      { key: 'ruta.consejos.kicker', label: 'Consejos: texto pequeño sobre el título', value: 'Consejos Prácticos para tu Visita' },
       {
         key: 'ruta.consejos.titulo',
         label: 'Consejos: título',
@@ -487,7 +487,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       { key: 'historia.hero.titulo', label: 'Título', value: 'La Historia de Cumpeo' },
       {
         key: 'historia.hero.bajada',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value:
           'De las páginas de una historieta a un destino turístico vibrante y lleno de humor chileno.',
         multiline: true,
@@ -537,7 +537,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       { key: 'historia.hitos.titulo', label: 'Título', value: 'La Ruta Hacia la Tematización' },
       {
         key: 'historia.hitos.bajada',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value: 'Hitos clave en la historia de nuestro turismo',
       },
       { key: 'historia.hitos.1.year', label: 'Hito 1: año', value: '1949' },
@@ -640,7 +640,7 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       { key: 'contacto.hero.titulo', label: 'Título', value: 'Contacto Turístico' },
       {
         key: 'contacto.hero.bajada',
-        label: 'Bajada',
+        label: 'Texto bajo el título',
         value:
           '¿Tienes dudas sobre cómo llegar, dónde alojar o qué comer? El equipo de turismo de Cumpeo está a tu disposición.',
         multiline: true,

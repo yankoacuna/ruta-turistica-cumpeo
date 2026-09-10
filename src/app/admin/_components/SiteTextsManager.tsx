@@ -61,6 +61,16 @@ function formatearFecha(iso: string): string {
   }
 }
 
+const ACCION_LABEL: Record<string, string> = {
+  editar: 'Editado',
+  restaurar: 'Restaurado',
+  original: 'Valor original',
+};
+
+function formatearAccion(accion: string): string {
+  return ACCION_LABEL[accion] || accion;
+}
+
 export function SiteTextsManager({
   overrides,
   role,
@@ -364,9 +374,14 @@ export function SiteTextsManager({
                                     sin guardar
                                   </span>
                                 )}
-                                <code className="block text-[10px] text-text-muted mt-0.5 break-all">
-                                  {def.key}
-                                </code>
+                                {role === 'ADMIN' && (
+                                  <code
+                                    className="block text-[10px] text-text-muted mt-0.5 break-all"
+                                    title="Clave técnica interna (solo visible para administradores)"
+                                  >
+                                    {def.key}
+                                  </code>
+                                )}
                               </div>
 
                               <div className="flex items-center gap-1.5 shrink-0">
@@ -440,7 +455,7 @@ export function SiteTextsManager({
                                               {formatearFecha(rev.createdAt)}
                                             </span>
                                             <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-text-muted bg-white border border-border rounded px-1 py-0.5">
-                                              {rev.accion}
+                                              {formatearAccion(rev.accion)}
                                             </span>
                                           </div>
                                           <p className="text-[11px] text-text-secondary mt-1 whitespace-pre-line line-clamp-3">
