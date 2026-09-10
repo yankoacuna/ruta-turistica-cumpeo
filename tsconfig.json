@@ -33,7 +33,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "C:/Users/NUEVOS~1/AppData/Local/Temp/cumpeo-build-test/types/**/*.ts",
+    "../../../../cumpeo-build-test/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

@@ -1,10 +1,16 @@
 import React from 'react';
-import { Phone, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Accommodation } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import { ImageUploadField } from '../ImageUploadField';
 import { GalleryField } from '../GalleryField';
+import {
+  CoordinatesPicker,
+  ContactoSection,
+  ActivoToggle,
+  CommaSeparatedField,
+} from './common';
 
 interface AlojamientoModalProps {
   editing: Partial<Accommodation>;
@@ -22,10 +28,6 @@ export function AlojamientoModal({
   isPending,
 }: AlojamientoModalProps) {
   const set = (patch: Partial<Accommodation>) => onChange({ ...editing, ...patch });
-
-  const contacto = editing.contacto as any || {};
-  const setContacto = (patch: Record<string, string>) =>
-    set({ contacto: { ...contacto, ...patch } });
 
   return (
     <ModalWrapper
@@ -50,8 +52,8 @@ export function AlojamientoModal({
               value={editing.tipo || ''}
               onChange={(e) => set({ tipo: e.target.value })}
             >
-              <option value="">Seleccionar tipoâ€¦</option>
-              <option value="CabaÃ±a">CabaÃ±a</option>
+              <option value="">Seleccionar tipo…</option>
+              <option value="Cabaña">Cabaña</option>
               <option value="Hostal">Hostal</option>
               <option value="Hotel">Hotel</option>
               <option value="Camping">Camping</option>
@@ -59,18 +61,11 @@ export function AlojamientoModal({
               <option value="Agroturismo">Agroturismo</option>
             </select>
           </Field>
-          <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-surface-soft h-[42px]">
-            <input
-              type="checkbox"
-              id="acc-activo"
-              checked={editing.activo ?? true}
-              onChange={(e) => set({ activo: e.target.checked })}
-              className="w-4 h-4 text-rojo rounded border-border focus:ring-rojo cursor-pointer"
-            />
-            <label htmlFor="acc-activo" className="text-xs font-bold text-text-primary cursor-pointer select-none">
-              {editing.activo ?? true ? 'Visible en el portal' : 'Oculto (En Pausa)'}
-            </label>
-          </div>
+          <ActivoToggle
+            id="acc-activo"
+            checked={editing.activo ?? true}
+            onChange={(activo) => set({ activo })}
+          />
         </div>
 
         {/* Propietario */}
@@ -86,20 +81,20 @@ export function AlojamientoModal({
           </div>
         </Field>
 
-        {/* DescripciÃ³n */}
-        <Field label="DescripciÃ³n" required>
+        {/* Descripción */}
+        <Field label="Descripción" required>
           <textarea
             required
             className={textareaCls}
-            placeholder="DescripciÃ³n del alojamiento y sus caracterÃ­sticasâ€¦"
+            placeholder="Descripción del alojamiento y sus características…"
             value={editing.descripcion || ''}
             onChange={(e) => set({ descripcion: e.target.value })}
           />
         </Field>
 
-        {/* DirecciÃ³n + Servicios */}
+        {/* Dirección + Servicios */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="DirecciÃ³n">
+          <Field label="Dirección">
             <input
               className={inputCls}
               placeholder="Calle / Localidad"
@@ -107,96 +102,32 @@ export function AlojamientoModal({
               onChange={(e) => set({ direccion: e.target.value })}
             />
           </Field>
-          <Field label="Servicios" hint="Separados por coma">
-            <input
-              className={inputCls}
-              placeholder="WiFi, Estacionamiento, Piscinaâ€¦"
-              value={(editing.servicios || []).join(', ')}
-              onChange={(e) =>
-                set({
-                  servicios: e.target.value
-                    .split(',')
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
-          </Field>
+          <CommaSeparatedField
+            label="Servicios"
+            placeholder="WiFi, Estacionamiento, Piscina, Quincho…"
+            hint="Separados por coma"
+            value={editing.servicios || []}
+            onChange={(servicios) => set({ servicios })}
+          />
         </div>
 
+        {/* Contacto Refactorizado */}
+        <ContactoSection
+          contacto={editing.contacto}
+          telefono={editing.telefono}
+          whatsapp={editing.whatsapp}
+          onChange={({ contacto, telefono, whatsapp }) =>
+            set({ contacto, telefono, whatsapp })
+          }
+          instagramPlaceholder="@nombre_hospedaje"
+        />
 
-        {/* Contacto */}
-        <div className="rounded-xl border border-border overflow-hidden">
-          <div className="bg-surface-soft px-4 py-2.5 text-xs font-bold text-text-secondary uppercase tracking-wide flex items-center gap-1.5">
-            <Phone size={12} /> InformaciÃ³n de Contacto
-          </div>
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="TelÃ©fono (Llamadas)">
-              <input
-                className={inputCls}
-                placeholder="+56 9 XXXX XXXX"
-                value={editing.telefono || contacto.telefono || ''}
-                onChange={(e) => {
-                  setContacto({ telefono: e.target.value });
-                  set({ telefono: e.target.value });
-                }}
-              />
-            </Field>
-            <Field label="WhatsApp">
-              <input
-                className={inputCls}
-                placeholder="+56 9 XXXX XXXX"
-                value={editing.whatsapp || contacto.whatsapp || ''}
-                onChange={(e) => {
-                  setContacto({ whatsapp: e.target.value });
-                  set({ whatsapp: e.target.value });
-                }}
-              />
-            </Field>
-            <Field label="Sitio Web">
-              <input
-                className={inputCls}
-                placeholder="https://..."
-                value={contacto.web || ''}
-                onChange={(e) => setContacto({ web: e.target.value })}
-              />
-            </Field>
-            <Field label="Instagram">
-              <input
-                className={inputCls}
-                placeholder="@nombre_hospedaje"
-                value={contacto.instagram || ''}
-                onChange={(e) => setContacto({ instagram: e.target.value })}
-              />
-            </Field>
-          </div>
-        </div>
-
-        {/* Coordenadas */}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Latitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={editing.coordenadas?.lat ?? -35.267}
-              onChange={(e) =>
-                set({ coordenadas: { ...editing.coordenadas!, lat: parseFloat(e.target.value) } })
-              }
-            />
-          </Field>
-          <Field label="Longitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={editing.coordenadas?.lng ?? -71.25}
-              onChange={(e) =>
-                set({ coordenadas: { ...editing.coordenadas!, lng: parseFloat(e.target.value) } })
-              }
-            />
-          </Field>
-        </div>
+        {/* Coordenadas Refactorizadas con Mapa */}
+        <CoordinatesPicker
+          coordinates={editing.coordenadas}
+          onChange={(coordenadas) => set({ coordenadas })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Alojamiento'}`}
+        />
 
         <ImageUploadField
           label="Imagen Principal"
@@ -215,4 +146,3 @@ export function AlojamientoModal({
     </ModalWrapper>
   );
 }
-

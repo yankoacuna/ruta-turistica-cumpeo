@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Search,
   Plus,
@@ -15,6 +15,11 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types';
 import { AdminSection } from '../_types';
@@ -40,6 +45,25 @@ interface AdminTableProps {
     eventos: EntityHandlers<CumpeoEvent>;
   };
 }
+
+type FilterOption = { value: string; label: string };
+
+interface ColumnDef<T> {
+  key: string;
+  label: string;
+  thClassName?: string;
+  tdClassName?: string;
+  align?: 'left' | 'right';
+  sortable?: boolean;
+  getSortValue?: (item: T) => string | number;
+  filterable?: boolean;
+  filterType?: 'text' | 'select';
+  filterOptions?: FilterOption[];
+  getFilterValue?: (item: T) => string;
+  render: (item: T) => React.ReactNode;
+}
+
+const PAGE_SIZE_OPTIONS = [10, 15, 20, 50];
 
 function Thumbnail({ url }: { url?: string | null }) {
   const hasRealImage = Boolean(url && !url.includes('placeholder'));
@@ -106,15 +130,22 @@ function RowActions({
   );
 }
 
-function formatDate(dateVal?: string | Date) {
-  if (!dateVal) return '—';
-  try {
-    const d = new Date(dateVal);
-    return d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
-  } catch {
-    return '—';
-  }
+function EstadoBadge({ activo, inactiveLabel = 'En Pausa' }: { activo: boolean; inactiveLabel?: string }) {
+  return activo ? (
+    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+      <CheckCircle2 size={11} /> Activo
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
+      <XCircle size={11} /> {inactiveLabel}
+    </span>
+  );
 }
+
+const ESTADO_FILTER_OPTIONS: FilterOption[] = [
+  { value: 'activo', label: 'Activo' },
+  { value: 'inactivo', label: 'Inactivo' },
+];
 
 export function AdminTable({
   activeSection,
@@ -127,6 +158,11 @@ export function AdminTable({
   handlers,
 }: AdminTableProps) {
   const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const q = search.trim().toLowerCase();
 
   const filteredDestinos = useMemo(
@@ -165,6 +201,22 @@ export function AdminTable({
     [eventos, q]
   );
 
+  const categoriaOptions = useMemo<FilterOption[]>(
+    () =>
+      Array.from(new Set(destinos.map((d) => d.categoria)))
+        .sort()
+        .map((c) => ({ value: c, label: c.charAt(0).toUpperCase() + c.slice(1) })),
+    [destinos]
+  );
+
+  const eventoTipoOptions = useMemo<FilterOption[]>(
+    () =>
+      Array.from(new Set(eventos.map((e) => e.tipo)))
+        .sort()
+        .map((t) => ({ value: t, label: t.replace(/-/g, ' ') })),
+    [eventos]
+  );
+
   const currentHandler =
     activeSection === 'destinos'
       ? handlers.destinos
@@ -174,14 +226,398 @@ export function AdminTable({
       ? handlers.eventos
       : handlers.alojamientos;
 
-  const totalFiltered =
+  const columns = useMemo<ColumnDef<any>[]>(() => {
+    switch (activeSection) {
+      case 'destinos':
+        return [
+          { key: 'thumb', label: '', thClassName: 'w-12', render: (d: Destination) => <Thumbnail url={d.imagenPrincipal} /> },
+          {
+            key: 'nombre',
+            label: 'Nombre',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (d: Destination) => d.nombre.toLowerCase(),
+            getFilterValue: (d: Destination) => d.nombre,
+            render: (d: Destination) => (
+              <>
+                <div className="font-semibold text-text-primary">{d.nombre}</div>
+                <div className="text-[11px] text-text-muted line-clamp-1 mt-0.5">{d.descripcionCorta}</div>
+              </>
+            ),
+          },
+          {
+            key: 'categoria',
+            label: 'Categoría',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell',
+            sortable: true,
+            filterable: true,
+            filterType: 'select',
+            filterOptions: categoriaOptions,
+            getSortValue: (d: Destination) => d.categoria,
+            getFilterValue: (d: Destination) => d.categoria,
+            render: (d: Destination) => (
+              <span className="inline-block text-xs font-semibold capitalize px-2.5 py-0.5 rounded-full bg-surface-soft text-text-secondary border border-border">
+                {d.categoria}
+              </span>
+            ),
+          },
+          {
+            key: 'horario',
+            label: 'Horario',
+            thClassName: 'hidden lg:table-cell',
+            tdClassName: 'hidden lg:table-cell text-text-secondary',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (d: Destination) => (d.horario || '').toLowerCase(),
+            getFilterValue: (d: Destination) => d.horario || '',
+            render: (d: Destination) => d.horario || <span className="text-text-muted">No especificado</span>,
+          },
+          {
+            key: 'destacado',
+            label: 'Destacado',
+            thClassName: 'hidden sm:table-cell',
+            tdClassName: 'hidden sm:table-cell',
+            sortable: true,
+            filterable: true,
+            filterType: 'select',
+            filterOptions: [
+              { value: 'si', label: 'Sí' },
+              { value: 'no', label: 'No' },
+            ],
+            getSortValue: (d: Destination) => (d.destacado ? 1 : 0),
+            getFilterValue: (d: Destination) => (d.destacado ? 'si' : 'no'),
+            render: (d: Destination) => (
+              <span
+                className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${
+                  d.destacado
+                    ? 'bg-[#FFF3C4] text-[#B47900] border border-[#FDE68A]'
+                    : 'bg-surface-soft text-text-muted border border-border'
+                }`}
+              >
+                {d.destacado && <Star size={9} />}
+                {d.destacado ? 'Sí' : 'No'}
+              </span>
+            ),
+          },
+          {
+            key: 'estado',
+            label: 'Estado',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell',
+            sortable: true,
+            filterable: true,
+            filterType: 'select',
+            filterOptions: ESTADO_FILTER_OPTIONS,
+            getSortValue: (d: Destination) => ((d.activo ?? true) ? 1 : 0),
+            getFilterValue: (d: Destination) => ((d.activo ?? true) ? 'activo' : 'inactivo'),
+            render: (d: Destination) => <EstadoBadge activo={d.activo ?? true} />,
+          },
+          {
+            key: 'actions',
+            label: 'Acciones',
+            align: 'right',
+            render: (d: Destination) => (
+              <RowActions
+                onEdit={() => handlers.destinos.onEdit(d)}
+                onDelete={() => handlers.destinos.onDelete(d.id, d.nombre)}
+                canEdit={canEdit}
+                canDelete={canDelete}
+              />
+            ),
+          },
+        ];
+
+      case 'restaurantes':
+        return [
+          { key: 'thumb', label: '', thClassName: 'w-12', render: (r: Restaurant) => <Thumbnail url={r.imagenPrincipal} /> },
+          {
+            key: 'nombre',
+            label: 'Nombre',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (r: Restaurant) => r.nombre.toLowerCase(),
+            getFilterValue: (r: Restaurant) => r.nombre,
+            render: (r: Restaurant) => (
+              <>
+                <div className="font-semibold text-text-primary">{r.nombre}</div>
+                {r.tipo && <div className="text-[11px] text-text-muted mt-0.5 capitalize">{r.tipo}</div>}
+                {r.especialidad && !r.tipo && <div className="text-[11px] text-text-muted mt-0.5">{r.especialidad}</div>}
+              </>
+            ),
+          },
+          {
+            key: 'propietario',
+            label: 'Propietario',
+            thClassName: 'hidden sm:table-cell',
+            tdClassName: 'hidden sm:table-cell text-text-secondary text-xs',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (r: Restaurant) => (r.propietario || '').toLowerCase(),
+            getFilterValue: (r: Restaurant) => r.propietario || '',
+            render: (r: Restaurant) =>
+              r.propietario ? <span className="font-medium text-text-primary">{r.propietario}</span> : <span className="text-text-muted">—</span>,
+          },
+          {
+            key: 'horario',
+            label: 'Horario',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell text-text-secondary text-xs',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (r: Restaurant) => ((r.horario as any)?.descripcion || '').toLowerCase(),
+            getFilterValue: (r: Restaurant) => (r.horario as any)?.descripcion || '',
+            render: (r: Restaurant) => (r.horario as any)?.descripcion || <span className="text-text-muted">—</span>,
+          },
+          {
+            key: 'estado',
+            label: 'Estado',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell',
+            sortable: true,
+            filterable: true,
+            filterType: 'select',
+            filterOptions: ESTADO_FILTER_OPTIONS,
+            getSortValue: (r: Restaurant) => ((r.activo ?? true) ? 1 : 0),
+            getFilterValue: (r: Restaurant) => ((r.activo ?? true) ? 'activo' : 'inactivo'),
+            render: (r: Restaurant) => <EstadoBadge activo={r.activo ?? true} />,
+          },
+          {
+            key: 'actions',
+            label: 'Acciones',
+            align: 'right',
+            render: (r: Restaurant) => (
+              <RowActions
+                onEdit={() => handlers.restaurantes.onEdit(r)}
+                onDelete={() => handlers.restaurantes.onDelete(r.id, r.nombre)}
+                canEdit={canEdit}
+                canDelete={canDelete}
+              />
+            ),
+          },
+        ];
+
+      case 'alojamientos':
+        return [
+          { key: 'thumb', label: '', thClassName: 'w-12', render: (a: Accommodation) => <Thumbnail url={a.imagenPrincipal} /> },
+          {
+            key: 'nombre',
+            label: 'Nombre',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (a: Accommodation) => a.nombre.toLowerCase(),
+            getFilterValue: (a: Accommodation) => a.nombre,
+            render: (a: Accommodation) => (
+              <>
+                <div className="font-semibold text-text-primary">{a.nombre}</div>
+                {a.tipo && <div className="text-[11px] text-text-muted mt-0.5">{a.tipo}</div>}
+              </>
+            ),
+          },
+          {
+            key: 'propietario',
+            label: 'Propietario',
+            thClassName: 'hidden sm:table-cell',
+            tdClassName: 'hidden sm:table-cell text-text-secondary text-xs',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (a: Accommodation) => (a.propietario || '').toLowerCase(),
+            getFilterValue: (a: Accommodation) => a.propietario || '',
+            render: (a: Accommodation) =>
+              a.propietario ? <span className="font-medium text-text-primary">{a.propietario}</span> : <span className="text-text-muted">—</span>,
+          },
+          {
+            key: 'direccion',
+            label: 'Dirección',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell text-text-secondary text-xs',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (a: Accommodation) => (a.direccion || '').toLowerCase(),
+            getFilterValue: (a: Accommodation) => a.direccion || '',
+            render: (a: Accommodation) => a.direccion || <span className="text-text-muted">—</span>,
+          },
+          {
+            key: 'estado',
+            label: 'Estado',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell',
+            sortable: true,
+            filterable: true,
+            filterType: 'select',
+            filterOptions: ESTADO_FILTER_OPTIONS,
+            getSortValue: (a: Accommodation) => ((a.activo ?? true) ? 1 : 0),
+            getFilterValue: (a: Accommodation) => ((a.activo ?? true) ? 'activo' : 'inactivo'),
+            render: (a: Accommodation) => <EstadoBadge activo={a.activo ?? true} />,
+          },
+          {
+            key: 'actions',
+            label: 'Acciones',
+            align: 'right',
+            render: (a: Accommodation) => (
+              <RowActions
+                onEdit={() => handlers.alojamientos.onEdit(a)}
+                onDelete={() => handlers.alojamientos.onDelete(a.id, a.nombre)}
+                canEdit={canEdit}
+                canDelete={canDelete}
+              />
+            ),
+          },
+        ];
+
+      case 'eventos':
+      default:
+        return [
+          { key: 'thumb', label: '', thClassName: 'w-12', render: (ev: CumpeoEvent) => <Thumbnail url={ev.imagenPrincipal} /> },
+          {
+            key: 'nombre',
+            label: 'Nombre',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (ev: CumpeoEvent) => ev.nombre.toLowerCase(),
+            getFilterValue: (ev: CumpeoEvent) => ev.nombre,
+            render: (ev: CumpeoEvent) => (
+              <>
+                <div className="font-semibold text-text-primary">{ev.nombre}</div>
+                {ev.recurrente && (
+                  <div className="text-[11px] text-[#4A7C59] mt-0.5 flex items-center gap-1">
+                    <Clock size={10} /> Anual
+                  </div>
+                )}
+              </>
+            ),
+          },
+          {
+            key: 'tipo',
+            label: 'Tipo',
+            thClassName: 'hidden sm:table-cell',
+            tdClassName: 'hidden sm:table-cell',
+            sortable: true,
+            filterable: true,
+            filterType: 'select',
+            filterOptions: eventoTipoOptions,
+            getSortValue: (ev: CumpeoEvent) => ev.tipo,
+            getFilterValue: (ev: CumpeoEvent) => ev.tipo,
+            render: (ev: CumpeoEvent) => (
+              <span className="inline-block text-xs font-semibold capitalize px-2.5 py-0.5 rounded-full bg-surface-soft text-text-secondary border border-border">
+                {ev.tipo.replace(/-/g, ' ')}
+              </span>
+            ),
+          },
+          {
+            key: 'fecha',
+            label: 'Fecha',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell text-text-secondary text-xs',
+            sortable: true,
+            filterable: true,
+            filterType: 'text',
+            getSortValue: (ev: CumpeoEvent) => (ev.fecha || '').toLowerCase(),
+            getFilterValue: (ev: CumpeoEvent) => ev.fecha || '',
+            render: (ev: CumpeoEvent) => ev.fecha || <span className="text-text-muted">—</span>,
+          },
+          {
+            key: 'estado',
+            label: 'Estado',
+            thClassName: 'hidden md:table-cell',
+            tdClassName: 'hidden md:table-cell',
+            sortable: true,
+            filterable: true,
+            filterType: 'select',
+            filterOptions: [
+              { value: 'activo', label: 'Activo' },
+              { value: 'inactivo', label: 'Inactivo' },
+            ],
+            getSortValue: (ev: CumpeoEvent) => (ev.activo ? 1 : 0),
+            getFilterValue: (ev: CumpeoEvent) => (ev.activo ? 'activo' : 'inactivo'),
+            render: (ev: CumpeoEvent) => <EstadoBadge activo={ev.activo} inactiveLabel="Inactivo" />,
+          },
+          {
+            key: 'actions',
+            label: 'Acciones',
+            align: 'right',
+            render: (ev: CumpeoEvent) => (
+              <RowActions
+                onEdit={() => handlers.eventos.onEdit(ev)}
+                onDelete={() => handlers.eventos.onDelete(ev.id, ev.nombre)}
+                canEdit={canEdit}
+                canDelete={canDelete}
+              />
+            ),
+          },
+        ];
+    }
+  }, [activeSection, handlers, canEdit, canDelete, categoriaOptions, eventoTipoOptions]);
+
+  const searchFilteredItems: any[] =
     activeSection === 'destinos'
-      ? filteredDestinos.length
+      ? filteredDestinos
       : activeSection === 'restaurantes'
-      ? filteredRestaurantes.length
+      ? filteredRestaurantes
       : activeSection === 'eventos'
-      ? filteredEventos.length
-      : filteredAlojamientos.length;
+      ? filteredEventos
+      : filteredAlojamientos;
+
+  const columnFilteredItems = useMemo(() => {
+    const activeFilters = Object.entries(columnFilters).filter(([, v]) => v);
+    if (activeFilters.length === 0) return searchFilteredItems;
+    return searchFilteredItems.filter((item) =>
+      activeFilters.every(([key, value]) => {
+        const col = columns.find((c) => c.key === key);
+        if (!col || !col.getFilterValue) return true;
+        const itemValue = col.getFilterValue(item);
+        return col.filterType === 'select'
+          ? itemValue === value
+          : itemValue.toLowerCase().includes(value.toLowerCase());
+      })
+    );
+  }, [searchFilteredItems, columnFilters, columns]);
+
+  const sortedItems = useMemo(() => {
+    if (!sortKey) return columnFilteredItems;
+    const col = columns.find((c) => c.key === sortKey);
+    if (!col || !col.getSortValue) return columnFilteredItems;
+    const getSortValue = col.getSortValue;
+    const sorted = [...columnFilteredItems].sort((a, b) => {
+      const va = getSortValue(a);
+      const vb = getSortValue(b);
+      if (va < vb) return -1;
+      if (va > vb) return 1;
+      return 0;
+    });
+    if (sortDir === 'desc') sorted.reverse();
+    return sorted;
+  }, [columnFilteredItems, sortKey, sortDir, columns]);
+
+  const totalFiltered = sortedItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedItems = useMemo(
+    () => sortedItems.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [sortedItems, safePage, pageSize]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeSection, q, columnFilters, pageSize]);
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
 
   const sectionLabel = {
     destinos: 'Destinos Turísticos',
@@ -203,6 +639,9 @@ export function AdminTable({
     alojamientos: 'Administra hoteles, cabañas y opciones de hospedaje en Cumpeo.',
     eventos: 'Programa fiestas costumbristas, ferias tradicionales y actividades culturales.',
   }[activeSection];
+
+  const rangeStart = totalFiltered === 0 ? 0 : (safePage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(safePage * pageSize, totalFiltered);
 
   return (
     <div className="bg-white rounded-2xl border border-border shadow-xs overflow-hidden">
@@ -239,6 +678,7 @@ export function AdminTable({
 
           {canEdit && (
             <button
+              id="tour-table-new-btn"
               className="flex items-center gap-1.5 bg-rojo text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-rojo-dark transition-all shadow-[0_2px_8px_rgba(230,57,70,0.25)] whitespace-nowrap"
               onClick={currentHandler.onNew}
             >
@@ -253,249 +693,87 @@ export function AdminTable({
         <table className="w-full text-sm">
           <thead className="bg-surface-soft text-text-muted text-xs uppercase tracking-wider">
             <tr>
-              <th className="px-4 py-3 text-left font-bold w-12" />
-              <th className="px-4 py-3 text-left font-bold">Nombre</th>
-              {activeSection === 'destinos' && (
-                <>
-                  <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Categoría</th>
-                  <th className="px-4 py-3 text-left font-bold hidden lg:table-cell">Horario</th>
-                  <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Destacado</th>
-                </>
-              )}
-              {activeSection === 'restaurantes' && (
-                <>
-                  <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Propietario</th>
-                  <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Horario</th>
-                </>
-              )}
-              {activeSection === 'alojamientos' && (
-                <>
-                  <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Propietario</th>
-                  <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Dirección</th>
-                </>
-              )}
-              {activeSection === 'eventos' && (
-                <>
-                  <th className="px-4 py-3 text-left font-bold hidden sm:table-cell">Tipo</th>
-                  <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Fecha</th>
-                </>
-              )}
-              <th className="px-4 py-3 text-left font-bold hidden md:table-cell">Estado</th>
-              <th className="px-4 py-3 text-right font-bold">Acciones</th>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  className={`px-4 py-3 font-bold ${col.align === 'right' ? 'text-right' : 'text-left'} ${col.thClassName || ''}`}
+                >
+                  {col.sortable ? (
+                    <button
+                      type="button"
+                      onClick={() => handleSort(col.key)}
+                      className={`inline-flex items-center gap-1 hover:text-text-primary transition-colors ${
+                        col.align === 'right' ? 'flex-row-reverse' : ''
+                      }`}
+                    >
+                      <span>{col.label}</span>
+                      {sortKey === col.key ? (
+                        sortDir === 'asc' ? (
+                          <ChevronUp size={12} />
+                        ) : (
+                          <ChevronDown size={12} />
+                        )
+                      ) : (
+                        <ChevronsUpDown size={12} className="opacity-40" />
+                      )}
+                    </button>
+                  ) : (
+                    col.label
+                  )}
+                </th>
+              ))}
+            </tr>
+            <tr className="normal-case tracking-normal">
+              {columns.map((col) => (
+                <th key={col.key} className={`px-4 pb-3 pt-0 font-normal ${col.thClassName || ''}`}>
+                  {col.filterable &&
+                    (col.filterType === 'select' ? (
+                      <select
+                        value={columnFilters[col.key] || ''}
+                        onChange={(e) => setColumnFilters((f) => ({ ...f, [col.key]: e.target.value }))}
+                        className="w-full px-2 py-1 rounded-md border border-border bg-white text-[11px] font-medium text-text-secondary outline-none focus:border-rojo"
+                      >
+                        <option value="">Todos</option>
+                        {col.filterOptions?.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={columnFilters[col.key] || ''}
+                        onChange={(e) => setColumnFilters((f) => ({ ...f, [col.key]: e.target.value }))}
+                        placeholder="Filtrar…"
+                        className="w-full px-2 py-1 rounded-md border border-border bg-white text-[11px] font-medium text-text-secondary outline-none focus:border-rojo placeholder:text-text-muted/60"
+                      />
+                    ))}
+                </th>
+              ))}
             </tr>
           </thead>
 
           <tbody>
-            {/* ── Destinos ────────────────────────────────────────────────────── */}
-            {activeSection === 'destinos' &&
-              filteredDestinos.map((d) => (
-                <tr
-                  key={d.id}
-                  className="border-t border-border hover:bg-surface-soft/60 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Thumbnail url={d.imagenPrincipal} />
+            {paginatedItems.map((item) => (
+              <tr key={item.id} className="border-t border-border hover:bg-surface-soft/60 transition-colors">
+                {columns.map((col) => (
+                  <td key={col.key} className={`px-4 py-3 ${col.align === 'right' ? 'text-right' : ''} ${col.tdClassName || ''}`}>
+                    {col.render(item)}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-text-primary">{d.nombre}</div>
-                    <div className="text-[11px] text-text-muted line-clamp-1 mt-0.5">
-                      {d.descripcionCorta}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="inline-block text-xs font-semibold capitalize px-2.5 py-0.5 rounded-full bg-surface-soft text-text-secondary border border-border">
-                      {d.categoria}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary hidden lg:table-cell">
-                    {d.horario || <span className="text-text-muted">No especificado</span>}
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${
-                        d.destacado
-                          ? 'bg-[#FFF3C4] text-[#B47900] border border-[#FDE68A]'
-                          : 'bg-surface-soft text-text-muted border border-border'
-                      }`}
-                    >
-                      {d.destacado && <Star size={9} />}
-                      {d.destacado ? 'Sí' : 'No'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    {(d.activo ?? true) ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                        <CheckCircle2 size={11} /> Activo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
-                        <XCircle size={11} /> En Pausa
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <RowActions
-                      onEdit={() => handlers.destinos.onEdit(d)}
-                      onDelete={() => handlers.destinos.onDelete(d.id, d.nombre)}
-                      canEdit={canEdit}
-                      canDelete={canDelete}
-                    />
-                  </td>
-                </tr>
-              ))}
-
-            {/* ── Restaurantes ────────────────────────────────────────────────── */}
-            {activeSection === 'restaurantes' &&
-              filteredRestaurantes.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-t border-border hover:bg-surface-soft/60 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Thumbnail url={r.imagenPrincipal} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-text-primary">{r.nombre}</div>
-                    {r.tipo && (
-                      <div className="text-[11px] text-text-muted mt-0.5 capitalize">{r.tipo}</div>
-                    )}
-                    {r.especialidad && !r.tipo && (
-                      <div className="text-[11px] text-text-muted mt-0.5">{r.especialidad}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell">
-                    {r.propietario
-                      ? <span className="font-medium text-text-primary">{r.propietario}</span>
-                      : <span className="text-text-muted">—</span>}
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">
-                    {(r.horario as any)?.descripcion || <span className="text-text-muted">—</span>}
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    {(r.activo ?? true) ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                        <CheckCircle2 size={11} /> Activo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
-                        <XCircle size={11} /> En Pausa
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <RowActions
-                      onEdit={() => handlers.restaurantes.onEdit(r)}
-                      onDelete={() => handlers.restaurantes.onDelete(r.id, r.nombre)}
-                      canEdit={canEdit}
-                      canDelete={canDelete}
-                    />
-                  </td>
-                </tr>
-              ))}
-
-            {/* ── Alojamientos ─────────────────────────────────────────────────── */}
-            {activeSection === 'alojamientos' &&
-              filteredAlojamientos.map((a) => (
-                <tr
-                  key={a.id}
-                  className="border-t border-border hover:bg-surface-soft/60 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Thumbnail url={a.imagenPrincipal} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-text-primary">{a.nombre}</div>
-                    {a.tipo && (
-                      <div className="text-[11px] text-text-muted mt-0.5">{a.tipo}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell">
-                    {a.propietario
-                      ? <span className="font-medium text-text-primary">{a.propietario}</span>
-                      : <span className="text-text-muted">—</span>}
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">
-                    {a.direccion || <span className="text-text-muted">—</span>}
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    {(a.activo ?? true) ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                        <CheckCircle2 size={11} /> Activo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
-                        <XCircle size={11} /> En Pausa
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <RowActions
-                      onEdit={() => handlers.alojamientos.onEdit(a)}
-                      onDelete={() => handlers.alojamientos.onDelete(a.id, a.nombre)}
-                      canEdit={canEdit}
-                      canDelete={canDelete}
-                    />
-                  </td>
-                </tr>
-              ))}
-
-            {/* ── Eventos ───────────────────────────────────────────────────────── */}
-            {activeSection === 'eventos' &&
-              filteredEventos.map((ev) => (
-                <tr
-                  key={ev.id}
-                  className="border-t border-border hover:bg-surface-soft/60 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <Thumbnail url={ev.imagenPrincipal} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-text-primary">{ev.nombre}</div>
-                    {ev.recurrente && (
-                      <div className="text-[11px] text-[#4A7C59] mt-0.5 flex items-center gap-1">
-                        <Clock size={10} /> Anual
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="inline-block text-xs font-semibold capitalize px-2.5 py-0.5 rounded-full bg-surface-soft text-text-secondary border border-border">
-                      {ev.tipo.replace(/-/g, ' ')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">
-                    {ev.fecha || <span className="text-text-muted">—</span>}
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    {ev.activo ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                        <CheckCircle2 size={11} /> Activo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted bg-surface-soft px-2 py-0.5 rounded-full border border-border">
-                        <XCircle size={11} /> Inactivo
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <RowActions
-                      onEdit={() => handlers.eventos.onEdit(ev)}
-                      onDelete={() => handlers.eventos.onDelete(ev.id, ev.nombre)}
-                      canEdit={canEdit}
-                      canDelete={canDelete}
-                    />
-                  </td>
-                </tr>
-              ))}
+                ))}
+              </tr>
+            ))}
 
             {/* Empty state */}
             {totalFiltered === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-text-muted">
+                <td colSpan={columns.length} className="px-4 py-12 text-center text-text-muted">
                   <div className="flex flex-col items-center gap-2">
                     <Search size={28} className="text-border" />
                     <span className="text-sm font-medium">
-                      {search
-                        ? `Sin resultados para "${search}"`
+                      {search || Object.values(columnFilters).some(Boolean)
+                        ? 'Sin resultados para los filtros aplicados'
                         : 'No hay elementos registrados'}
                     </span>
                   </div>
@@ -504,6 +782,58 @@ export function AdminTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination footer */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 sm:px-6 py-4 border-t border-border bg-white">
+        <div className="flex items-center gap-2 text-xs text-text-secondary">
+          <span>
+            {totalFiltered === 0
+              ? 'Sin registros'
+              : `Mostrando ${rangeStart}–${rangeEnd} de ${totalFiltered}`}
+          </span>
+          <span className="flex items-center gap-1.5 ml-2">
+            <label htmlFor="page-size" className="text-text-muted">
+              Filas por página:
+            </label>
+            <select
+              id="page-size"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="px-2 py-1 rounded-md border border-border bg-surface-soft text-xs font-medium text-text-primary outline-none focus:border-rojo"
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={safePage <= 1}
+            className="p-1.5 rounded-lg border border-border text-text-secondary hover:bg-surface-soft disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="Página anterior"
+          >
+            <ChevronLeft size={15} />
+          </button>
+          <span className="text-xs font-semibold text-text-primary px-1">
+            Página {safePage} de {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage >= totalPages}
+            className="p-1.5 rounded-lg border border-border text-text-secondary hover:bg-surface-soft disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="Página siguiente"
+          >
+            <ChevronRight size={15} />
+          </button>
+        </div>
       </div>
     </div>
   );

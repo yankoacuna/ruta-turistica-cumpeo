@@ -41,6 +41,7 @@ export function RutasManager({
 
         {canEdit && (
           <button
+            id="tour-new-route-btn"
             onClick={onNew}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-rojo hover:bg-rojo-dark text-white transition-all shadow-sm shrink-0 self-start sm:self-auto"
           >

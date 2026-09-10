@@ -1,18 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Destination, Accommodation, Restaurant, AppConfig, EmergencyContact, CumpeoEvent } from '@/lib/types';
-import { sortByDistance } from '@/lib/data';
+import React, { useCallback, useMemo, useState } from 'react';
+import { UtensilsCrossed, BedDouble, Camera } from 'lucide-react';
+import {
+  Destination,
+  Accommodation,
+  Restaurant,
+  AppConfig,
+  EmergencyContact,
+  CumpeoEvent,
+} from '@/lib/types';
 import { useToast } from '@/components/Toast';
+import { useNearbyDestinations } from '@/hooks/useNearbyDestinations';
 
 // Componentes modulares de la portada
 import { HeroSection } from '@/components/home/HeroSection';
+import { QuickActions } from '@/components/home/QuickActions';
 import { NearbySection } from '@/components/home/NearbySection';
 import { RutaShowcase } from '@/components/home/RutaShowcase';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
+import { CatalogSection } from '@/components/home/CatalogSection';
 import { EventsSection } from '@/components/home/EventsSection';
-import { ServicesSection } from '@/components/home/ServicesSection';
+import { MunicipalBanner } from '@/components/home/MunicipalBanner';
 import { EmergencyModal } from '@/components/home/EmergencyModal';
+import {
+  destinationToCard,
+  restaurantToCard,
+  accommodationToCard,
+} from '@/components/home/adapters';
 
 interface HomeClientProps {
   initialConfig: AppConfig;
@@ -34,101 +49,109 @@ export default function HomeClient({
   initialEvents = [],
 }: HomeClientProps) {
   const { showToast } = useToast();
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
 
-  // Estados de datos iniciales
-  const [config] = useState<AppConfig | null>(initialConfig);
-  const [categories] = useState<any[]>(initialConfig.categorias || []);
-  const [destinations] = useState<Destination[]>(initialDestinations);
-  const [featured] = useState<Destination[]>(initialFeatured);
-  const [accommodations] = useState<Accommodation[]>(initialAccommodations);
-  const [restaurants] = useState<Restaurant[]>(initialRestaurants);
-  const [emergencyContacts] = useState<EmergencyContact[]>(initialEmergency);
-  const [events] = useState<CumpeoEvent[]>(initialEvents);
+  const categories = initialConfig.categorias || [];
 
-  // Estados de geolocalización GPS
-  const [, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [nearbyList, setNearbyList] = useState<Destination[]>([]);
-  const [isLocating, setIsLocating] = useState<boolean>(false);
-  const [hasGPS, setHasGPS] = useState<boolean>(false);
+  const notify = useCallback(
+    (msg: string, type: 'info' | 'success' | 'error') => showToast(msg, type),
+    [showToast]
+  );
 
-  // Estados de modales
-  const [showEmergencyModal, setShowEmergencyModal] = useState<boolean>(false);
+  const { nearbyList, isLocating, hasGPS, locate } = useNearbyDestinations({
+    destinations: initialDestinations,
+    onMessage: notify,
+  });
 
-  const handleGPSLocation = () => {
-    if (!navigator.geolocation) {
-      showToast('Tu navegador no soporta geolocalización GPS', 'error');
-      return;
-    }
-    setIsLocating(true);
-    showToast('Obteniendo tu posición GPS...', 'info');
+  const restaurantCards = useMemo(
+    () => initialRestaurants.map(restaurantToCard),
+    [initialRestaurants]
+  );
+  const lodgingCards = useMemo(
+    () => initialAccommodations.map(accommodationToCard),
+    [initialAccommodations]
+  );
+  const destinationCards = useMemo(
+    () => initialDestinations.map(destinationToCard),
+    [initialDestinations]
+  );
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setUserCoords(coords);
-        setIsLocating(false);
-        setHasGPS(true);
-
-        const pois = destinations.map((d) => ({
-          ...d,
-          tipo: 'destino' as const,
-          descripcionCorta: d.descripcionCorta,
-        }));
-        const sorted = sortByDistance(pois as any, coords);
-        setNearbyList(sorted.slice(0, 6) as any);
-        showToast('Destinos cercanos calculados exitosamente', 'success');
-        setTimeout(() => {
-          document.getElementById('section-nearby')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      },
-      (err) => {
-        setIsLocating(false);
-        showToast('No se pudo obtener el GPS: ' + err.message, 'error');
-      }
-    );
-  };
+  const openEmergencyModal = useCallback(() => setShowEmergencyModal(true), []);
 
   return (
-    <div className="w-full pb-16 bg-[#F8F7F4]">
-      {/* 1. Hero con buscador inteligente y accesos directos */}
-      <HeroSection
-        destinations={destinations}
-        onGPSClick={handleGPSLocation}
+    <div className="w-full bg-bg">
+      {/* 1. Hero compacto: identidad + buscador. Nada mas compite por la pantalla. */}
+      <HeroSection destinations={initialDestinations} />
+
+      {/* 2. Accesos directos superpuestos al borde del hero */}
+      <QuickActions
+        onGPSClick={locate}
         isLocating={isLocating}
+        onOpenEmergencyModal={openEmergencyModal}
       />
 
-      {/* 2. Sección condicional por detección GPS */}
-      {hasGPS && (
-        <NearbySection
-          nearbyList={nearbyList}
-          onRefresh={handleGPSLocation}
-        />
-      )}
+      {/* 3. Resultados GPS (solo tras pedir ubicacion) */}
+      {hasGPS && <NearbySection nearbyList={nearbyList} onRefresh={locate} />}
 
-      {/* 3. Showcase editorial: La Ruta Oficial de Condorito y mosaico fotográfico */}
+      {/* 4. Bloque de acento: el producto estrella de la comuna */}
       <RutaShowcase />
 
-      {/* 4. Galería patrimonial: Atractivos destacados */}
-      <FeaturedSection featured={featured} />
+      {/* 5. Destacados en carrusel */}
+      <FeaturedSection featured={initialFeatured} />
 
-      {/* 5. Calendario tradicional: Eventos y festividades costumbristas */}
-      <EventsSection events={events} />
-
-      {/* 6. Catastro comunal por pestañas (Gastronomía, Alojamientos, Destinos) + Banner */}
-      <ServicesSection
-        restaurants={restaurants}
-        accommodations={accommodations}
-        destinations={destinations}
-        categories={categories}
-        onOpenEmergencyModal={() => setShowEmergencyModal(true)}
+      {/* 6-8. Catastro comunal, acotado: 3 tarjetas + "ver mas" en cada bloque */}
+      <CatalogSection
+        id="section-comer"
+        tone="soft"
+        eyebrow="Gastronomia Local"
+        icon={UtensilsCrossed}
+        title="Donde Comer"
+        subtitle="Restaurantes criollos y picadas registradas en el catastro comunal."
+        items={restaurantCards}
+        initialCount={3}
+        cols={3}
+        nounPlural="locales"
       />
 
-      {/* 7. Modal de Asistencia y Contacto Municipal */}
+      <CatalogSection
+        id="section-dormir"
+        tone="base"
+        eyebrow="Hospedaje"
+        icon={BedDouble}
+        title="Donde Dormir"
+        subtitle="Cabañas y hospedajes campesinos para quedarse mas de un dia."
+        items={lodgingCards}
+        initialCount={3}
+        cols={3}
+        nounPlural="alojamientos"
+      />
+
+      <CatalogSection
+        id="section-destinos"
+        tone="soft"
+        eyebrow="Explorar por Categoria"
+        icon={Camera}
+        title="Todos los Destinos"
+        subtitle="Filtra el catastro turistico completo de la comuna."
+        items={destinationCards}
+        filters={categories}
+        initialCount={6}
+        cols={3}
+        action={{ href: '/mapa', label: 'Abrir mapa GPS' }}
+        nounPlural="destinos"
+      />
+
+      {/* 9. Calendario tradicional */}
+      <EventsSection events={initialEvents} />
+
+      {/* 10. Cierre institucional */}
+      <MunicipalBanner onOpenEmergencyModal={openEmergencyModal} />
+
       <EmergencyModal
         isOpen={showEmergencyModal}
         onClose={() => setShowEmergencyModal(false)}
-        config={config}
-        emergencyContacts={emergencyContacts}
+        config={initialConfig}
+        emergencyContacts={initialEmergency}
       />
     </div>
   );

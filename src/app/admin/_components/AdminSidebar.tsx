@@ -65,7 +65,7 @@ export function AdminSidebar({
       ? [
           {
             id: 'backups' as AdminSection,
-            label: 'Copias de Seguridad',
+            label: 'Copias y Carga Masiva',
             icon: Database,
             count: undefined,
           },
@@ -223,7 +223,7 @@ export function AdminSidebar({
       </div>
 
       {/* Navigation Sections */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
+      <div id="tour-sidebar-nav" className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
         {navGroups.map((group) => (
           <div key={group.title}>
             <div className="px-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-text-muted">
@@ -237,6 +237,7 @@ export function AdminSidebar({
                 return (
                   <button
                     key={item.id}
+                    id={`tour-nav-${item.id}`}
                     onClick={() => handleNavClick(item.id)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-xs transition-all ${
                       isActive

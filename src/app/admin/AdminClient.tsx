@@ -20,6 +20,7 @@ import { useRestaurantes } from './_hooks/useRestaurantes';
 import { useAlojamientos } from './_hooks/useAlojamientos';
 import { useEventos } from './_hooks/useEventos';
 import { useRutas } from './_hooks/useRutas';
+import { useSessionHeartbeat } from './_hooks/useSessionHeartbeat';
 
 import { AdminLogin } from './_components/AdminLogin';
 import { AdminSidebar } from './_components/AdminSidebar';
@@ -38,6 +39,7 @@ import { RutaModal } from './_components/modals/RutaModal';
 import { UserModal } from './_components/modals/UserModal';
 import { ChangePasswordModal } from './_components/modals/ChangePasswordModal';
 import { SessionExpiredModal } from './_components/modals/SessionExpiredModal';
+import { runTour, TourId } from './_components/adminTour';
 import {
   loginAdmin,
   logoutAdmin,
@@ -98,6 +100,15 @@ export default function AdminClient({
   const handleAuthError = () => {
     setIsSessionExpired(true);
   };
+
+  // Mantiene la sesion viva mientras el usuario esta realmente usando el
+  // panel, en vez de dejar que el token expire en silencio y recien avisar
+  // cuando intenta guardar algo (ver useSessionHeartbeat para el detalle).
+  useSessionHeartbeat({
+    enabled: isAuthenticated && !isSessionExpired,
+    onExpired: handleAuthError,
+    onRefreshed: setSession,
+  });
 
   const destinos = useDestinos(initialDestinos, { showToast, onAuthError: handleAuthError });
   const restaurantes = useRestaurantes(initialRestaurantes, { showToast, onAuthError: handleAuthError });
@@ -233,6 +244,17 @@ export default function AdminClient({
     }
   };
 
+  const handleStartTour = (tourId: TourId = 'general') => {
+    runTour(tourId, {
+      activeSection,
+      onNavigate: (section) => setActiveSection(section),
+      openNewDestino: canEdit ? destinos.openNew : undefined,
+      closeDestino: destinos.close,
+      openNewRuta: canEdit ? rutas.openNew : undefined,
+      closeRuta: rutas.close,
+    });
+  };
+
   if (!isAuthenticated) return <AdminLogin onLogin={handleLogin} />;
 
   return (
@@ -264,6 +286,7 @@ export default function AdminClient({
           onChangePassword={() => setIsChangePasswordOpen(true)}
           onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           onLogout={handleLogout}
+          onStartTour={handleStartTour}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
@@ -293,6 +316,7 @@ export default function AdminClient({
               onNewAlojamiento={canEdit ? alojamientos.openNew : undefined}
               onNewEvento={canEdit ? eventos.openNew : undefined}
               onNewRuta={canEdit ? rutas.openNew : undefined}
+              onStartTour={handleStartTour}
             />
           )}
 

@@ -1,10 +1,15 @@
 import React from 'react';
-import { Phone, User, CreditCard } from 'lucide-react';
+import { User, CreditCard } from 'lucide-react';
 import { Restaurant } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
 import { ImageUploadField } from '../ImageUploadField';
 import { GalleryField } from '../GalleryField';
+import {
+  CoordinatesPicker,
+  ContactoSection,
+  ActivoToggle,
+} from './common';
 
 interface RestauranteModalProps {
   editing: Partial<Restaurant>;
@@ -23,11 +28,7 @@ export function RestauranteModal({
 }: RestauranteModalProps) {
   const set = (patch: Partial<Restaurant>) => onChange({ ...editing, ...patch });
 
-  const contacto = editing.contacto as any || {};
-  const setContacto = (patch: Record<string, string>) =>
-    set({ contacto: { ...contacto, ...patch } });
-
-  const horario = editing.horario as any || {};
+  const horario = (editing.horario as any) || {};
   const setHorario = (patch: Record<string, string>) =>
     set({ horario: { ...horario, ...patch } });
 
@@ -50,18 +51,11 @@ export function RestauranteModal({
               />
             </Field>
           </div>
-          <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-surface-soft h-[42px]">
-            <input
-              type="checkbox"
-              id="rest-activo"
-              checked={editing.activo ?? true}
-              onChange={(e) => set({ activo: e.target.checked })}
-              className="w-4 h-4 text-rojo rounded border-border focus:ring-rojo cursor-pointer"
-            />
-            <label htmlFor="rest-activo" className="text-xs font-bold text-text-primary cursor-pointer select-none">
-              {editing.activo ?? true ? 'Visible en el portal' : 'Oculto (En Pausa)'}
-            </label>
-          </div>
+          <ActivoToggle
+            id="rest-activo"
+            checked={editing.activo ?? true}
+            onChange={(activo) => set({ activo })}
+          />
         </div>
 
         {/* Tipo + Propietario */}
@@ -87,7 +81,7 @@ export function RestauranteModal({
               <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
               <input
                 className={inputCls + ' pl-8'}
-                placeholder="Ej: María de la Cuadra"
+                placeholder="Ej: Juan Pérez"
                 value={editing.propietario || ''}
                 onChange={(e) => set({ propietario: e.target.value })}
               />
@@ -95,25 +89,15 @@ export function RestauranteModal({
           </Field>
         </div>
 
-        {/* Especialidad + Plato estrella */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Especialidad">
-            <input
-              className={inputCls}
-              placeholder="Ej: Cocina típica maulina"
-              value={editing.especialidad || ''}
-              onChange={(e) => set({ especialidad: e.target.value })}
-            />
-          </Field>
-          <Field label="Plato Estrella">
-            <input
-              className={inputCls}
-              placeholder="Ej: Cazuela de vacuno"
-              value={editing.platoEstrella || ''}
-              onChange={(e) => set({ platoEstrella: e.target.value })}
-            />
-          </Field>
-        </div>
+        {/* Especialidad (Plato estrella eliminado) */}
+        <Field label="Especialidad">
+          <input
+            className={inputCls}
+            placeholder="Ej: Cocina típica maulina, carnes a la brasa, repostería casera"
+            value={editing.especialidad || ''}
+            onChange={(e) => set({ especialidad: e.target.value })}
+          />
+        </Field>
 
         {/* Descripción */}
         <Field label="Descripción" required>
@@ -173,52 +157,16 @@ export function RestauranteModal({
           </div>
         </div>
 
-        {/* Contacto */}
-        <div className="rounded-xl border border-border overflow-hidden">
-          <div className="bg-surface-soft px-4 py-2.5 text-xs font-bold text-text-secondary uppercase tracking-wide flex items-center gap-1.5">
-            <Phone size={12} /> Información de Contacto
-          </div>
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="Teléfono (Llamadas)">
-              <input
-                className={inputCls}
-                placeholder="+56 9 XXXX XXXX"
-                value={editing.telefono || contacto.telefono || ''}
-                onChange={(e) => {
-                  setContacto({ telefono: e.target.value });
-                  set({ telefono: e.target.value });
-                }}
-              />
-            </Field>
-            <Field label="WhatsApp">
-              <input
-                className={inputCls}
-                placeholder="+56 9 XXXX XXXX"
-                value={editing.whatsapp || contacto.whatsapp || ''}
-                onChange={(e) => {
-                  setContacto({ whatsapp: e.target.value });
-                  set({ whatsapp: e.target.value });
-                }}
-              />
-            </Field>
-            <Field label="Instagram">
-              <input
-                className={inputCls}
-                placeholder="@nombre_local"
-                value={contacto.instagram || ''}
-                onChange={(e) => setContacto({ instagram: e.target.value })}
-              />
-            </Field>
-            <Field label="Sitio Web">
-              <input
-                className={inputCls}
-                placeholder="https://..."
-                value={contacto.web || ''}
-                onChange={(e) => setContacto({ web: e.target.value })}
-              />
-            </Field>
-          </div>
-        </div>
+        {/* Contacto Refactorizado */}
+        <ContactoSection
+          contacto={editing.contacto}
+          telefono={editing.telefono}
+          whatsapp={editing.whatsapp}
+          onChange={({ contacto, telefono, whatsapp }) =>
+            set({ contacto, telefono, whatsapp })
+          }
+          instagramPlaceholder="@nombre_local"
+        />
 
         {/* URL menú */}
         <Field label="URL del Menú" hint="Enlace a carta digital o PDF">
@@ -230,31 +178,12 @@ export function RestauranteModal({
           />
         </Field>
 
-        {/* Coordenadas */}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Latitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={editing.coordenadas?.lat ?? -35.267}
-              onChange={(e) =>
-                set({ coordenadas: { ...editing.coordenadas!, lat: parseFloat(e.target.value) } })
-              }
-            />
-          </Field>
-          <Field label="Longitud">
-            <input
-              type="number"
-              step="0.000001"
-              className={inputCls}
-              value={editing.coordenadas?.lng ?? -71.25}
-              onChange={(e) =>
-                set({ coordenadas: { ...editing.coordenadas!, lng: parseFloat(e.target.value) } })
-              }
-            />
-          </Field>
-        </div>
+        {/* Coordenadas Refactorizadas con Mapa */}
+        <CoordinatesPicker
+          coordinates={editing.coordenadas}
+          onChange={(coordenadas) => set({ coordenadas })}
+          modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
+        />
 
         <ImageUploadField
           label="Imagen Principal"

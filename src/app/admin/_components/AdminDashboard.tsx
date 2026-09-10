@@ -21,10 +21,12 @@ import {
   Eye,
   Shield,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser } from '@/lib/types';
 import { StatCard } from './StatCard';
 import { AdminSection } from '../_types';
+import { TourId } from './adminTour';
 
 interface AdminDashboardProps {
   destinos: Destination[];
@@ -40,6 +42,7 @@ interface AdminDashboardProps {
   onNewAlojamiento?: () => void;
   onNewEvento?: () => void;
   onNewRuta?: () => void;
+  onStartTour?: (tourId: TourId) => void;
 }
 
 export function AdminDashboard({
@@ -56,6 +59,7 @@ export function AdminDashboard({
   onNewAlojamiento,
   onNewEvento,
   onNewRuta,
+  onStartTour,
 }: AdminDashboardProps) {
   const isLector = currentUser?.role === 'LECTOR';
   const isAdmin = currentUser?.role === 'ADMIN';
@@ -80,22 +84,22 @@ export function AdminDashboard({
 
   const progressItems = [
     {
-      label: 'Destinos con foto de portada',
+      label: 'Destinos con foto',
       value: destinos.filter((d) => hasRealPhoto(d.imagenPrincipal)).length,
       total: destinos.length,
     },
     {
-      label: 'Restaurantes con foto de portada',
+      label: 'Restaurantes con foto',
       value: restaurantes.filter((r) => hasRealPhoto(r.imagenPrincipal)).length,
       total: restaurantes.length,
     },
     {
-      label: 'Alojamientos con foto de portada',
+      label: 'Alojamientos con foto',
       value: alojamientos.filter((a) => hasRealPhoto(a.imagenPrincipal)).length,
       total: alojamientos.length,
     },
     {
-      label: 'Eventos con foto de portada',
+      label: 'Eventos con foto',
       value: eventos.filter((e) => hasRealPhoto(e.imagenPrincipal)).length,
       total: eventos.length,
     },
@@ -104,7 +108,10 @@ export function AdminDashboard({
   return (
     <div className="space-y-6">
       {/* Executive Welcome Banner */}
-      <div className="bg-gradient-to-r from-rojo-dark via-rojo to-rojo-light rounded-2xl p-6 text-white shadow-lg shadow-rojo/15 relative overflow-hidden">
+      <div
+        id="tour-dashboard-welcome"
+        className="bg-gradient-to-r from-rojo-dark via-rojo to-rojo-light rounded-2xl p-6 text-white shadow-lg shadow-rojo/15 relative overflow-hidden"
+      >
         <div className="absolute right-0 bottom-0 opacity-10 translate-x-8 translate-y-8 select-none pointer-events-none">
           <Compass size={220} />
         </div>
@@ -124,6 +131,42 @@ export function AdminDashboard({
           <p className="text-white/90 text-sm leading-relaxed">
             Bienvenido al gestor de contenidos. Desde aquí supervisas los destinos, gastronomía, hospedajes, eventos y circuitos que ven los turistas en la plataforma móvil y en los tótems informativos.
           </p>
+
+          {onStartTour && (
+            <div className="mt-4 pt-3 border-t border-white/20 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-white/90 flex items-center gap-1.5 mr-1">
+                <Sparkles size={13} className="text-sol" />
+                <span>Tours Guiados:</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => onStartTour('general')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 text-text-primary text-xs font-extrabold shadow-md hover:bg-white hover:text-rojo transition-all cursor-pointer"
+              >
+                <Compass size={13} className="text-rojo" />
+                <span>Tour General</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onStartTour('create-destino')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 text-text-primary text-xs font-extrabold shadow-md hover:bg-white hover:text-rojo transition-all cursor-pointer"
+              >
+                <MapPin size={13} className="text-rojo" />
+                <span>Crear Atractivo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onStartTour('create-ruta')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 text-text-primary text-xs font-extrabold shadow-md hover:bg-white hover:text-rojo transition-all cursor-pointer"
+              >
+                <Map size={13} className="text-rojo" />
+                <span>Crear Ruta</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -147,7 +190,7 @@ export function AdminDashboard({
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 text-rose-800 text-xs font-bold transition-all shadow-2xs group"
             >
               <Plus size={14} className="group-hover:scale-110 transition-transform" />
-              <span>Restaurante</span>
+              <span>Nuevo Restaurante</span>
             </button>
 
             <button
@@ -155,7 +198,7 @@ export function AdminDashboard({
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-sky-200 bg-sky-50/50 hover:bg-sky-100/70 text-sky-800 text-xs font-bold transition-all shadow-2xs group"
             >
               <Plus size={14} className="group-hover:scale-110 transition-transform" />
-              <span>Alojamiento</span>
+              <span>Nuevo Alojamiento</span>
             </button>
 
             <button
@@ -163,12 +206,12 @@ export function AdminDashboard({
               className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 text-emerald-800 text-xs font-bold transition-all shadow-2xs group"
             >
               <Plus size={14} className="group-hover:scale-110 transition-transform" />
-              <span>Evento</span>
+              <span>Nuevo Evento</span>
             </button>
 
             <button
               onClick={onNewRuta || (() => onNavigate('rutas'))}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 text-purple-800 text-xs font-bold transition-all shadow-2xs group col-span-2 sm:col-span-1"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 text-purple-800 text-xs font-bold transition-all shadow-2xs group"
             >
               <Plus size={14} className="group-hover:scale-110 transition-transform" />
               <span>Nueva Ruta</span>
@@ -192,7 +235,7 @@ export function AdminDashboard({
       )}
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div id="tour-stat-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         <StatCard
           label="Destinos"
           value={destinos.length}
@@ -240,109 +283,53 @@ export function AdminDashboard({
         />
       </div>
 
-      {/* Analytics & Health */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Consejos y Buenas Prácticas para el Gestor */}
-        <div className="bg-white rounded-2xl border border-border shadow-2xs p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
-                  <Star size={16} />
-                </div>
-                <h3 className="font-bold text-text-primary text-sm">Recomendaciones para el Administrador</h3>
-              </div>
-              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                Buenas Prácticas
-              </span>
+      {/* Analytics & Health: Calidad y Cobertura Visual */}
+      <div id="tour-visual-coverage" className="bg-white rounded-2xl border border-border shadow-2xs p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-sky-50 text-cielo">
+              <TrendingUp size={16} />
             </div>
-            <p className="text-xs text-text-secondary leading-relaxed mb-3">
-              Recomendaciones clave para mantener el portal atractivo y actualizado para los turistas que visitan Cumpeo:
-            </p>
+            <div>
+              <h3 className="font-bold text-text-primary text-sm">Calidad y Cobertura Visual</h3>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Porcentaje de fichas que ya cuentan con fotografía de portada para garantizar una experiencia atractiva al turista.
+              </p>
+            </div>
           </div>
-
-          <div className="space-y-2 pt-2 border-t border-border/60">
-            {[
-              {
-                titulo: 'Fotos de alta calidad',
-                detalle: 'Sube fotos reales y nítidas de platos, fachadas y esculturas temáticas.',
-              },
-              {
-                titulo: 'Horarios y teléfonos al día',
-                detalle: 'Verifica los horarios de fin de semana para evitar visitas a locales cerrados.',
-              },
-              {
-                titulo: 'Circuitos y Rutas turísticas',
-                detalle: 'Agrupa atractivos cercanos para facilitar el recorrido a pie por el pueblo.',
-              },
-              {
-                titulo: 'Señalética con Códigos QR',
-                detalle: 'Descarga e imprime los QR para instalarlos en tótems, placas o folletos.',
-              },
-            ].map((tip) => (
-              <div
-                key={tip.titulo}
-                className="flex items-start gap-2.5 text-xs py-1.5 border-b border-border/40 last:border-none"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-rojo mt-1.5 shrink-0" />
-                <div>
-                  <div className="font-semibold text-text-primary">{tip.titulo}</div>
-                  <div className="text-[11px] text-text-muted leading-tight">{tip.detalle}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <span className="text-[11px] font-bold text-text-secondary bg-surface-soft border border-border px-2.5 py-1 rounded-full shrink-0 self-start sm:self-auto">
+            {imageCoveragePct}% promedio
+          </span>
         </div>
 
-        {/* Catalog Completion Quality */}
-        <div className="bg-white rounded-2xl border border-border shadow-2xs p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-sky-50 text-cielo">
-                  <TrendingUp size={16} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-border/60">
+          {progressItems.map((item) => {
+            const pct = item.total > 0 ? Math.round((item.value / item.total) * 100) : 0;
+            return (
+              <div key={item.label} className="p-3 rounded-xl bg-surface-soft/60 border border-border/60 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-text-secondary font-medium truncate pr-2">{item.label}</span>
+                  <span className="font-bold text-text-primary shrink-0">
+                    {item.value}/{item.total} <span className="text-text-muted font-normal text-[11px]">({pct}%)</span>
+                  </span>
                 </div>
-                <h3 className="font-bold text-text-primary text-sm">Calidad y Cobertura Visual</h3>
+                <div className="w-full h-2 bg-white rounded-full overflow-hidden border border-border/80">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rojo'
+                    }`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
               </div>
-              <span className="text-[11px] font-bold text-text-secondary bg-surface-soft border border-border px-2 py-0.5 rounded-full">
-                {imageCoveragePct}% promedio
-              </span>
-            </div>
-            <p className="text-xs text-text-secondary leading-relaxed mb-4">
-              Porcentaje de fichas que ya cuentan con fotografía de portada para garantizar una experiencia atractiva al turista.
-            </p>
-          </div>
-
-          <div className="space-y-3 pt-2 border-t border-border/60">
-            {progressItems.map((item) => {
-              const pct = item.total > 0 ? Math.round((item.value / item.total) * 100) : 0;
-              return (
-                <div key={item.label} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-text-secondary font-medium">{item.label}</span>
-                    <span className="font-bold text-text-primary">
-                      {item.value} / {item.total}{' '}
-                      <span className="text-text-muted font-normal">({pct}%)</span>
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-surface-soft rounded-full overflow-hidden border border-border/80">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rojo'
-                      }`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Recent Records Showcase */}
       {destinos.length > 0 && (
-        <div className="bg-white rounded-2xl border border-border shadow-2xs overflow-hidden">
+        <div id="tour-recent-destinos" className="bg-white rounded-2xl border border-border shadow-2xs overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
               <MapPin size={16} className="text-rojo" />

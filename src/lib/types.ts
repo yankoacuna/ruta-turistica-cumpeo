@@ -72,7 +72,6 @@ export interface Restaurant {
     web?: string;
     instagram?: string;
   } | null;
-  platoEstrella?: string;
   mediosPago?: string[];      // desde catastro: ["Efectivo", "Débito"]
   horario?: {
     apertura?: string;

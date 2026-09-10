@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Compass, ArrowUp, ArrowDown, Trash2, Plus, MapPin, Clock, Gauge } from 'lucide-react';
+import { Compass, ArrowUp, ArrowDown, Trash2, Plus, Clock, Gauge } from 'lucide-react';
 import { TourRoute, POI } from '@/lib/types';
+import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
+import { SlugField } from './common';
 
 interface RutaModalProps {
   editing: Partial<TourRoute>;
@@ -23,6 +25,14 @@ export function RutaModal({
 }: RutaModalProps) {
   const [selectedPoiToAdd, setSelectedPoiToAdd] = useState<string>('');
   const set = (patch: Partial<TourRoute>) => onChange({ ...editing, ...patch });
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing.slug && editing.nombre) {
+      onChange({ ...editing, slug: slugify(editing.nombre) });
+    }
+    onSubmit(e);
+  };
 
   const poiMap = new Map(availablePois.map((p) => [p.id, p]));
   const currentPoiIds: string[] = editing.poiIds || [];
@@ -55,9 +65,9 @@ export function RutaModal({
       title={editing.id ? `Configurar: ${editing.nombre || 'Ruta'}` : 'Crear Nueva Ruta Turística'}
       onClose={onClose}
     >
-      <form onSubmit={onSubmit} className="flex flex-col gap-5">
-        {/* Nombre y Slug */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
+        {/* Nombre del circuito */}
+        <div id="tour-ruta-nombre">
           <Field label="Nombre del Circuito / Ruta" required>
             <input
               required
@@ -67,28 +77,33 @@ export function RutaModal({
               onChange={(e) => set({ nombre: e.target.value })}
             />
           </Field>
+        </div>
 
-          <Field label="Slug / Identificador único" hint="Solo letras minúsculas, números y guiones">
-            <input
-              className={inputCls}
-              placeholder="la-ruta-de-condorito"
-              value={editing.slug || ''}
-              onChange={(e) => set({ slug: e.target.value })}
-            />
-          </Field>
+        {/* Dirección Web Pública (URL / Slug) Refactorizada */}
+        <div id="tour-ruta-slug">
+          <SlugField
+            slug={editing.slug || ''}
+            baseName={editing.nombre || ''}
+            basePath="cumpeo.cl/ruta?slug="
+            onChange={(slug) => set({ slug })}
+            isEditing={Boolean(editing.id)}
+            helpText="Identificador con el que los turistas compartirán y abrirán esta ruta turística interactiva."
+          />
         </div>
 
         {/* Descripción */}
-        <Field label="Descripción de la Ruta" required>
-          <textarea
-            required
-            rows={3}
-            className={textareaCls}
-            placeholder="Describe el objetivo turístico, paisaje, atractivo cultural o gastronómico..."
-            value={editing.descripcion || ''}
-            onChange={(e) => set({ descripcion: e.target.value })}
-          />
-        </Field>
+        <div id="tour-ruta-desc">
+          <Field label="Descripción de la Ruta" required>
+            <textarea
+              required
+              rows={3}
+              className={textareaCls}
+              placeholder="Describe el objetivo turístico, paisaje, atractivo cultural o gastronómico..."
+              value={editing.descripcion || ''}
+              onChange={(e) => set({ descripcion: e.target.value })}
+            />
+          </Field>
+        </div>
 
         {/* Métricas y Color */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -137,7 +152,7 @@ export function RutaModal({
         </div>
 
         {/* ── SECCIÓN DE PARADAS CONFIGURABLES (STOPS) ─────── */}
-        <div className="p-4 bg-surface-soft border-2 border-dashed border-border rounded-2xl">
+        <div id="tour-ruta-pois" className="p-4 bg-surface-soft border-2 border-dashed border-border rounded-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <div>
               <h4 className="font-display font-extrabold text-sm text-text-primary flex items-center gap-1.5">
@@ -242,7 +257,7 @@ export function RutaModal({
           <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-text-primary">
             <input
               type="checkbox"
-              className="rounded text-rojo focus:ring-rojo"
+              className="rounded text-rojo focus:ring-rojo accent-rojo"
               checked={editing.destacada ?? false}
               onChange={(e) => set({ destacada: e.target.checked })}
             />
@@ -252,7 +267,7 @@ export function RutaModal({
           <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-text-primary">
             <input
               type="checkbox"
-              className="rounded text-rojo focus:ring-rojo"
+              className="rounded text-rojo focus:ring-rojo accent-rojo"
               checked={editing.activo ?? true}
               onChange={(e) => set({ activo: e.target.checked })}
             />
@@ -260,7 +275,9 @@ export function RutaModal({
           </label>
         </div>
 
-        <ModalActions isPending={isPending} onClose={onClose} />
+        <div id="tour-ruta-actions">
+          <ModalActions isPending={isPending} onClose={onClose} />
+        </div>
       </form>
     </ModalWrapper>
   );

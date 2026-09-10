@@ -33,3 +33,119 @@
 }
 
 /* The rest of the styling is done via Tailwind CSS utility classes in the components. */
+
+/* ── Utilidades ──────────────────────────────────────────────── */
+@layer utilities {
+  /* Carruseles horizontales sin barra de scroll visible (mobile) */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ── Driver.js Custom Styling (Tour Guiado CMS) ──────── */
+.driver-popover.cumpeo-tour-popover {
+  background-color: #ffffff;
+  color: #1E1E24;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E2E0D8;
+  padding: 1.25rem;
+  max-width: 360px;
+  font-family: var(--font-body);
+}
+
+.driver-popover.cumpeo-tour-popover .driver-popover-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1E1E24;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.driver-popover.cumpeo-tour-popover .tour-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background-color: #FFF5F5;
+  color: #E63946;
+  border: 1px solid rgba(230, 57, 70, 0.2);
+  flex-shrink: 0;
+}
+
+.driver-popover.cumpeo-tour-popover .driver-popover-description {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #4A4E69;
+  margin-bottom: 1rem;
+}
+
+.driver-popover.cumpeo-tour-popover .driver-popover-footer {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.driver-popover.cumpeo-tour-popover .driver-popover-progress-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8D99AE;
+}
+
+.driver-popover.cumpeo-tour-popover .driver-popover-navigation-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.driver-popover.cumpeo-tour-popover button.driver-popover-prev-btn {
+  background-color: #FAF8F5;
+  color: #4A4E69;
+  border: 1px solid #E2E0D8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.driver-popover.cumpeo-tour-popover button.driver-popover-prev-btn:hover {
+  background-color: #F0EDE6;
+  color: #1E1E24;
+}
+
+.driver-popover.cumpeo-tour-popover button.driver-popover-next-btn {
+  background-color: #E63946;
+  color: #ffffff;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+.driver-popover.cumpeo-tour-popover button.driver-popover-next-btn:hover {
+  background-color: #C1121F;
+}
+
+.driver-popover.cumpeo-tour-popover .driver-popover-close-btn {
+  color: #8D99AE;
+  font-size: 1.1rem;
+  transition: color 0.15s ease;
+}
+
+.driver-popover.cumpeo-tour-popover .driver-popover-close-btn:hover {
+  color: #E63946;
+}
+
