@@ -9,8 +9,8 @@ const emptyRuta = (): Partial<TourRoute> => ({
   descripcion: '',
   color: '#E63946',
   poiIds: [],
-  duracionEstimada: '2 horas',
-  distanciaKm: 5.0,
+  duracionEstimada: '',
+  distanciaKm: undefined,
   dificultad: 'Fácil',
   mapaImagen: '/assets/images/mapa-ilustrado-ruta-condorito.png',
   destacada: false,
@@ -18,6 +18,7 @@ const emptyRuta = (): Partial<TourRoute> => ({
   orden: 0,
   hitos: [],
   consejos: [],
+  tiemposParada: {},
 });
 
 export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAuthError }: HookOptions) {
@@ -42,6 +43,7 @@ export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAut
             poiIds: saved.poiIds as string[],
             hitos: saved.hitos as any,
             consejos: saved.consejos as any,
+            tiemposParada: saved.tiemposParada as any,
           } as TourRoute;
           return idx >= 0
             ? prev.map((r) => (r.id === saved.id ? updated : r))

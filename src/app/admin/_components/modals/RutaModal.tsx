@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
-import { Compass, ArrowUp, ArrowDown, Trash2, Plus, Clock, Gauge } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+import {
+  Compass,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  Plus,
+  Clock,
+  Gauge,
+  Sparkles,
+  Loader2,
+  Timer,
+  Lightbulb,
+} from 'lucide-react';
 import { TourRoute, POI } from '@/lib/types';
 import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls, selectCls } from '../Field';
+import { useToast } from '@/components/Toast';
 
 interface RutaModalProps {
   editing: Partial<TourRoute>;
@@ -12,6 +26,73 @@ interface RutaModalProps {
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
   isPending: boolean;
+}
+
+/** "105" -> "1 h 45 min". 0 o negativo -> cadena vacía. */
+function formatMinutos(mins: number): string {
+  if (!mins || mins <= 0) return '';
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} h`;
+  return `${h} h ${m} min`;
+}
+
+/**
+ * Botón que calcula distancia y tiempo de manejo reales entre las paradas
+ * configuradas, usando Google Directions API (el mismo servicio que ya traza
+ * la línea de la ruta en el mapa público, aquí solo leemos sus números).
+ */
+function AutoCalcTrasladoButton({
+  coords,
+  onResult,
+}: {
+  coords: google.maps.LatLngLiteral[];
+  onResult: (r: { km: number; minutos: number }) => void;
+}) {
+  const routesLib = useMapsLibrary('routes');
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    if (!routesLib) return;
+    if (coords.length < 2) {
+      showToast('Agrega al menos 2 paradas con ubicación para calcular.', 'error');
+      return;
+    }
+    setLoading(true);
+    try {
+      const service = new routesLib.DirectionsService();
+      const response = await service.route({
+        origin: coords[0],
+        destination: coords[coords.length - 1],
+        waypoints: coords.slice(1, -1).map((location) => ({ location, stopover: true })),
+        travelMode: google.maps.TravelMode.DRIVING,
+      });
+      const legs = response.routes[0]?.legs || [];
+      const meters = legs.reduce((sum, leg) => sum + (leg.distance?.value || 0), 0);
+      const seconds = legs.reduce((sum, leg) => sum + (leg.duration?.value || 0), 0);
+      onResult({ km: Math.round((meters / 1000) * 10) / 10, minutos: Math.round(seconds / 60) });
+      showToast('Distancia y tiempo de traslado calculados', 'success');
+    } catch (err: any) {
+      showToast(`No se pudo calcular la ruta: ${err?.message || 'error desconocido'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading || coords.length < 2}
+      className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-border hover:border-rojo hover:text-rojo text-text-primary shadow-2xs transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+      title={coords.length < 2 ? 'Agrega al menos 2 paradas con ubicación' : undefined}
+    >
+      {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+      Calcular Distancia y Tiempo de Traslado
+    </button>
+  );
 }
 
 export function RutaModal({
@@ -23,6 +104,8 @@ export function RutaModal({
   isPending,
 }: RutaModalProps) {
   const [selectedPoiToAdd, setSelectedPoiToAdd] = useState<string>('');
+  const [autoTraslado, setAutoTraslado] = useState<{ km: number; minutos: number } | null>(null);
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const set = (patch: Partial<TourRoute>) => onChange({ ...editing, ...patch });
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -57,6 +140,34 @@ export function RutaModal({
     nextPoiIds[targetIndex] = temp;
     set({ poiIds: nextPoiIds });
   };
+
+  // ── Tiempos por parada + tiempo total estimado ──────────────────────────
+  const tiemposParada: Record<string, number> = editing.tiemposParada || {};
+  const handleSetTiempoParada = (poiId: string, minutos: number) => {
+    set({ tiemposParada: { ...tiemposParada, [poiId]: Math.max(0, minutos) } });
+  };
+  const totalExtraMinutos = currentPoiIds.reduce((sum, id) => sum + (tiemposParada[id] || 0), 0);
+  const totalMinutosEstimados = (autoTraslado?.minutos || 0) + totalExtraMinutos;
+
+  // La duración ya no la escribe el admin: en cuanto se calcula el traslado
+  // una vez, el total (manejo + tiempo por parada) queda siempre en sincronía.
+  useEffect(() => {
+    if (autoTraslado) {
+      set({ duracionEstimada: formatMinutos(totalMinutosEstimados) || '0 min' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoTraslado, totalMinutosEstimados]);
+
+  const stopCoords: google.maps.LatLngLiteral[] = currentPoiIds
+    .map((id) => poiMap.get(id)?.coordenadas)
+    .filter((c): c is google.maps.LatLngLiteral => !!c);
+
+  // ── Consejos prácticos (tips) ────────────────────────────────────────────
+  const consejos: { titulo: string; texto: string }[] = editing.consejos || [];
+  const handleAddConsejo = () => set({ consejos: [...consejos, { titulo: '', texto: '' }] });
+  const handleUpdateConsejo = (idx: number, patch: Partial<{ titulo: string; texto: string }>) =>
+    set({ consejos: consejos.map((c, i) => (i === idx ? { ...c, ...patch } : c)) });
+  const handleRemoveConsejo = (idx: number) => set({ consejos: consejos.filter((_, i) => i !== idx) });
 
   return (
     <ModalWrapper
@@ -113,29 +224,24 @@ export function RutaModal({
             </div>
           </Field>
 
-          <Field label="Duración Estimada" hint="Ej: 2 a 3 horas">
+          <Field
+            label="Duración Estimada"
+            hint="Se calcula sola: tiempo de manejo entre paradas + minutos que le asignes a cada una, más abajo"
+          >
             <div className="relative">
               <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-              <input
-                className={inputCls + ' pl-8'}
-                placeholder="2 a 3 horas"
-                value={editing.duracionEstimada || ''}
-                onChange={(e) => set({ duracionEstimada: e.target.value })}
-              />
+              <div className={inputCls + ' pl-8 bg-surface-soft text-text-secondary cursor-not-allowed flex items-center'}>
+                {editing.duracionEstimada || 'Calcula el traslado en "Paradas" para obtenerla'}
+              </div>
             </div>
           </Field>
 
-          <Field label="Distancia (Km)">
+          <Field label="Distancia (Km)" hint="Se calcula sola desde las paradas del circuito">
             <div className="relative">
               <Gauge size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-              <input
-                type="number"
-                step="0.1"
-                className={inputCls + ' pl-8'}
-                placeholder="7.5"
-                value={editing.distanciaKm ?? ''}
-                onChange={(e) => set({ distanciaKm: parseFloat(e.target.value) || 0 })}
-              />
+              <div className={inputCls + ' pl-8 bg-surface-soft text-text-secondary cursor-not-allowed flex items-center'}>
+                {editing.distanciaKm ? `${editing.distanciaKm} km` : 'Sin calcular'}
+              </div>
             </div>
           </Field>
         </div>
@@ -183,6 +289,18 @@ export function RutaModal({
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
+                      <div className="relative mr-1" title="Minutos extra a pasar en esta parada">
+                        <Timer size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-text-muted" />
+                        <input
+                          type="number"
+                          min={0}
+                          step={5}
+                          value={tiemposParada[id] || ''}
+                          onChange={(e) => handleSetTiempoParada(id, parseInt(e.target.value, 10) || 0)}
+                          placeholder="0"
+                          className="w-16 pl-6 pr-1.5 py-1 text-[11px] rounded-lg border border-border bg-surface-soft focus:border-rojo focus:bg-white outline-hidden"
+                        />
+                      </div>
                       <button
                         type="button"
                         disabled={index === 0}
@@ -239,6 +357,108 @@ export function RutaModal({
               <Plus size={14} /> Agregar Parada
             </button>
           </div>
+
+          {/* Cálculo automático de distancia y tiempo */}
+          <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2.5">
+            <p className="text-[11px] text-text-muted">
+              El minutero junto a cada parada es tiempo extra que el turista se queda ahí (aparte de manejar).
+              Calcula el traslado real con el mapa, y el tiempo total suma ambas cosas.
+            </p>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {apiKey ? (
+                <APIProvider apiKey={apiKey} libraries={['routes']}>
+                  <AutoCalcTrasladoButton
+                    coords={stopCoords}
+                    onResult={(r) => {
+                      setAutoTraslado(r);
+                      set({ distanciaKm: r.km });
+                    }}
+                  />
+                </APIProvider>
+              ) : (
+                <span className="text-[11px] text-amber-700">
+                  Falta configurar la clave de Google Maps para calcular automáticamente.
+                </span>
+              )}
+
+              {autoTraslado && (
+                <span className="text-[11px] font-semibold text-text-secondary bg-white border border-border rounded-full px-2.5 py-1">
+                  Manejando: {formatMinutos(autoTraslado.minutos) || '0 min'} · {autoTraslado.km} km
+                </span>
+              )}
+            </div>
+
+            {autoTraslado && (
+              <div className="bg-white border border-border rounded-xl px-3.5 py-2.5">
+                <div className="text-xs text-text-secondary">
+                  <span className="font-bold text-text-primary">Duración Estimada (automática): </span>
+                  {formatMinutos(totalMinutosEstimados) || '0 min'}
+                  <span className="text-text-muted">
+                    {' '}
+                    ({formatMinutos(autoTraslado.minutos) || '0 min'} de traslado + {formatMinutos(totalExtraMinutos) || '0 min'} en paradas)
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── CONSEJOS PRÁCTICOS ─────────────────────────────── */}
+        <div className="p-4 bg-surface-soft border-2 border-dashed border-border rounded-2xl">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <h4 className="font-display font-extrabold text-sm text-text-primary flex items-center gap-1.5">
+                <Lightbulb size={16} className="text-sol-dark" /> Consejos Prácticos ({consejos.length})
+              </h4>
+              <p className="text-xs text-text-muted">
+                Tips cortos que se muestran al turista bajo el mapa de esta ruta (transporte, horarios, recomendaciones).
+              </p>
+            </div>
+          </div>
+
+          {consejos.length === 0 ? (
+            <div className="py-6 text-center text-xs text-text-muted bg-white rounded-xl border border-border">
+              Sin consejos todavía. Agrega el primero abajo.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {consejos.map((tip, idx) => (
+                <div key={idx} className="p-3 bg-white rounded-xl border border-border flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      className={inputCls + ' text-xs'}
+                      placeholder="Título breve, ej: Transporte y Acceso"
+                      value={tip.titulo}
+                      onChange={(e) => handleUpdateConsejo(idx, { titulo: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveConsejo(idx)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 shrink-0"
+                      title="Quitar consejo"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    className={textareaCls + ' text-xs'}
+                    placeholder="Detalle del consejo para el turista…"
+                    value={tip.texto}
+                    onChange={(e) => handleUpdateConsejo(idx, { texto: e.target.value })}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleAddConsejo}
+            className="mt-3 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white border border-border hover:border-rojo hover:text-rojo text-text-primary transition-all"
+          >
+            <Plus size={14} /> Agregar Consejo
+          </button>
         </div>
 
         {/* Opciones de publicación */}

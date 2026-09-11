@@ -122,7 +122,8 @@ model TourRoute {
   distanciaKm      Float?   // e.g. 7.5
   dificultad       String?  @default("Fácil")
   hitos            Json?    // Array of milestones [{ numero, titulo, descripcion }]
-  consejos         Json?    // Array of practical tips [{ icono, titulo, texto }]
+  consejos         Json?    // Array of practical tips [{ titulo, texto }]
+  tiemposParada    Json?    // Extra minutes per stop, keyed by POI id: { [poiId]: minutos }
   mapaImagen       String?  // e.g. "/assets/images/mapa-ilustrado-ruta-condorito.png"
   destacada        Boolean  @default(false)
   activo           Boolean  @default(true)

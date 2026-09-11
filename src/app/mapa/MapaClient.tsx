@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import MapComponent from '@/components/MapComponent';
 import { POI, TourRoute } from '@/lib/types';
@@ -29,6 +29,7 @@ import {
   Compass,
   CheckCircle2,
   ChevronRight,
+  Route,
 } from 'lucide-react';
 
 interface MapaClientProps {
@@ -86,6 +87,8 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [tourRoutes] = useState<TourRoute[]>(initialTourRoutes);
   const [activeRoute, setActiveRoute] = useState<TourRoute | null>(null);
+  /** POI para el que se pidió dibujar la línea desde el GPS del usuario (sin navegación). */
+  const [tracedPoi, setTracedPoi] = useState<POI | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
@@ -134,10 +137,16 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
     const route = tourRoutes.find((r) => r.id === routeId) || null;
     setActiveRoute(route);
     setActiveCategory('rutas');
+    setTracedPoi(null);
     if (route) {
       showToast(`Ruta activa: ${route.nombre}`, 'info');
     }
   };
+
+  // Al cambiar o cerrar la selección, se descarta cualquier trazado pendiente.
+  useEffect(() => {
+    setTracedPoi(null);
+  }, [selectedPoi?.id]);
 
   const handleGPS = () => {
     if (!navigator.geolocation) {
@@ -202,6 +211,21 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
       carMin,
     };
   }, [userCoords, selectedPoi]);
+
+  // Trazado simple (sin navegación en vivo): línea desde el GPS hasta el POI marcado.
+  const singleTrip = useMemo(() => {
+    if (activeRoute || !userCoords || !tracedPoi?.coordenadas) return null;
+    return { origin: userCoords, destination: tracedPoi.coordenadas, color: '#0077B6' };
+  }, [activeRoute, userCoords, tracedPoi]);
+
+  const handleToggleTrace = () => {
+    if (!selectedPoi) return;
+    if (!userCoords) {
+      showToast('Activando tu GPS para trazar la ruta...', 'info');
+      handleGPS();
+    }
+    setTracedPoi((prev) => (prev?.id === selectedPoi.id ? null : selectedPoi));
+  };
 
   return (
     <div className="relative w-full overflow-hidden bg-[#F4F3EF]" style={{ height: 'calc(100vh - 68px)' }}>
@@ -335,6 +359,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
             onSelectPoi={handleSelectPoi}
             userCoords={userCoords}
             activeRoute={activeRoute}
+            singleTrip={singleTrip}
             resetCenterTrigger={resetCenterTrigger}
             onGPSClick={handleGPS}
             onCenterCumpeoClick={handleCenterCumpeo}
@@ -429,6 +454,22 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                     </a>
                   )}
                 </div>
+
+                {/* Trazar ruta en el propio mapa (sin navegación) */}
+                {!activeRoute && (
+                  <button
+                    onClick={handleToggleTrace}
+                    className={`inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                      tracedPoi?.id === selectedPoi.id
+                        ? 'bg-cielo text-white border-cielo'
+                        : 'bg-white text-cielo-dark border-border hover:border-cielo'
+                    }`}
+                    title="Dibuja la línea de manejo desde tu GPS hasta este lugar, sin salir del sitio"
+                  >
+                    <Route size={13} />
+                    {tracedPoi?.id === selectedPoi.id ? 'Quitar Trazado' : 'Trazar Ruta en el Mapa'}
+                  </button>
+                )}
 
                 {/* Navigation Links: Google Maps & Waze */}
                 <div className="flex gap-2">
