@@ -37,13 +37,14 @@ import {
   restoreSiteTextRevision,
   saveSiteTexts,
 } from '../siteTextActions';
-import type { ToastFn } from '../_types';
+import type { ToastFn, ConfirmFn } from '../_types';
 
 interface SiteTextsManagerProps {
   /** Textos modificados que llegaron del servidor. */
   overrides: SiteTextRecord[];
   role: UserRole;
   showToast: ToastFn;
+  confirmAction: ConfirmFn;
   onAuthError?: () => void;
 }
 
@@ -75,6 +76,7 @@ export function SiteTextsManager({
   overrides,
   role,
   showToast,
+  confirmAction,
   onAuthError,
 }: SiteTextsManagerProps) {
   const canEdit = role === 'ADMIN' || role === 'EDITOR';
@@ -150,7 +152,11 @@ export function SiteTextsManager({
   };
 
   const restaurarOriginal = async (def: SiteTextDef) => {
-    if (!confirm(`¿Volver "${def.label}" al texto original del sitio?`)) return;
+    const ok = await confirmAction(`¿Volver "${def.label}" al texto original del sitio?`, {
+      title: 'Restaurar texto original',
+      confirmLabel: 'Restaurar',
+    });
+    if (!ok) return;
     setGuardando(true);
     try {
       await resetSiteText(def.key);
@@ -190,7 +196,11 @@ export function SiteTextsManager({
   };
 
   const restaurarVersion = async (revision: SiteTextRevisionRecord) => {
-    if (!confirm('¿Dejar vigente esta versión anterior del texto?')) return;
+    const ok = await confirmAction('¿Dejar vigente esta versión anterior del texto?', {
+      title: 'Restaurar versión anterior',
+      confirmLabel: 'Restaurar',
+    });
+    if (!ok) return;
     setGuardando(true);
     try {
       const res = await restoreSiteTextRevision(revision.id);
@@ -238,7 +248,7 @@ export function SiteTextsManager({
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
+          <div id="tour-textos-live" className="flex flex-col sm:flex-row gap-2.5 shrink-0">
             <Link
               href="/?edit=1"
               target="_blank"
@@ -273,7 +283,7 @@ export function SiteTextsManager({
           </p>
         )}
 
-        <div className="mt-4 relative">
+        <div id="tour-textos-search" className="mt-4 relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             type="search"
@@ -286,6 +296,7 @@ export function SiteTextsManager({
       </div>
 
       {/* Grupos por página */}
+      <div id="tour-textos-groups" className="space-y-5">
       {paginas.map(({ pagina, grupos }) => {
         const gruposVisibles = grupos.filter((g) => g.items.some(coincide));
         if (gruposVisibles.length === 0) return null;
@@ -489,6 +500,7 @@ export function SiteTextsManager({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

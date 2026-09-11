@@ -19,7 +19,6 @@ model Destination {
   coordenadas      Json     // { "lat": -35.267, "lng": -71.250 }
   direccion        String?
   horario          Json?
-  precio           String?
   duracionVisita   String?
   comoLlegar       String?
   tags             String[]
@@ -45,7 +44,6 @@ model Restaurant {
   telefono         String?  // Ej: "+56 9 6507 5887"
   whatsapp         String?  // Ej: "+56 9 6507 5887"
   horario          Json?
-  precio           Json?    // e.g. { "rango": "$" }
   mediosPago       String[] // ["Efectivo", "Débito", "Crédito"]
   tags             String[]
   imagenPrincipal  String?
@@ -68,7 +66,6 @@ model Accommodation {
   direccion        String?
   telefono         String?
   whatsapp         String?
-  precio           Json?    // e.g. { "min": 25000, "max": 40000 }
   servicios        String[]
   imagenPrincipal  String?
   galeria          String[]

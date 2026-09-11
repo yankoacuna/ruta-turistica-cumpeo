@@ -24,6 +24,7 @@ import {
 import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types';
 import { formatHorario } from '@/lib/openingHours';
 import { AdminSection } from '../_types';
+import { Tooltip } from './Tooltip';
 
 interface EntityHandlers<T> {
   onNew: () => void;
@@ -93,11 +94,14 @@ function RowActions({
   onDelete,
   canEdit = true,
   canDelete = true,
+  activo = true,
 }: {
   onEdit: () => void;
   onDelete: () => void;
   canEdit?: boolean;
   canDelete?: boolean;
+  /** Mientras el registro esté activo, no se puede eliminar: primero hay que desactivarlo. */
+  activo?: boolean;
 }) {
   if (!canEdit && !canDelete) {
     return (
@@ -119,13 +123,21 @@ function RowActions({
         </button>
       )}
       {canDelete && (
-        <button
-          onClick={onDelete}
-          className="p-2 text-rojo hover:bg-[#FFE0E2] rounded-lg transition-colors"
-          title="Eliminar registro"
-        >
-          <Trash2 size={15} />
-        </button>
+        activo ? (
+          <Tooltip label={`Primero debes desactivarlo (edítalo y desmarca "Activo") antes de poder eliminarlo`}>
+            <button disabled className="p-2 text-text-muted/40 rounded-lg cursor-not-allowed">
+              <Trash2 size={15} />
+            </button>
+          </Tooltip>
+        ) : (
+          <button
+            onClick={onDelete}
+            className="p-2 text-rojo hover:bg-[#FFE0E2] rounded-lg transition-colors"
+            title="Eliminar registro"
+          >
+            <Trash2 size={15} />
+          </button>
+        )
       )}
     </div>
   );
@@ -326,6 +338,7 @@ export function AdminTable({
                 onDelete={() => handlers.destinos.onDelete(d.id, d.nombre)}
                 canEdit={canEdit}
                 canDelete={canDelete}
+                activo={d.activo ?? true}
               />
             ),
           },

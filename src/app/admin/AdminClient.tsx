@@ -16,6 +16,7 @@ import {
   OrderableEntity,
 } from '@/lib/types';
 import { useToast } from '@/components/Toast';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 import { useDestinos } from './_hooks/useDestinos';
 import { useRestaurantes } from './_hooks/useRestaurantes';
@@ -84,6 +85,7 @@ export default function AdminClient({
   initialSiteTexts = [],
 }: Props) {
   const { showToast } = useToast();
+  const { confirm: confirmAction } = useConfirm();
   const [session, setSession] = useState<AdminSessionUser | null>(initialSession);
   const [isAuthenticated, setIsAuthenticated] = useState(
     Boolean(initialSession || initialAuthenticated)
@@ -122,11 +124,11 @@ export default function AdminClient({
     onRefreshed: setSession,
   });
 
-  const destinos = useDestinos(initialDestinos, { showToast, onAuthError: handleAuthError });
-  const restaurantes = useRestaurantes(initialRestaurantes, { showToast, onAuthError: handleAuthError });
-  const alojamientos = useAlojamientos(initialAlojamientos, { showToast, onAuthError: handleAuthError });
-  const eventos = useEventos(initialEventos, { showToast, onAuthError: handleAuthError });
-  const rutas = useRutas(initialRutas, { showToast, onAuthError: handleAuthError });
+  const destinos = useDestinos(initialDestinos, { showToast, confirmAction, onAuthError: handleAuthError });
+  const restaurantes = useRestaurantes(initialRestaurantes, { showToast, confirmAction, onAuthError: handleAuthError });
+  const alojamientos = useAlojamientos(initialAlojamientos, { showToast, confirmAction, onAuthError: handleAuthError });
+  const eventos = useEventos(initialEventos, { showToast, confirmAction, onAuthError: handleAuthError });
+  const rutas = useRutas(initialRutas, { showToast, confirmAction, onAuthError: handleAuthError });
 
   /**
    * Deja las listas del panel en el mismo orden que se acaba de guardar, para
@@ -162,7 +164,7 @@ export default function AdminClient({
       if (res.success && res.user) {
         setSession(res.user);
         setIsAuthenticated(true);
-        showToast(`Bienvenido, ${res.user.nombre} (${res.user.role})`, 'success');
+        showToast(`Bienvenido, ${res.user.nombre}`, 'success');
 
         if (res.user.role === 'ADMIN') {
           try {
@@ -266,7 +268,12 @@ export default function AdminClient({
   };
 
   const handleDeleteUser = async (id: string, nombre: string) => {
-    if (!confirm(`¿Estás seguro de eliminar permanentemente al usuario "${nombre}"?`)) return;
+    const ok = await confirmAction(`¿Estás seguro de eliminar permanentemente al usuario "${nombre}"?`, {
+      title: 'Eliminar usuario',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await deleteAdminUser(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
@@ -286,6 +293,12 @@ export default function AdminClient({
       closeRuta: rutas.close,
       openNewRestaurante: canEdit ? restaurantes.openNew : undefined,
       closeRestaurante: restaurantes.close,
+      openNewAlojamiento: canEdit ? alojamientos.openNew : undefined,
+      closeAlojamiento: alojamientos.close,
+      openNewEvento: canEdit ? eventos.openNew : undefined,
+      closeEvento: eventos.close,
+      openNewUser: isAdmin ? handleNewUser : undefined,
+      closeUser: () => setEditingUser(null),
     });
   };
 
@@ -424,6 +437,7 @@ export default function AdminClient({
               overrides={initialSiteTexts}
               role={role}
               showToast={showToast}
+              confirmAction={confirmAction}
               onAuthError={handleAuthError}
             />
           )}

@@ -29,7 +29,7 @@ export function QRGenerator({
   const [signSubtitle, setSignSubtitle] = useState<string>('Escanea con tu celular para ver la historia oficial');
 
   // Determine current target URL
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://cumpeo-turismo.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://turismocumpeo.cl';
 
   const currentUrl = React.useMemo(() => {
     if (selectedType === 'mapa') {

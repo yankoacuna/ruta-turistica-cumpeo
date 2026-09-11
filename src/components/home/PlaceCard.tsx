@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Phone, MessageCircle, Navigation, User, ArrowRight } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, Instagram, Facebook, Navigation, User, ArrowRight } from 'lucide-react';
 import { formatImgUrl } from '@/lib/data';
 import { useOpeningStatus } from '@/hooks/useOpeningStatus';
 import { Horario } from '@/lib/types';
@@ -20,6 +20,8 @@ export interface PlaceCardItem {
   href?: string;
   telefono?: string | null;
   whatsapp?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
   coords?: { lat: number; lng: number } | null;
   /**
    * Horario crudo (solo gastronomia). Se calcula "Abierto/Cerrado" en el cliente,
@@ -46,7 +48,9 @@ const BADGE =
 export function PlaceCard({ item }: { item: PlaceCardItem }) {
   const phoneClean = item.telefono?.replace(/\D/g, '');
   const whatsappClean = item.whatsapp?.replace(/\D/g, '') || phoneClean;
-  const hasContact = Boolean(phoneClean || whatsappClean || item.coords);
+  const hasContact = Boolean(
+    phoneClean || whatsappClean || item.instagram || item.facebook || item.coords
+  );
   const status = useOpeningStatus(item.horario ?? null);
 
   const media = (
@@ -145,8 +149,8 @@ export function PlaceCard({ item }: { item: PlaceCardItem }) {
       )}
 
       {hasContact && (
-        <div className="p-2.5 bg-paper-warm border-t border-border flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
+        <div className="p-2.5 bg-paper-warm border-t border-border flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {phoneClean && (
               <a
                 href={`tel:${phoneClean}`}
@@ -165,6 +169,28 @@ export function PlaceCard({ item }: { item: PlaceCardItem }) {
                 aria-label={`Escribir por WhatsApp a ${item.nombre}`}
               >
                 <MessageCircle size={16} />
+              </a>
+            )}
+            {item.instagram && (
+              <a
+                href={`https://instagram.com/${item.instagram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-lg bg-white border-[1.5px] border-border hover:border-ink text-text-primary transition-colors"
+                aria-label={`Ver Instagram de ${item.nombre}`}
+              >
+                <Instagram size={16} />
+              </a>
+            )}
+            {item.facebook && (
+              <a
+                href={`https://facebook.com/${item.facebook}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-lg bg-white border-[1.5px] border-border hover:border-ink text-text-primary transition-colors"
+                aria-label={`Ver Facebook de ${item.nombre}`}
+              >
+                <Facebook size={16} />
               </a>
             )}
           </div>

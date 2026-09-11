@@ -18,6 +18,12 @@ import {
   MapPin,
   LayoutDashboard,
   UtensilsCrossed,
+  UploadCloud,
+  BedDouble,
+  CalendarDays,
+  Users,
+  Type,
+  ListOrdered,
 } from 'lucide-react';
 import { AdminSection, AdminSessionUser } from '../_types';
 import { TourId } from './adminTour';
@@ -101,19 +107,6 @@ export function AdminTopBar({
 
       {/* Right Actions */}
       <div id="tour-topbar-actions" className="flex items-center gap-3 shrink-0">
-        {/* User Role Badge */}
-        {currentUser && (
-          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full border bg-[#FAF8F5] border-border text-xs">
-            <span className="font-medium text-text-secondary max-w-[130px] truncate">
-              {currentUser.nombre}
-            </span>
-            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold border ${role.cls}`}>
-              <RoleIcon size={11} />
-              {role.label}
-            </span>
-          </div>
-        )}
-
         {/* Guided Tour Dropdown */}
         {onStartTour && (
           <div className="relative">
@@ -206,22 +199,116 @@ export function AdminTopBar({
                       <div className="text-[10px] text-text-muted">Restaurante o picada, con ubicación en el mapa</div>
                     </div>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTourMenuOpen(false);
+                      onStartTour('create-alojamiento');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-cielo/10 text-cielo-dark flex items-center justify-center shrink-0 group-hover:bg-cielo/20">
+                      <BedDouble size={14} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">Cómo Crear un Alojamiento</div>
+                      <div className="text-[10px] text-text-muted">Cabañas, hostales y hospedajes con servicios</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTourMenuOpen(false);
+                      onStartTour('create-evento');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-100">
+                      <CalendarDays size={14} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">Cómo Crear un Evento</div>
+                      <div className="text-[10px] text-text-muted">Fiestas, ferias y celebraciones locales</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTourMenuOpen(false);
+                      onStartTour('textos');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 group-hover:bg-sky-100">
+                      <Type size={14} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">Cómo Editar los Textos del Sitio</div>
+                      <div className="text-[10px] text-text-muted">Títulos y bajadas, en vivo o desde el listado</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTourMenuOpen(false);
+                      onStartTour('orden');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-[#FDF0DC] text-tierra-dark flex items-center justify-center shrink-0 group-hover:bg-[#FBE4C0]">
+                      <ListOrdered size={14} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">Cómo Ordenar la Portada</div>
+                      <div className="text-[10px] text-text-muted">Arrastra o usa flechas para definir el orden</div>
+                    </div>
+                  </button>
+
+                  {currentUser?.role === 'ADMIN' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTourMenuOpen(false);
+                        onStartTour('usuarios');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-red-50 text-rojo flex items-center justify-center shrink-0 group-hover:bg-red-100">
+                        <Users size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Cómo Crear un Usuario</div>
+                        <div className="text-[10px] text-text-muted">Roles y contraseña temporal automática</div>
+                      </div>
+                    </button>
+                  )}
+
+                  {currentUser?.role !== 'LECTOR' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTourMenuOpen(false);
+                        onStartTour('bulk-import');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-cielo/10 text-cielo-dark flex items-center justify-center shrink-0 group-hover:bg-cielo/20">
+                        <UploadCloud size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Cómo Usar la Carga Masiva</div>
+                        <div className="text-[10px] text-text-muted">Importar y exportar planillas Excel o JSON</div>
+                      </div>
+                    </button>
+                  )}
                 </div>
               </>
             )}
           </div>
-        )}
-
-        {/* Change password button */}
-        {onChangePassword && (
-          <button
-            onClick={onChangePassword}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-text-secondary hover:text-rojo hover:bg-[#FFF5F5] border border-border hover:border-rojo/30 transition-all shadow-2xs"
-            title="Cambiar mi contraseña personal"
-          >
-            <KeyRound size={13} />
-            <span>Cambiar Clave</span>
-          </button>
         )}
 
         {/* View Public Portal */}

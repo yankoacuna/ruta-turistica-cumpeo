@@ -379,7 +379,6 @@ export async function saveDestination(
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   revalidatePath('/destino/[slug]', 'page');
   return result;
@@ -392,7 +391,6 @@ export async function deleteDestination(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.destination.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
@@ -457,7 +455,6 @@ export async function saveRestaurant(
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return result;
 }
@@ -469,7 +466,6 @@ export async function deleteRestaurant(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.restaurant.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
@@ -526,7 +522,6 @@ export async function saveAccommodation(
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return result;
 }
@@ -538,7 +533,6 @@ export async function deleteAccommodation(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.accommodation.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
@@ -661,7 +655,6 @@ export async function restoreDatabaseBackup(tokenOrData: string | any, maybeData
   }
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   revalidatePath('/ruta');
   return { success: true };
@@ -701,7 +694,6 @@ export async function bulkImportEntitiesAction(
             coordenadas: item.coordenadas,
             direccion: item.direccion || null,
             horario: item.horario || null,
-            precio: item.precio || null,
             duracionVisita: item.duracionVisita || null,
             comoLlegar: item.comoLlegar || null,
             tags: item.tags || [],
@@ -724,7 +716,6 @@ export async function bulkImportEntitiesAction(
             coordenadas: item.coordenadas,
             direccion: item.direccion || null,
             horario: item.horario || null,
-            precio: item.precio || null,
             duracionVisita: item.duracionVisita || null,
             comoLlegar: item.comoLlegar || null,
             tags: item.tags || [],
@@ -875,7 +866,6 @@ export async function bulkImportEntitiesAction(
   }
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   revalidatePath('/ruta');
 
@@ -933,7 +923,6 @@ export async function updateEntityOrder(
   await prisma.$transaction(updates);
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return { actualizados: ids.length };
 }
@@ -994,7 +983,6 @@ export async function saveEvent(
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return result;
 }
@@ -1006,7 +994,6 @@ export async function deleteEvent(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.event.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
@@ -1079,7 +1066,6 @@ export async function saveTourRoute(
   revalidatePath('/');
   revalidatePath('/ruta');
   revalidatePath('/mapa');
-  revalidatePath('/admin');
   return result;
 }
 
@@ -1092,7 +1078,6 @@ export async function deleteTourRoute(tokenOrId: string, maybeId?: string) {
   revalidatePath('/');
   revalidatePath('/ruta');
   revalidatePath('/mapa');
-  revalidatePath('/admin');
   return true;
 }
 
@@ -1123,7 +1108,6 @@ export async function updateTourRouteStops(
   revalidatePath('/');
   revalidatePath('/ruta');
   revalidatePath('/mapa');
-  revalidatePath('/admin');
 }
 
 // ─── USER MANAGEMENT (SOLO ADMINISTRADOR) ───────────────────────────────────
@@ -1191,7 +1175,6 @@ export async function createAdminUser(data: {
     },
   });
 
-  revalidatePath('/admin');
   return { user: user as unknown as AdminUser, temporaryPassword };
 }
 
@@ -1247,7 +1230,6 @@ export async function updateAdminUser(
     },
   });
 
-  revalidatePath('/admin');
   return { user: user as unknown as AdminUser, temporaryPassword };
 }
 
@@ -1269,7 +1251,6 @@ export async function deleteAdminUser(id: string): Promise<boolean> {
   }
 
   await prisma.user.delete({ where: { id } });
-  revalidatePath('/admin');
   return true;
 }
 

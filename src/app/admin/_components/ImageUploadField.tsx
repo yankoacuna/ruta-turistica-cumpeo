@@ -11,6 +11,7 @@ import {
   Link as LinkIcon,
   RefreshCw,
   Globe,
+  ClipboardPaste,
 } from "lucide-react";
 import { Field } from "./Field";
 
@@ -95,6 +96,111 @@ export function ImageUploadField({
     handleFile(e.dataTransfer.files[0]);
   };
 
+  const handlePasteFromClipboard = async () => {
+    setErrorMsg("");
+    setState("uploading");
+    try {
+      if (!navigator.clipboard) {
+        throw new Error(
+          "Tu navegador no permite acceso directo al portapapeles. Puedes presionar Ctrl+V para pegar."
+        );
+      }
+
+      // 1. Intentar leer imagen binaria con navigator.clipboard.read()
+      if (navigator.clipboard.read) {
+        try {
+          const items = await navigator.clipboard.read();
+          for (const item of items) {
+            const imageType = item.types.find((t) => t.startsWith("image/"));
+            if (imageType) {
+              const blob = await item.getType(imageType);
+              const ext = imageType.split("/")[1]?.replace("+xml", "") || "png";
+              const file = new File([blob], `portapapeles-${Date.now()}.${ext}`, {
+                type: imageType,
+              });
+              handleFile(file);
+              return;
+            }
+          }
+        } catch (readErr: any) {
+          console.warn("navigator.clipboard.read falló o requiere permisos:", readErr);
+        }
+      }
+
+      // 2. Si no hubo imagen binaria o no hubo permiso para binarios, probar si hay una URL copiada
+      if (navigator.clipboard.readText) {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (text) {
+          if (
+            text.startsWith("http://") ||
+            text.startsWith("https://") ||
+            text.startsWith("data:image/") ||
+            text.startsWith("/uploads/")
+          ) {
+            onChange(text);
+            setState("success");
+            setIsEditingUrl(false);
+            return;
+          }
+        }
+      }
+
+      throw new Error(
+        "No se detectó ninguna imagen en el portapapeles. Copia una imagen o captura de pantalla (Ctrl+C o clic derecho 'Copiar imagen') y vuelve a intentarlo."
+      );
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+        setErrorMsg(
+          "Permiso denegado por el navegador para leer el portapapeles. También puedes hacer clic aquí y presionar Ctrl+V."
+        );
+      } else {
+        setErrorMsg(err.message || "No se pudo leer del portapapeles. Prueba presionando Ctrl+V.");
+      }
+      setState("error");
+    }
+  };
+
+  const handleContainerPaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "url") {
+        return;
+      }
+
+      const items = e.clipboardData?.items;
+      if (!items || items.length === 0) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleFile(file);
+            return;
+          }
+        }
+      }
+
+      const text = e.clipboardData.getData("text/plain")?.trim();
+      if (
+        text &&
+        (text.startsWith("http://") ||
+          text.startsWith("https://") ||
+          text.startsWith("data:image/") ||
+          text.startsWith("/uploads/"))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        onChange(text);
+        setState("success");
+        setIsEditingUrl(false);
+      }
+    },
+    [onChange]
+  );
+
   const handleRemove = async () => {
     // Solo eliminamos fisicamente del disco si fue un archivo subido en esta misma sesion
     if (value && value.startsWith("/uploads/") && uploadedInThisSession.current.has(value)) {
@@ -148,7 +254,7 @@ export function ImageUploadField({
 
   return (
     <Field label={label} required={required} hint={hint}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" onPaste={handleContainerPaste}>
         {/* Si ya hay imagen y NO estamos editando URL, mostramos la vista previa con acciones */}
         {previewSrc && !isEditingUrl ? (
           <div className="rounded-xl border border-border bg-surface-soft overflow-hidden shadow-xs">
@@ -172,6 +278,14 @@ export function ImageUploadField({
                   className="flex items-center gap-1.5 bg-white text-text-primary text-xs font-bold px-3 py-2 rounded-xl shadow-md hover:bg-rojo hover:text-white transition-all cursor-pointer"
                 >
                   <Upload size={13} /> Subir archivo
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePasteFromClipboard}
+                  className="flex items-center gap-1.5 bg-white text-text-primary text-xs font-bold px-3 py-2 rounded-xl shadow-md hover:bg-rojo hover:text-white transition-all cursor-pointer"
+                  title="Pegar imagen desde el portapapeles (Ctrl+V)"
+                >
+                  <ClipboardPaste size={13} /> Pegar portapapeles
                 </button>
                 <button
                   type="button"
@@ -251,6 +365,14 @@ export function ImageUploadField({
                 </button>
                 <button
                   type="button"
+                  onClick={handlePasteFromClipboard}
+                  className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-surface-soft hover:bg-rojo hover:text-white text-text-primary border border-border transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Pegar imagen copiada del portapapeles (Ctrl+V)"
+                >
+                  <ClipboardPaste size={11} /> Pegar portapapeles
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setManualUrlInput(value.startsWith("http") ? value : "");
                     setIsEditingUrl(true);
@@ -319,10 +441,10 @@ export function ImageUploadField({
             {activeTab === "upload" ? (
               /* Pestaña: Subir archivo */
               <div
-                className={`relative rounded-xl border-2 border-dashed transition-all overflow-hidden ${
+                className={`relative rounded-xl border-2 border-dashed transition-all overflow-hidden p-6 sm:p-7 flex flex-col items-center justify-center gap-3 text-center ${
                   isDragging
                     ? "border-rojo bg-[#FFF0F1] scale-[1.01]"
-                    : "border-border bg-surface-soft"
+                    : "border-border bg-surface-soft hover:border-rojo/60"
                 }`}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -330,29 +452,63 @@ export function ImageUploadField({
                 }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    inputRef.current?.click();
+                  }
+                }}
               >
-                <button
-                  type="button"
-                  onClick={() => inputRef.current?.click()}
-                  disabled={state === "uploading"}
-                  className="w-full py-7 sm:py-9 flex flex-col items-center gap-2 text-text-muted hover:text-rojo transition-colors disabled:opacity-50 cursor-pointer px-4"
-                >
-                  {state === "uploading" ? (
+                {state === "uploading" ? (
+                  <div className="flex flex-col items-center gap-2 py-4">
                     <Loader2 size={32} className="animate-spin text-rojo" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-2xl bg-rojo/10 text-rojo flex items-center justify-center mb-0.5 shadow-xs">
+                    <span className="text-xs font-bold text-text-primary">
+                      Subiendo imagen al servidor...
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-2xl bg-rojo/10 text-rojo flex items-center justify-center shadow-xs">
                       <Upload size={22} />
                     </div>
-                  )}
-                  <span className="text-xs font-bold text-text-primary">
-                    {state === "uploading"
-                      ? "Subiendo imagen al servidor..."
-                      : "Haz clic o arrastra una imagen aquí"}
-                  </span>
-                  <span className="text-[11px] text-text-muted text-center">
-                    Archivos soportados: JPG, PNG, WebP, GIF, AVIF (Máximo 5 MB)
-                  </span>
-                </button>
+
+                    <div className="max-w-xs">
+                      <span className="text-xs font-bold text-text-primary block">
+                        Arrastra una imagen aquí o elije una opción:
+                      </span>
+                      <span className="text-[11px] text-text-muted">
+                        JPG, PNG, WebP, GIF, AVIF (Máximo 5 MB)
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                      <button
+                        type="button"
+                        onClick={() => inputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-surface-soft text-text-primary border border-border shadow-xs hover:border-rojo hover:text-rojo transition-all cursor-pointer"
+                      >
+                        <Upload size={13} /> Seleccionar archivo
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handlePasteFromClipboard}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-text-primary border border-border shadow-xs hover:bg-rojo hover:text-white hover:border-rojo transition-all cursor-pointer group"
+                        title="Pegar imagen copiada o captura de pantalla desde el portapapeles (Ctrl+V)"
+                      >
+                        <ClipboardPaste
+                          size={14}
+                          className="text-rojo group-hover:text-white transition-colors"
+                        />
+                        <span>Pegar portapapeles</span>
+                        <kbd className="text-[10px] font-mono text-text-muted group-hover:text-white/90 bg-surface-soft group-hover:bg-black/20 px-1 py-0.5 rounded border border-border group-hover:border-transparent">
+                          Ctrl+V
+                        </kbd>
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               /* Pestaña: Pegar enlace web (URL) - Espaciosa, clara e intuitiva */

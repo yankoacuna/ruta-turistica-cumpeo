@@ -140,9 +140,9 @@ export default async function RutaPage({ searchParams }: RutaPageProps) {
               />
               <div className="flex items-center gap-3">
                 <img
-                  src="/assets/images/logo-muni-rio-claro.png"
+                  src="/assets/images/logo-muni-blanco.png"
                   alt="Ilustre Municipalidad de Río Claro"
-                  className="h-10 object-contain brightness-110"
+                  className="h-10 object-contain"
                 />
               </div>
               <Editable

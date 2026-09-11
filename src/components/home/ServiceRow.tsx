@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, MessageCircle, Navigation, User } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, Instagram, Facebook, Navigation, User } from 'lucide-react';
 import { formatImgUrl } from '@/lib/data';
 import { useOpeningStatus } from '@/hooks/useOpeningStatus';
 import type { PlaceCardItem } from './PlaceCard';
@@ -84,8 +84,8 @@ export function ServiceRow({ item }: { item: PlaceCardItem }) {
         </div>
       </div>
 
-      {(phoneClean || whatsappClean || item.coords) && (
-        <div className="flex items-center gap-2 pt-3 border-t border-border">
+      {(phoneClean || whatsappClean || item.instagram || item.facebook || item.coords) && (
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border">
           {phoneClean && (
             <a
               href={`tel:${phoneClean}`}
@@ -112,6 +112,28 @@ export function ServiceRow({ item }: { item: PlaceCardItem }) {
               className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-bold bg-ink hover:bg-ink-soft text-white no-underline transition-colors"
             >
               <Navigation size={15} /> Ir
+            </a>
+          )}
+          {item.instagram && (
+            <a
+              href={`https://instagram.com/${item.instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-lg bg-paper-warm border-[1.5px] border-border hover:border-ink text-text-primary transition-colors"
+              aria-label={`Ver Instagram de ${item.nombre}`}
+            >
+              <Instagram size={16} />
+            </a>
+          )}
+          {item.facebook && (
+            <a
+              href={`https://facebook.com/${item.facebook}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-lg bg-paper-warm border-[1.5px] border-border hover:border-ink text-text-primary transition-colors"
+              aria-label={`Ver Facebook de ${item.nombre}`}
+            >
+              <Facebook size={16} />
             </a>
           )}
         </div>

@@ -257,10 +257,10 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     id: 'home.servicios',
     pagina: 'Portada',
     path: '/',
-    label: 'Comer y dormir',
+    label: 'Comidas y Alojamientos',
     items: [
       { key: 'home.servicios.kicker', label: 'Texto pequeño sobre el título', value: 'Catastro comunal' },
-      { key: 'home.servicios.titulo', label: 'Título', value: 'Comer y dormir en Cumpeo' },
+      { key: 'home.servicios.titulo', label: 'Título', value: 'Comidas y Alojamientos en Cumpeo' },
       {
         key: 'home.servicios.lead',
         label: 'Texto bajo el título',

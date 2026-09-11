@@ -20,7 +20,7 @@ const emptyRuta = (): Partial<TourRoute> => ({
   consejos: [],
 });
 
-export function useRutas(initial: TourRoute[], { showToast, onAuthError }: HookOptions) {
+export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAuthError }: HookOptions) {
   const [rutas, setRutas] = useState<TourRoute[]>(initial);
   const [editing, setEditing] = useState<Partial<TourRoute> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -58,8 +58,13 @@ export function useRutas(initial: TourRoute[], { showToast, onAuthError }: HookO
     });
   };
 
-  const handleDelete = (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar la ruta "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async (id: string, nombre: string) => {
+    const ok = await confirmAction(`¿Eliminar la ruta "${nombre}"? Esta acción no se puede deshacer.`, {
+      title: 'Eliminar ruta',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteTourRoute(id);

@@ -4,6 +4,7 @@ import React from 'react';
 import { Compass, Plus, Pencil, Trash2, MapPin, Clock, Gauge, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';
 import { TourRoute, POI } from '@/lib/types';
 import Link from 'next/link';
+import { Tooltip } from './Tooltip';
 
 interface RutasManagerProps {
   rutas: TourRoute[];
@@ -168,13 +169,21 @@ export function RutasManager({
                       </button>
                     )}
                     {canDelete && (
-                      <button
-                        onClick={() => onDelete(ruta.id, ruta.nombre)}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-50 transition-colors"
-                        title="Eliminar ruta"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      ruta.activo !== false ? (
+                        <Tooltip label={`Primero debes desactivarla (edítala y desmarca "Activo") antes de poder eliminarla`}>
+                          <button disabled className="p-1.5 rounded-lg text-text-muted/40 cursor-not-allowed">
+                            <Trash2 size={14} />
+                          </button>
+                        </Tooltip>
+                      ) : (
+                        <button
+                          onClick={() => onDelete(ruta.id, ruta.nombre)}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Eliminar ruta"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )
                     )}
                   </div>
                 </div>

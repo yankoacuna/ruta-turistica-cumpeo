@@ -106,9 +106,8 @@ export function RestauranteModal({
         <div id="tour-rest-ubicacion">
           <LocationField
             direccion={editing.direccion}
-            onDireccionChange={(direccion) => set({ direccion })}
             coordinates={editing.coordenadas}
-            onCoordinatesChange={(coordenadas) => set({ coordenadas })}
+            onChange={({ direccion, coordenadas }) => set({ direccion, coordenadas })}
             modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
           />
         </div>
@@ -151,7 +150,8 @@ export function RestauranteModal({
           onChange={({ contacto, telefono, whatsapp }) =>
             set({ contacto, telefono, whatsapp })
           }
-          instagramPlaceholder="@nombre_local"
+          instagramPlaceholder="nombre_local"
+          facebookPlaceholder="NombreDelLocal"
         />
 
         {/* URL menú */}

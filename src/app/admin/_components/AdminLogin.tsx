@@ -161,11 +161,6 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
               </button>
             </div>
           </form>
-
-          <div className="mt-5 pt-4 border-t border-border flex items-center justify-center gap-1.5 text-[11px] text-text-muted">
-            <ShieldCheck size={12} />
-            Control de acceso por roles: Administrador, Editor y Lector
-          </div>
         </div>
       </div>
     </div>

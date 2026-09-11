@@ -11,10 +11,10 @@ const emptyAcc = (): Partial<Accommodation> => ({
   direccion: '',
   servicios: [],
   imagenPrincipal: '',
-  contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '' },
+  contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '', facebook: '' },
 });
 
-export function useAlojamientos(initial: Accommodation[], { showToast, onAuthError }: HookOptions) {
+export function useAlojamientos(initial: Accommodation[], { showToast, confirmAction, onAuthError }: HookOptions) {
   const [alojamientos, setAlojamientos] = useState<Accommodation[]>(initial);
   const [editing, setEditing] = useState<Partial<Accommodation> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -51,8 +51,13 @@ export function useAlojamientos(initial: Accommodation[], { showToast, onAuthErr
     });
   };
 
-  const handleDelete = (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async (id: string, nombre: string) => {
+    const ok = await confirmAction(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`, {
+      title: 'Eliminar alojamiento',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteAccommodation(id);

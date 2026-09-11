@@ -19,6 +19,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { AdminUser, UserRole } from '@/lib/types';
+import { Tooltip } from './Tooltip';
 
 interface UserManagerProps {
   users: AdminUser[];
@@ -264,15 +265,24 @@ export function UserManager({
                             <Pencil size={15} />
                           </button>
 
-                          {/* Delete */}
-                          <button
-                            onClick={() => onDeleteUser(user.id, user.nombre)}
-                            className="p-1.5 text-rojo hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            title={isCurrent ? 'No puedes eliminar tu propia cuenta' : 'Eliminar usuario'}
-                            disabled={isCurrent}
+                          {/* Delete: solo si ya está desactivado */}
+                          <Tooltip
+                            label={
+                              isCurrent
+                                ? 'No puedes eliminar tu propia cuenta'
+                                : user.activo
+                                ? 'Primero desactiva el acceso antes de poder eliminarlo'
+                                : 'Eliminar usuario'
+                            }
                           >
-                            <Trash2 size={15} />
-                          </button>
+                            <button
+                              onClick={() => onDeleteUser(user.id, user.nombre)}
+                              className="p-1.5 text-rojo hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              disabled={isCurrent || user.activo}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

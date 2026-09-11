@@ -28,8 +28,8 @@ export default function Footer() {
             <div>
               <div className="mb-3">
                 <img
-                  src="/assets/images/logo-muni-rio-claro.png"
-                  className="h-10 max-w-[170px] object-contain brightness-125"
+                  src="/assets/images/logo-muni-blanco.png"
+                  className="h-10 max-w-[170px] object-contain"
                   alt="Ilustre Municipalidad de Río Claro"
                 />
               </div>

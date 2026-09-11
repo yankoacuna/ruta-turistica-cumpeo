@@ -5,7 +5,7 @@ const path = require('path');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding TourRoutes into PostgreSQL...');
+  console.log('Seeding TourRoutes into database...');
 
   const initialRoutes = [
     {

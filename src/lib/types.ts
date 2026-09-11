@@ -64,6 +64,7 @@ export interface Accommodation {
     email?: string;
     web?: string;
     instagram?: string;
+    facebook?: string;
   } | null;
   servicios?: string[];
   imagenPrincipal?: string | null;
@@ -92,6 +93,7 @@ export interface Restaurant {
     email?: string;
     web?: string;
     instagram?: string;
+    facebook?: string;
   } | null;
   mediosPago?: string[];      // desde catastro: ["Efectivo", "Débito"]
   horario?: Horario | string | null;
@@ -123,7 +125,7 @@ export interface CumpeoEvent {
   tipo: 'fiestas-religiosas' | 'ferias-libres' | 'centros-de-evento' | string;
   descripcion: string;
   descripcionLarga?: string | null;
-  fecha?: string | null;       // "20 de enero" / "Fines de semana"
+  fecha?: string | null;       // "1 de enero" / "Fines de semana"
   recurrente: boolean;
   coordenadas?: Coordinates | null;
   direccion?: string | null;

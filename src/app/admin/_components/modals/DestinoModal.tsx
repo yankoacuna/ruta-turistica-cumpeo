@@ -112,13 +112,14 @@ export function DestinoModal({
         </Field>
 
         {/* Ubicación: dirección + mapa sincronizados */}
-        <LocationField
-          direccion={editing.direccion}
-          onDireccionChange={(direccion) => set({ direccion })}
-          coordinates={editing.coordenadas}
-          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
-        />
+        <div id="tour-dest-ubicacion">
+          <LocationField
+            direccion={editing.direccion}
+            coordinates={editing.coordenadas}
+            onChange={({ direccion, coordenadas }) => set({ direccion, coordenadas })}
+            modalTitle={`Ubicación de ${editing.nombre || 'Destino'}`}
+          />
+        </div>
 
         {/* Horario de Atención */}
         <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
