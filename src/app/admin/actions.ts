@@ -321,6 +321,16 @@ export async function assertAuthorized(token?: string) {
 
 // ─── DESTINATIONS ─────────────────────────────────────────────────────────────
 
+/**
+ * Listado para el panel: a diferencia de `getDestinations` (usada por el sitio
+ * público), incluye también los registros inactivos/ocultos, para que el
+ * admin pueda encontrarlos, reactivarlos o eliminarlos.
+ */
+export async function getAdminDestinations(): Promise<Destination[]> {
+  const data = await prisma.destination.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+  return data.map((d) => ({ ...d, coordenadas: d.coordenadas as any })) as Destination[];
+}
+
 export async function saveDestination(
   tokenOrData: string | Partial<Destination>,
   maybeData?: Partial<Destination>
@@ -397,6 +407,17 @@ export async function deleteDestination(tokenOrId: string, maybeId?: string) {
 
 // ─── RESTAURANTS ──────────────────────────────────────────────────────────────
 
+/** Listado para el panel: incluye también los inactivos/ocultos (ver `getAdminDestinations`). */
+export async function getAdminRestaurants(): Promise<Restaurant[]> {
+  const data = await prisma.restaurant.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+  return data.map((r) => ({
+    ...r,
+    coordenadas: r.coordenadas as any,
+    horario: r.horario as any,
+    contacto: r.contacto as any,
+  })) as Restaurant[];
+}
+
 export async function saveRestaurant(
   tokenOrData: string | Partial<Restaurant>,
   maybeData?: Partial<Restaurant>
@@ -471,6 +492,16 @@ export async function deleteRestaurant(tokenOrId: string, maybeId?: string) {
 }
 
 // ─── ACCOMMODATIONS ───────────────────────────────────────────────────────────
+
+/** Listado para el panel: incluye también los inactivos/ocultos (ver `getAdminDestinations`). */
+export async function getAdminAccommodations(): Promise<Accommodation[]> {
+  const data = await prisma.accommodation.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+  return data.map((a) => ({
+    ...a,
+    coordenadas: a.coordenadas as any,
+    contacto: a.contacto as any,
+  })) as Accommodation[];
+}
 
 export async function saveAccommodation(
   tokenOrData: string | Partial<Accommodation>,

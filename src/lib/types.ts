@@ -112,7 +112,6 @@ export interface EmergencyContact {
   id: string;
   institucion: string;
   telefono: string;
-  icono?: string | null;
   direccion?: string | null;
   orden: number;
   activo: boolean;
@@ -184,7 +183,6 @@ export interface RouteMilestone {
 }
 
 export interface RouteTip {
-  icono?: string;
   titulo: string;
   texto: string;
 }

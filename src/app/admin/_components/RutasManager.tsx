@@ -170,7 +170,7 @@ export function RutasManager({
                     )}
                     {canDelete && (
                       ruta.activo !== false ? (
-                        <Tooltip label={`Primero debes desactivarla (edítala y desmarca "Activo") antes de poder eliminarla`}>
+                        <Tooltip label={`Primero debes desactivarla: edítala y desmarca "Ruta Activa / Visible al público" antes de poder eliminarla`}>
                           <button disabled className="p-1.5 rounded-lg text-text-muted/40 cursor-not-allowed">
                             <Trash2 size={14} />
                           </button>

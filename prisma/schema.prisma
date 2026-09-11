@@ -100,7 +100,6 @@ model EmergencyContact {
   id          String   @id // carabineros, bomberos, cesfam, etc.
   institucion String
   telefono    String
-  icono       String?  // shield, flame, ambulance, phone
   direccion   String?
   orden       Int      @default(0)
   activo      Boolean  @default(true)

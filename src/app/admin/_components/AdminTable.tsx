@@ -124,7 +124,7 @@ function RowActions({
       )}
       {canDelete && (
         activo ? (
-          <Tooltip label={`Primero debes desactivarlo (edítalo y desmarca "Activo") antes de poder eliminarlo`}>
+          <Tooltip label={`Primero debes desactivarlo: edítalo y desmarca "Visible en el portal" o "Activo" antes de poder eliminarlo`}>
             <button disabled className="p-2 text-text-muted/40 rounded-lg cursor-not-allowed">
               <Trash2 size={15} />
             </button>
@@ -411,6 +411,7 @@ export function AdminTable({
                 onDelete={() => handlers.restaurantes.onDelete(r.id, r.nombre)}
                 canEdit={canEdit}
                 canDelete={canDelete}
+                activo={r.activo ?? true}
               />
             ),
           },
@@ -482,6 +483,7 @@ export function AdminTable({
                 onDelete={() => handlers.alojamientos.onDelete(a.id, a.nombre)}
                 canEdit={canEdit}
                 canDelete={canDelete}
+                activo={a.activo ?? true}
               />
             ),
           },
@@ -565,6 +567,7 @@ export function AdminTable({
                 onDelete={() => handlers.eventos.onDelete(ev.id, ev.nombre)}
                 canEdit={canEdit}
                 canDelete={canDelete}
+                activo={ev.activo}
               />
             ),
           },

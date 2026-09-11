@@ -50,7 +50,7 @@ async function main() {
       consejos: [
         {
           icono: '🚗',
-          titulo: 'Transporte & Acceso',
+          titulo: 'Transporte y Acceso',
           texto: 'Cumpeo está a 45 minutos de Talca y 2.5 horas de Santiago por la Ruta 5 Sur. Hay buses rurales frecuentes desde el Terminal de Talca.'
         },
         {

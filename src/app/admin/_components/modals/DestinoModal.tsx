@@ -9,6 +9,7 @@ import {
   CommaSeparatedField,
   MediaFields,
   HorarioField,
+  ActivoToggle,
 } from './common';
 
 interface DestinoModalProps {
@@ -41,8 +42,8 @@ export function DestinoModal({
       onClose={onClose}
     >
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-        {/* Nombre + Categoría */}
-        <div id="tour-dest-nombre" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nombre + Categoría + Estado */}
+        <div id="tour-dest-nombre" className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <Field label="Nombre del Destino" required>
             <input
               required
@@ -69,6 +70,11 @@ export function DestinoModal({
               <option value="entretencion">Entretención</option>
             </select>
           </Field>
+          <ActivoToggle
+            id="dest-activo"
+            checked={editing.activo ?? true}
+            onChange={(activo) => set({ activo })}
+          />
         </div>
 
         {/* Descripciones */}
