@@ -10,13 +10,13 @@ const emptyRest = (): Partial<Restaurant> => ({
   coordenadas: { lat: -35.281739, lng: -71.258714 },
   direccion: '',
   horario: { apertura: '', cierre: '', descripcion: '' },
-  contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '' },
+  contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '', facebook: '' },
   imagenPrincipal: '',
   menuUrl: '',
   tags: [],
 });
 
-export function useRestaurantes(initial: Restaurant[], { showToast, onAuthError }: HookOptions) {
+export function useRestaurantes(initial: Restaurant[], { showToast, confirmAction, onAuthError }: HookOptions) {
   const [restaurantes, setRestaurantes] = useState<Restaurant[]>(initial);
   const [editing, setEditing] = useState<Partial<Restaurant> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -54,8 +54,13 @@ export function useRestaurantes(initial: Restaurant[], { showToast, onAuthError 
     });
   };
 
-  const handleDelete = (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async (id: string, nombre: string) => {
+    const ok = await confirmAction(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`, {
+      title: 'Eliminar restaurante',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteRestaurant(id);

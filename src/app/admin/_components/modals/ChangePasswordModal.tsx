@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { KeyRound, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
-import { Field, inputCls } from '../Field';
+import { Field } from '../Field';
+import { PasswordInput } from '../PasswordInput';
 import { changeOwnPassword } from '../../actions';
 import { useToast } from '@/components/Toast';
 
@@ -61,59 +62,44 @@ export function ChangePasswordModal({ onClose }: ChangePasswordModalProps) {
 
         {/* Current password */}
         <Field label="Contraseña Actual" required>
-          <div className="relative">
-            <input
-              type="password"
-              required
-              className={inputCls}
-              placeholder="Tu contraseña actual..."
-              value={currentPassword}
-              onChange={(e) => {
-                setCurrentPassword(e.target.value);
-                setError(null);
-              }}
-              autoFocus
-            />
-            <KeyRound size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
-          </div>
+          <PasswordInput
+            required
+            placeholder="Tu contraseña actual..."
+            value={currentPassword}
+            onChange={(v) => {
+              setCurrentPassword(v);
+              setError(null);
+            }}
+            autoFocus
+          />
         </Field>
 
         {/* New password */}
         <Field label="Nueva Contraseña" required hint="Mínimo 6 caracteres">
-          <div className="relative">
-            <input
-              type="password"
-              required
-              minLength={6}
-              className={inputCls}
-              placeholder="Ingresa tu nueva clave..."
-              value={newPassword}
-              onChange={(e) => {
-                setNewPassword(e.target.value);
-                setError(null);
-              }}
-            />
-            <Lock size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
-          </div>
+          <PasswordInput
+            required
+            minLength={6}
+            placeholder="Ingresa tu nueva clave..."
+            value={newPassword}
+            onChange={(v) => {
+              setNewPassword(v);
+              setError(null);
+            }}
+          />
         </Field>
 
         {/* Confirm new password */}
         <Field label="Confirmar Nueva Contraseña" required>
-          <div className="relative">
-            <input
-              type="password"
-              required
-              minLength={6}
-              className={inputCls}
-              placeholder="Vuelve a escribir la nueva clave..."
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setError(null);
-              }}
-            />
-            <Lock size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
-          </div>
+          <PasswordInput
+            required
+            minLength={6}
+            placeholder="Vuelve a escribir la nueva clave..."
+            value={confirmPassword}
+            onChange={(v) => {
+              setConfirmPassword(v);
+              setError(null);
+            }}
+          />
         </Field>
 
         {error && (

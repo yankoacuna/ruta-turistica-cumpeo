@@ -1,6 +1,14 @@
 "use client";
 import React, { useRef, useState, useCallback } from "react";
-import { Plus, Trash2, Image as ImageIcon, Upload, Loader2, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Image as ImageIcon,
+  Upload,
+  Loader2,
+  AlertCircle,
+  ClipboardPaste,
+} from "lucide-react";
 import { Field, inputCls } from "./Field";
 
 interface GalleryFieldProps {
@@ -15,38 +23,148 @@ export function GalleryField({ images = [], onChange }: GalleryFieldProps) {
   const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
-  const uploadFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) { setError("Solo se aceptan archivos de imagen"); return; }
-    setUploading(true); setError("");
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al subir");
-      if (!images.includes(data.url)) onChange([...images, data.url]);
-    } catch (err: any) {
-      setError(err.message || "Error al subir imagen");
-    } finally {
-      setUploading(false);
-    }
-  }, [images, onChange]);
+  const uploadFile = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith("image/")) {
+        setError("Solo se aceptan archivos de imagen");
+        return;
+      }
+      setUploading(true);
+      setError("");
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al subir");
+        if (!images.includes(data.url)) onChange([...images, data.url]);
+      } catch (err: any) {
+        setError(err.message || "Error al subir imagen");
+      } finally {
+        setUploading(false);
+      }
+    },
+    [images, onChange]
+  );
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setIsDragging(false);
+    e.preventDefault();
+    setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) uploadFile(file);
   };
 
+  const handlePasteFromClipboard = async () => {
+    setError("");
+    setUploading(true);
+    try {
+      if (!navigator.clipboard) {
+        throw new Error(
+          "Tu navegador no permite acceso directo al portapapeles. Puedes presionar Ctrl+V para pegar."
+        );
+      }
+
+      if (navigator.clipboard.read) {
+        try {
+          const items = await navigator.clipboard.read();
+          for (const item of items) {
+            const imageType = item.types.find((t) => t.startsWith("image/"));
+            if (imageType) {
+              const blob = await item.getType(imageType);
+              const ext = imageType.split("/")[1]?.replace("+xml", "") || "png";
+              const file = new File([blob], `galeria-${Date.now()}.${ext}`, {
+                type: imageType,
+              });
+              await uploadFile(file);
+              return;
+            }
+          }
+        } catch (readErr: any) {
+          console.warn("navigator.clipboard.read falló en galería:", readErr);
+        }
+      }
+
+      if (navigator.clipboard.readText) {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (text) {
+          if (
+            text.startsWith("http://") ||
+            text.startsWith("https://") ||
+            text.startsWith("/uploads/")
+          ) {
+            if (!images.includes(text)) {
+              onChange([...images, text]);
+            }
+            return;
+          }
+        }
+      }
+
+      throw new Error(
+        "No se detectó ninguna imagen en el portapapeles. Copia una imagen o captura de pantalla (Ctrl+C o clic derecho 'Copiar imagen') y vuelve a intentarlo."
+      );
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+        setError("Permiso denegado por el navegador. Puedes hacer clic aquí y presionar Ctrl+V.");
+      } else {
+        setError(err.message || "No se pudo leer del portapapeles. Prueba presionando Ctrl+V.");
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleContainerPaste = useCallback(
+    async (e: React.ClipboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT") return;
+
+      const items = e.clipboardData?.items;
+      if (!items || items.length === 0) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            e.stopPropagation();
+            await uploadFile(file);
+            return;
+          }
+        }
+      }
+
+      const text = e.clipboardData.getData("text/plain")?.trim();
+      if (
+        text &&
+        (text.startsWith("http://") ||
+          text.startsWith("https://") ||
+          text.startsWith("/uploads/"))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!images.includes(text)) {
+          onChange([...images, text]);
+        }
+      }
+    },
+    [images, onChange, uploadFile]
+  );
+
   const handleAddUrl = () => {
     const trimmed = newUrl.trim();
     if (!trimmed || images.includes(trimmed)) return;
-    onChange([...images, trimmed]); setNewUrl("");
+    onChange([...images, trimmed]);
+    setNewUrl("");
   };
 
   const handleRemovePhoto = async (idx: number) => {
     const targetUrl = images[idx];
-    if (targetUrl && targetUrl.startsWith("/uploads/")) {
+    // "/uploads/" es el formato legado (disco local); "/storage/v1/object/public/"
+    // es una URL publica de nuestro bucket de Supabase. Cualquier otra URL externa
+    // pegada por el usuario no se toca.
+    if (targetUrl && (targetUrl.startsWith("/uploads/") || targetUrl.includes("/storage/v1/object/public/"))) {
       try {
         await fetch("/api/upload", {
           method: "DELETE",
@@ -62,19 +180,74 @@ export function GalleryField({ images = [], onChange }: GalleryFieldProps) {
 
   return (
     <Field label={`Galeria de Fotografias (${images.length})`}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" onPaste={handleContainerPaste}>
         <div
-          className={`border-2 border-dashed rounded-xl transition-all ${isDragging ? "border-rojo bg-[#FFF0F1]" : "border-border bg-surface-soft"}`}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          className={`border-2 border-dashed rounded-xl transition-all p-5 flex flex-col items-center justify-center gap-2 text-center ${
+            isDragging
+              ? "border-rojo bg-[#FFF0F1]"
+              : "border-border bg-surface-soft hover:border-rojo/60"
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
         >
-          <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
-            className="w-full py-5 flex flex-col items-center gap-1.5 text-text-muted hover:text-rojo transition-colors disabled:opacity-50">
-            {uploading ? <Loader2 size={22} className="animate-spin text-rojo" /> : <Upload size={22} className="opacity-50" />}
-            <span className="text-xs font-semibold">{uploading ? "Subiendo imagen..." : "Subir foto - clic o arrastra aqui"}</span>
-            <span className="text-[10px] text-text-muted">JPG, PNG, WebP - Max. 5 MB</span>
-          </button>
+          {uploading ? (
+            <div className="flex flex-col items-center gap-1.5 py-2">
+              <Loader2 size={24} className="animate-spin text-rojo" />
+              <span className="text-xs font-semibold text-text-primary">
+                Subiendo imagen a la galería...
+              </span>
+            </div>
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-xl bg-rojo/10 text-rojo flex items-center justify-center">
+                <Upload size={18} />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-text-primary block">
+                  Arrastra tus fotos aquí o usa los botones:
+                </span>
+                <span className="text-[10px] text-text-muted">JPG, PNG, WebP — Máx. 5 MB</span>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-text-primary border border-border shadow-xs hover:border-rojo hover:text-rojo transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Upload size={13} /> Subir archivos
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePasteFromClipboard}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-text-primary border border-border shadow-xs hover:bg-rojo hover:text-white hover:border-rojo transition-all cursor-pointer group disabled:opacity-50"
+                  title="Pegar imagen copiada en el portapapeles (Ctrl + V)"
+                >
+                  <ClipboardPaste
+                    size={13}
+                    className="text-rojo group-hover:text-white transition-colors"
+                  />
+                  <span>Pegar portapapeles</span>
+                  <kbd className="text-[10px] font-mono text-text-muted group-hover:text-white/90 bg-surface-soft group-hover:bg-black/20 px-1 py-0.5 rounded border border-border group-hover:border-transparent">
+                    Ctrl+V
+                  </kbd>
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {error && (

@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Phone, MessageCircle, Instagram, Globe } from 'lucide-react';
+import { Phone, MessageCircle, Instagram, Facebook, Globe } from 'lucide-react';
 import { Field, inputCls } from '../../Field';
 
 interface ContactoData {
   telefono?: string;
   whatsapp?: string;
   instagram?: string;
+  facebook?: string;
   web?: string;
   email?: string;
 }
@@ -22,6 +23,7 @@ interface ContactoSectionProps {
     whatsapp?: string;
   }) => void;
   instagramPlaceholder?: string;
+  facebookPlaceholder?: string;
 }
 
 export function ContactoSection({
@@ -29,7 +31,8 @@ export function ContactoSection({
   telefono = '',
   whatsapp = '',
   onChange,
-  instagramPlaceholder = '@nombre_local',
+  instagramPlaceholder = 'nombre_local',
+  facebookPlaceholder = 'NombreDelLocal',
 }: ContactoSectionProps) {
   const currentContacto: ContactoData = (contacto as ContactoData) || {};
   const currentTelefono = telefono || currentContacto.telefono || '';
@@ -49,11 +52,40 @@ export function ContactoSection({
     });
   };
 
+  /**
+   * Acepta lo que sea que peguen (usuario con o sin "@", link completo de
+   * Instagram) y siempre deja guardado solo el nombre de usuario limpio.
+   */
+  const sanitizeInstagram = (raw: string): string =>
+    raw
+      .trim()
+      .replace(/^https?:\/\//i, '')
+      .replace(/^(www\.)?instagram\.com\//i, '')
+      .replace(/^@/, '')
+      .split(/[/?#]/)[0];
+
   const handleInstagramChange = (value: string) => {
     onChange({
       telefono: currentTelefono,
       whatsapp: currentWhatsapp,
-      contacto: { ...currentContacto, instagram: value },
+      contacto: { ...currentContacto, instagram: sanitizeInstagram(value) },
+    });
+  };
+
+  /** Igual que Instagram, pero Facebook no usa "@": solo se limpia el link o dominio. */
+  const sanitizeFacebook = (raw: string): string =>
+    raw
+      .trim()
+      .replace(/^https?:\/\//i, '')
+      .replace(/^(www\.|m\.)?facebook\.com\//i, '')
+      .replace(/^@/, '')
+      .split(/[/?#]/)[0];
+
+  const handleFacebookChange = (value: string) => {
+    onChange({
+      telefono: currentTelefono,
+      whatsapp: currentWhatsapp,
+      contacto: { ...currentContacto, facebook: sanitizeFacebook(value) },
     });
   };
 
@@ -95,14 +127,27 @@ export function ContactoSection({
           </div>
         </Field>
 
-        <Field label="Instagram">
+        <Field label="Instagram" hint="Solo el nombre de usuario, la @ se agrega sola">
           <div className="relative">
             <Instagram size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+            <span className="absolute left-8 top-1/2 -translate-y-1/2 text-text-muted select-none">@</span>
             <input
-              className={`${inputCls} pl-8`}
+              className={`${inputCls} pl-11`}
               placeholder={instagramPlaceholder}
               value={currentContacto.instagram || ''}
               onChange={(e) => handleInstagramChange(e.target.value)}
+            />
+          </div>
+        </Field>
+
+        <Field label="Facebook" hint="Nombre de usuario o de la página, sin el link completo">
+          <div className="relative">
+            <Facebook size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+            <input
+              className={`${inputCls} pl-8`}
+              placeholder={facebookPlaceholder}
+              value={currentContacto.facebook || ''}
+              onChange={(e) => handleFacebookChange(e.target.value)}
             />
           </div>
         </Field>

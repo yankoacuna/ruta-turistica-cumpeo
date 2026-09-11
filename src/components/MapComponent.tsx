@@ -28,6 +28,12 @@ interface MapComponentProps {
   initialCenter?: { lat: number; lng: number };
   initialZoom?: number;
   activeRoute?: TourRoute | null;
+  /** Trazado simple (sin navegación) desde el GPS del usuario hasta un solo punto seleccionado. */
+  singleTrip?: {
+    origin: { lat: number; lng: number };
+    destination: { lat: number; lng: number };
+    color?: string;
+  } | null;
   resetCenterTrigger?: number;
   onGPSClick: () => void;
   onCenterCumpeoClick: () => void;
@@ -78,9 +84,15 @@ function getMarkerColor(categoria: string) {
 const DirectionsRendererComponent = ({
   activeRoute,
   pois,
+  singleTrip,
 }: {
   activeRoute: TourRoute | null;
   pois: POI[];
+  singleTrip?: {
+    origin: { lat: number; lng: number };
+    destination: { lat: number; lng: number };
+    color?: string;
+  } | null;
 }) => {
   const map = useMap();
   const routesLibrary = useMapsLibrary('routes');
@@ -89,6 +101,8 @@ const DirectionsRendererComponent = ({
   const [directionsRenderer, setDirectionsRenderer] =
     useState<google.maps.DirectionsRenderer | null>(null);
 
+  const strokeColor = activeRoute?.color ?? singleTrip?.color ?? '#E63946';
+
   useEffect(() => {
     if (!routesLibrary || !map) return;
     const service = new routesLibrary.DirectionsService();
@@ -96,7 +110,7 @@ const DirectionsRendererComponent = ({
       map,
       suppressMarkers: true,
       polylineOptions: {
-        strokeColor: activeRoute?.color ?? '#E63946',
+        strokeColor,
         strokeWeight: 6,
         strokeOpacity: 0.85,
       },
@@ -113,41 +127,55 @@ const DirectionsRendererComponent = ({
     if (!directionsRenderer) return;
     directionsRenderer.setOptions({
       polylineOptions: {
-        strokeColor: activeRoute?.color ?? '#E63946',
+        strokeColor,
         strokeWeight: 6,
         strokeOpacity: 0.85,
       },
     });
-  }, [directionsRenderer, activeRoute]);
+  }, [directionsRenderer, strokeColor, activeRoute]);
 
   useEffect(() => {
     if (!directionsService || !directionsRenderer) return;
 
-    if (!activeRoute) {
-      directionsRenderer.setDirections({ routes: [] } as unknown as google.maps.DirectionsResult);
+    if (activeRoute) {
+      const routeCoords = activeRoute.poiIds
+        .map((id) => pois.find((p) => p.id === id)?.coordenadas)
+        .filter((c): c is google.maps.LatLngLiteral => !!c);
+
+      if (routeCoords.length < 2) return;
+
+      directionsService
+        .route({
+          origin: routeCoords[0],
+          destination: routeCoords[routeCoords.length - 1],
+          waypoints: routeCoords
+            .slice(1, -1)
+            .map((location) => ({ location, stopover: true })),
+          travelMode: google.maps.TravelMode.DRIVING,
+        })
+        .then((response) => directionsRenderer.setDirections(response))
+        .catch((err: Error) =>
+          console.error('Error calculando la ruta:', err.message)
+        );
       return;
     }
 
-    const routeCoords = activeRoute.poiIds
-      .map((id) => pois.find((p) => p.id === id)?.coordenadas)
-      .filter((c): c is google.maps.LatLngLiteral => !!c);
+    if (singleTrip) {
+      directionsService
+        .route({
+          origin: singleTrip.origin,
+          destination: singleTrip.destination,
+          travelMode: google.maps.TravelMode.DRIVING,
+        })
+        .then((response) => directionsRenderer.setDirections(response))
+        .catch((err: Error) =>
+          console.error('Error calculando el trazado:', err.message)
+        );
+      return;
+    }
 
-    if (routeCoords.length < 2) return;
-
-    directionsService
-      .route({
-        origin: routeCoords[0],
-        destination: routeCoords[routeCoords.length - 1],
-        waypoints: routeCoords
-          .slice(1, -1)
-          .map((location) => ({ location, stopover: true })),
-        travelMode: google.maps.TravelMode.DRIVING,
-      })
-      .then((response) => directionsRenderer.setDirections(response))
-      .catch((err: Error) =>
-        console.error('Error calculando la ruta:', err.message)
-      );
-  }, [directionsService, directionsRenderer, activeRoute, pois]);
+    directionsRenderer.setDirections({ routes: [] } as unknown as google.maps.DirectionsResult);
+  }, [directionsService, directionsRenderer, activeRoute, pois, singleTrip]);
 
   return null;
 };
@@ -258,6 +286,7 @@ export default function MapComponent({
   initialCenter = { lat: -35.281739, lng: -71.258714 },
   initialZoom = 14,
   activeRoute,
+  singleTrip,
   resetCenterTrigger,
   onGPSClick,
   onCenterCumpeoClick,
@@ -304,6 +333,7 @@ export default function MapComponent({
           <DirectionsRendererComponent
             activeRoute={activeRoute ?? null}
             pois={pois}
+            singleTrip={singleTrip ?? null}
           />
 
           {/* Unified Floating Toolbar (No overlaps) */}

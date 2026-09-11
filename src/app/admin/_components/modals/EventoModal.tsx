@@ -28,75 +28,77 @@ export function EventoModal({
       onClose={onClose}
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        {/* Nombre */}
-        <Field label="Nombre del Evento" required>
-          <input
-            required
-            className={inputCls}
-            placeholder="Ej: Fiesta de San Sebastián"
-            value={editing.nombre || ''}
-            onChange={(e) => set({ nombre: e.target.value })}
-          />
-        </Field>
-
-        {/* Tipo + Fecha */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Tipo de Evento">
-            <select
-              className={selectCls}
-              value={editing.tipo || ''}
-              onChange={(e) => set({ tipo: e.target.value })}
-            >
-              <option value="">Seleccionar tipo…</option>
-              <option value="fiestas-religiosas">Fiestas Religiosas</option>
-              <option value="ferias-libres">Ferias Libres</option>
-              <option value="centros-de-evento">Centros de Evento</option>
-            </select>
+        {/* Nombre + Tipo + Fecha */}
+        <div id="tour-evento-nombre" className="flex flex-col gap-4">
+          <Field label="Nombre del Evento" required>
+            <input
+              required
+              className={inputCls}
+              placeholder="Ej: Fiesta de San Sebastián"
+              value={editing.nombre || ''}
+              onChange={(e) => set({ nombre: e.target.value })}
+            />
           </Field>
-          <Field label="Fecha" hint="Ej: 20 de enero / Fines de semana">
-            <div className="relative">
-              <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-              <input
-                className={inputCls + ' pl-8'}
-                placeholder="20 de enero / Todos los fines de semana"
-                value={editing.fecha || ''}
-                onChange={(e) => set({ fecha: e.target.value })}
-              />
-            </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Tipo de Evento">
+              <select
+                className={selectCls}
+                value={editing.tipo || ''}
+                onChange={(e) => set({ tipo: e.target.value })}
+              >
+                <option value="">Seleccionar tipo…</option>
+                <option value="fiestas-religiosas">Fiestas Religiosas</option>
+                <option value="ferias-libres">Ferias Libres</option>
+                <option value="centros-de-evento">Centros de Evento</option>
+              </select>
+            </Field>
+            <Field label="Fecha" hint="Ej: 1 de enero / Fines de semana">
+              <div className="relative">
+                <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                <input
+                  className={inputCls + ' pl-8'}
+                  placeholder="1 de enero / Todos los fines de semana"
+                  value={editing.fecha || ''}
+                  onChange={(e) => set({ fecha: e.target.value })}
+                />
+              </div>
+            </Field>
+          </div>
+        </div>
+
+        {/* Descripciones */}
+        <div id="tour-evento-desc" className="flex flex-col gap-4">
+          <Field label="Descripción" required>
+            <textarea
+              required
+              className={textareaCls}
+              placeholder="Descripción breve del evento…"
+              value={editing.descripcion || ''}
+              onChange={(e) => set({ descripcion: e.target.value })}
+            />
+          </Field>
+
+          <Field label="Descripción Detallada" hint="Información completa, historia, qué esperar">
+            <textarea
+              className={textareaCls}
+              rows={5}
+              placeholder="Historia del evento, tradiciones, actividades…"
+              value={editing.descripcionLarga || ''}
+              onChange={(e) => set({ descripcionLarga: e.target.value })}
+            />
           </Field>
         </div>
 
-        {/* Descripción */}
-        <Field label="Descripción" required>
-          <textarea
-            required
-            className={textareaCls}
-            placeholder="Descripción breve del evento…"
-            value={editing.descripcion || ''}
-            onChange={(e) => set({ descripcion: e.target.value })}
-          />
-        </Field>
-
-        {/* Descripción larga */}
-        <Field label="Descripción Detallada" hint="Información completa, historia, qué esperar">
-          <textarea
-            className={textareaCls}
-            rows={5}
-            placeholder="Historia del evento, tradiciones, actividades…"
-            value={editing.descripcionLarga || ''}
-            onChange={(e) => set({ descripcionLarga: e.target.value })}
-          />
-        </Field>
-
         {/* Ubicación: dirección + mapa sincronizados */}
-        <LocationField
-          direccion={editing.direccion}
-          onDireccionChange={(direccion) => set({ direccion })}
-          coordinates={editing.coordenadas}
-          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
-          direccionPlaceholder="Ej: Plaza de Cumpeo / Alameda"
-          modalTitle={`Ubicación de ${editing.nombre || 'Evento'}`}
-        />
+        <div id="tour-evento-ubicacion">
+          <LocationField
+            direccion={editing.direccion}
+            coordinates={editing.coordenadas}
+            onChange={({ direccion, coordenadas }) => set({ direccion, coordenadas })}
+            modalTitle={`Ubicación de ${editing.nombre || 'Evento'}`}
+          />
+        </div>
 
         {/* Tags */}
         <CommaSeparatedField
@@ -145,13 +147,16 @@ export function EventoModal({
         </div>
 
         <MediaFields
+          imagenWrapperId="tour-evento-image"
           imagenPrincipal={editing.imagenPrincipal}
           onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
           galeria={editing.galeria}
           onGaleriaChange={(galeria) => set({ galeria })}
         />
 
-        <ModalActions onClose={onClose} isPending={isPending} />
+        <div id="tour-evento-actions">
+          <ModalActions onClose={onClose} isPending={isPending} />
+        </div>
       </form>
     </ModalWrapper>
   );

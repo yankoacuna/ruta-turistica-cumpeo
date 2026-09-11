@@ -72,21 +72,18 @@ export default function Navbar() {
         role="navigation"
         aria-label="Navegación desktop"
       >
-        <div className="w-full max-w-[1200px] mx-auto px-4 h-full flex items-center justify-between">
-          {/* Brand Logo Condorito & Municipalidad de Río Claro */}
+        <div className="w-full max-w-[1400px] mx-auto px-6 lg:px-8 h-full flex items-center justify-between">
+          {/* Marca: la Municipalidad de Río Claro es el logo institucional principal
+              (siempre visible), Condorito queda como mascota/acompañante secundario. */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5 no-underline" title="Inicio Turismo Cumpeo">
-              <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
-                <img
-                  src="/assets/images/condorito-oficial.png"
-                  alt="Condorito Logo"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/assets/images/condorito-oficial.png';
-                  }}
-                />
-              </div>
-              <div className="flex flex-col">
+            <Link href="/" className="flex items-center gap-3 no-underline" title="Inicio Turismo Cumpeo">
+              <img
+                src="/assets/images/logo-muni-rio-claro.png"
+                alt="Ilustre Municipalidad de Río Claro"
+                className="h-11 md:h-12 w-auto max-w-[185px] object-contain shrink-0"
+              />
+              <div className="h-8 w-px bg-border hidden sm:block" />
+              <div className="hidden sm:flex flex-col">
                 <Editable
                   k="nav.marca"
                   as="div"
@@ -94,21 +91,18 @@ export default function Navbar() {
                 />
                 <div className="text-[0.7rem] font-bold text-text-secondary flex items-center gap-1 mt-[2px]">
                   <Editable k="nav.marcaBajada" />
-                  <Editable
-                    k="nav.marcaRegion"
-                    className="bg-rojo text-white text-[9px] px-[5px] py-[1px] rounded-full uppercase leading-none"
-                  />
                 </div>
               </div>
             </Link>
 
-            <div className="h-7 w-px bg-border hidden lg:block" />
-
-            <div className="hidden lg:flex items-center" title="Ilustre Municipalidad de Río Claro">
+            <div
+              className="w-8 h-8 rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 hidden lg:flex items-center justify-center relative"
+              title="Condorito, mascota de la ruta turística"
+            >
               <img
-                src="/assets/images/logo-muni-rio-claro.png"
-                alt="Ilustre Municipalidad de Río Claro"
-                className="h-8 max-w-[140px] object-contain"
+                src="/assets/images/condorito-oficial.png"
+                alt="Condorito"
+                className="w-full h-full object-cover"
               />
             </div>
           </div>
@@ -187,10 +181,12 @@ export default function Navbar() {
         className="md:hidden fixed top-0 left-0 right-0 h-[58px] bg-white/95 backdrop-blur-md border-b-[1.5px] border-border z-40 flex items-center justify-between px-3"
         role="banner"
       >
-        <Link href="/" className="flex items-center gap-2 no-underline">
-          <div className="w-9 h-9 rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
-            <img src="/assets/images/condorito-oficial.png" alt="Condorito Logo" className="w-full h-full object-cover" />
-          </div>
+        <Link href="/" className="flex items-center gap-2.5 no-underline">
+          <img
+            src="/assets/images/logo-muni-rio-claro.png"
+            alt="Ilustre Municipalidad de Río Claro"
+            className="h-9 max-w-[130px] object-contain shrink-0"
+          />
           <div className="flex flex-col">
             <Editable
               k="nav.marca"
@@ -204,12 +200,7 @@ export default function Navbar() {
             />
           </div>
         </Link>
-        <div className="flex items-center gap-1">
-          <img
-            src="/assets/images/logo-muni-rio-claro.png"
-            alt="Muni Río Claro"
-            className="h-6 max-w-[85px] object-contain opacity-85"
-          />
+        <div className="flex items-center gap-1.5">
           <button
             className="bg-transparent border-none text-text-primary font-bold text-sm p-1.5 flex items-center cursor-pointer rounded-lg hover:bg-surface-soft"
             onClick={() => setDrawerOpen(true)}
@@ -232,8 +223,12 @@ export default function Navbar() {
           >
             <div className="p-4 bg-rojo flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
-                <div className="w-[42px] h-[42px] rounded-full bg-sol border-2 border-ink overflow-hidden shadow-sm shrink-0 flex items-center justify-center relative">
-                  <img src="/assets/images/condorito-oficial.png" alt="Condorito" className="w-full h-full object-cover" />
+                <div className="h-11 px-2.5 rounded-lg bg-white shadow-sm shrink-0 flex items-center justify-center">
+                  <img
+                    src="/assets/images/logo-muni-rio-claro.png"
+                    alt="Ilustre Municipalidad de Río Claro"
+                    className="h-full w-auto max-w-[110px] object-contain"
+                  />
                 </div>
                 <div>
                   <Editable

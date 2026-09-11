@@ -9,8 +9,8 @@ const emptyRuta = (): Partial<TourRoute> => ({
   descripcion: '',
   color: '#E63946',
   poiIds: [],
-  duracionEstimada: '2 horas',
-  distanciaKm: 5.0,
+  duracionEstimada: '',
+  distanciaKm: undefined,
   dificultad: 'Fácil',
   mapaImagen: '/assets/images/mapa-ilustrado-ruta-condorito.png',
   destacada: false,
@@ -18,9 +18,10 @@ const emptyRuta = (): Partial<TourRoute> => ({
   orden: 0,
   hitos: [],
   consejos: [],
+  tiemposParada: {},
 });
 
-export function useRutas(initial: TourRoute[], { showToast, onAuthError }: HookOptions) {
+export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAuthError }: HookOptions) {
   const [rutas, setRutas] = useState<TourRoute[]>(initial);
   const [editing, setEditing] = useState<Partial<TourRoute> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -42,6 +43,7 @@ export function useRutas(initial: TourRoute[], { showToast, onAuthError }: HookO
             poiIds: saved.poiIds as string[],
             hitos: saved.hitos as any,
             consejos: saved.consejos as any,
+            tiemposParada: saved.tiemposParada as any,
           } as TourRoute;
           return idx >= 0
             ? prev.map((r) => (r.id === saved.id ? updated : r))
@@ -58,8 +60,13 @@ export function useRutas(initial: TourRoute[], { showToast, onAuthError }: HookO
     });
   };
 
-  const handleDelete = (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar la ruta "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async (id: string, nombre: string) => {
+    const ok = await confirmAction(`¿Eliminar la ruta "${nombre}"? Esta acción no se puede deshacer.`, {
+      title: 'Eliminar ruta',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteTourRoute(id);

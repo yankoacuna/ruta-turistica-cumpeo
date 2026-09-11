@@ -19,7 +19,6 @@ model Destination {
   coordenadas      Json     // { "lat": -35.267, "lng": -71.250 }
   direccion        String?
   horario          Json?
-  precio           String?
   duracionVisita   String?
   comoLlegar       String?
   tags             String[]
@@ -45,7 +44,6 @@ model Restaurant {
   telefono         String?  // Ej: "+56 9 6507 5887"
   whatsapp         String?  // Ej: "+56 9 6507 5887"
   horario          Json?
-  precio           Json?    // e.g. { "rango": "$" }
   mediosPago       String[] // ["Efectivo", "Débito", "Crédito"]
   tags             String[]
   imagenPrincipal  String?
@@ -68,7 +66,6 @@ model Accommodation {
   direccion        String?
   telefono         String?
   whatsapp         String?
-  precio           Json?    // e.g. { "min": 25000, "max": 40000 }
   servicios        String[]
   imagenPrincipal  String?
   galeria          String[]
@@ -103,7 +100,6 @@ model EmergencyContact {
   id          String   @id // carabineros, bomberos, cesfam, etc.
   institucion String
   telefono    String
-  icono       String?  // shield, flame, ambulance, phone
   direccion   String?
   orden       Int      @default(0)
   activo      Boolean  @default(true)
@@ -126,7 +122,8 @@ model TourRoute {
   distanciaKm      Float?   // e.g. 7.5
   dificultad       String?  @default("Fácil")
   hitos            Json?    // Array of milestones [{ numero, titulo, descripcion }]
-  consejos         Json?    // Array of practical tips [{ icono, titulo, texto }]
+  consejos         Json?    // Array of practical tips [{ titulo, texto }]
+  tiemposParada    Json?    // Extra minutes per stop, keyed by POI id: { [poiId]: minutos }
   mapaImagen       String?  // e.g. "/assets/images/mapa-ilustrado-ruta-condorito.png"
   destacada        Boolean  @default(false)
   activo           Boolean  @default(true)
@@ -142,14 +139,17 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  nombre    String
-  password  String
-  role      Role     @default(LECTOR)
-  activo    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  nombre              String
+  password            String
+  role                Role     @default(LECTOR)
+  activo              Boolean  @default(true)
+  /// true cuando la contraseña actual fue asignada por un admin (alta o reseteo)
+  /// y el usuario todavía no elige la suya: se le exige cambiarla al entrar.
+  mustChangePassword  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 /// Textos editables del sitio público.

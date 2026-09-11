@@ -78,7 +78,7 @@ export function Editable({ k, as = 'span', className, multiline }: EditableProps
     <span
       role="button"
       tabIndex={0}
-      title={`Editar este texto (${k})`}
+      title="Haz clic para editar este texto"
       aria-label={`Editar el texto: ${valor}`}
       onClick={abrir}
       onKeyDown={(e) => {

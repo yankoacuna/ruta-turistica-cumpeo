@@ -54,9 +54,10 @@ export function RutaShowcase({ route, stops = [] }: RutaShowcaseProps) {
       <div className="absolute inset-0 bg-halftone-sol opacity-70 pointer-events-none" aria-hidden="true" />
 
       <div className="relative max-w-shell mx-auto px-4 grid lg:grid-cols-12 lg:gap-12 lg:items-center">
-        {/* Plano ilustrado. Primero en mobile: comunica de inmediato "esto es
-            un recorrido", antes de leer una línea. */}
-        <div className="lg:col-span-6 lg:order-2 mb-8 lg:mb-0">
+        {/* Plano ilustrado. En mobile va después del título (se lee primero
+            qué ruta es), separado con margen superior para no pegarse al
+            texto; en escritorio pasa a la derecha y ocupa más ancho. */}
+        <div className="order-2 lg:col-span-7 lg:order-2 mt-8 lg:mt-0">
           <div className="rounded-xl overflow-hidden border-2 border-sol bg-paper shadow-comic-sol">
             <img
               src={mapa}
@@ -70,7 +71,7 @@ export function RutaShowcase({ route, stops = [] }: RutaShowcaseProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-6 lg:order-1">
+        <div className="order-1 lg:col-span-5 lg:order-1">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-[0.14em] bg-sol text-ink mb-4">
             <Compass size={14} /> <Editable k="home.ruta.kicker" />
           </div>

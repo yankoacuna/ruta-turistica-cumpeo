@@ -1,5 +1,13 @@
-import { getDestinations, getAccommodations, getRestaurants, getTourRoutes, getAllPOIs } from '@/lib/data';
-import { getAdminSession, getEvents, getAdminUsers } from './actions';
+import { getAllPOIs } from '@/lib/data';
+import {
+  getAdminSession,
+  getEvents,
+  getAdminUsers,
+  getAdminDestinations,
+  getAdminRestaurants,
+  getAdminAccommodations,
+  getAdminTourRoutes,
+} from './actions';
 import { getSiteTextsAdmin } from './siteTextActions';
 import AdminClient from './AdminClient';
 import { AdminUser, SiteTextRecord } from '@/lib/types';
@@ -8,11 +16,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
   const [destinos, restaurantes, alojamientos, eventos, rutas, allPois, session] = await Promise.all([
-    getDestinations(),
-    getRestaurants(),
-    getAccommodations(),
+    getAdminDestinations(),
+    getAdminRestaurants(),
+    getAdminAccommodations(),
     getEvents(),
-    getTourRoutes(),
+    getAdminTourRoutes(),
     getAllPOIs(),
     getAdminSession(),
   ]);

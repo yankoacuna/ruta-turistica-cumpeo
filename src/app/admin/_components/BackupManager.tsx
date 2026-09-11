@@ -12,14 +12,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  RefreshCw,
-  Lock,
-  Layers,
-  ShieldCheck,
   ShieldAlert,
   Server,
-  Calendar,
-  Check,
   FileUp,
 } from 'lucide-react';
 import { useToast } from '@/components/Toast';
@@ -46,7 +40,6 @@ export function BackupManager({
   userRole = 'ADMIN',
 }: BackupManagerProps) {
   const isAdmin = userRole === 'ADMIN';
-  const canExport = userRole === 'ADMIN' || userRole === 'EDITOR';
   const { showToast } = useToast();
 
   // Pestaña activa principal: 'bulk' (Carga masiva / Excel) vs 'tech' (Respaldo del sistema)
@@ -115,13 +108,13 @@ export function BackupManager({
     e.target.value = '';
   };
 
-  // ── Confirmar y Ejecutar Restauración en PostgreSQL ─────────────────────────
+  // ── Confirmar y Ejecutar Restauración en base de datos ─────────────────────────
   const handleExecuteRestore = async () => {
     if (!pendingBackupData) return;
 
     try {
       setIsRestoring(true);
-      setRestoreStatus('Aplicando datos en la base de datos PostgreSQL...');
+      setRestoreStatus('Aplicando datos en la base de datos...');
       await restoreDatabaseBackup(pendingBackupData);
 
       showToast('¡Copia de seguridad restaurada con éxito!', 'success');
@@ -158,37 +151,39 @@ export function BackupManager({
         </div>
 
         {/* ── Sub-Pestañas de Navegación ─────────────────────────────────────── */}
-        <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border">
-          <button
-            type="button"
-            onClick={() => setActiveTab('bulk')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'bulk'
-                ? 'bg-rojo text-white shadow-rojo'
-                : 'bg-surface-soft text-text-secondary hover:text-text-primary hover:bg-surface-hover'
-            }`}
-          >
-            <FileSpreadsheet size={15} />
-            <span>Carga Masiva e Importación / Exportación (Excel & JSON)</span>
-          </button>
+        {isAdmin && (
+          <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border">
+            <button
+              type="button"
+              onClick={() => setActiveTab('bulk')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'bulk'
+                  ? 'bg-rojo text-white shadow-rojo'
+                  : 'bg-surface-soft text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+              }`}
+            >
+              <FileSpreadsheet size={15} />
+              <span>Carga Masiva e Importación / Exportación (Excel & JSON)</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('tech')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'tech'
-                ? 'bg-rojo text-white shadow-rojo'
-                : 'bg-surface-soft text-text-secondary hover:text-text-primary hover:bg-surface-hover'
-            }`}
-          >
-            <Server size={15} />
-            <span>Respaldo Técnico del Sistema (Snapshot)</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('tech')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'tech'
+                  ? 'bg-rojo text-white shadow-rojo'
+                  : 'bg-surface-soft text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+              }`}
+            >
+              <Server size={15} />
+              <span>Respaldo Técnico del Sistema (Snapshot)</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── MODO 1: Carga Masiva e Importación / Exportación ─────────────────── */}
-      {activeTab === 'bulk' && (
+      {(activeTab === 'bulk' || !isAdmin) && (
         <BulkImportWizard
           destinos={destinos}
           restaurantes={restaurantes}
@@ -201,7 +196,7 @@ export function BackupManager({
       )}
 
       {/* ── MODO 2: Respaldo Técnico del Sistema (Snapshot) ──────────── */}
-      {activeTab === 'tech' && (
+      {activeTab === 'tech' && isAdmin && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Tarjeta Izquierda: Exportar Snapshot */}
@@ -237,28 +232,16 @@ export function BackupManager({
                 </div>
               </div>
 
-              {!canExport ? (
-                <div className="p-4 rounded-xl bg-surface-soft border border-border text-center text-xs text-text-muted">
-                  La descarga de copias de seguridad está reservada para Editores y Administradores.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {isAdmin ? (
-                    <button
-                      onClick={handleExportJSON}
-                      disabled={isExporting}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rojo text-white font-bold text-xs shadow-rojo hover:bg-rojo-dark transition-all disabled:opacity-50"
-                    >
-                      {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
-                      <span>{isExporting ? 'Generando backup...' : 'Descargar Snapshot Completo (.JSON)'}</span>
-                    </button>
-                  ) : (
-                    <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-border text-center text-xs text-text-muted">
-                      El respaldo JSON completo está reservado para Administradores.
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="space-y-3">
+                <button
+                  onClick={handleExportJSON}
+                  disabled={isExporting}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rojo text-white font-bold text-xs shadow-rojo hover:bg-rojo-dark transition-all disabled:opacity-50"
+                >
+                  {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
+                  <span>{isExporting ? 'Generando backup...' : 'Descargar Snapshot Completo (.JSON)'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Tarjeta Derecha: Restaurar Snapshot con Diagnóstico */}
@@ -270,7 +253,7 @@ export function BackupManager({
                 </h3>
                 <p className="text-xs text-text-secondary leading-relaxed mb-4">
                   Carga un archivo de respaldo JSON generado previamente. El sistema auditará la estructura y
-                  te mostrará un desglose detallado para confirmar antes de aplicar cambios en PostgreSQL.
+                  te mostrará un desglose detallado para confirmar antes de aplicar cambios en la base de datos.
                 </p>
 
                 <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-900 flex gap-2.5 items-start mb-4">
@@ -281,42 +264,28 @@ export function BackupManager({
                 </div>
               </div>
 
-              {!isAdmin ? (
-                <div className="p-5 rounded-xl bg-[#FAF8F5] border border-border text-center space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
-                    <Lock size={18} />
-                  </div>
-                  <div className="text-xs font-bold text-text-primary">
-                    Restauración restringida
-                  </div>
-                  <p className="text-[11px] text-text-muted max-w-sm mx-auto leading-relaxed">
-                    La restauración de la base de datos es una operación de alta criticidad reservada exclusivamente para usuarios con rol de <strong>Administrador</strong>.
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <label className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-xl hover:border-rojo bg-surface-soft/60 cursor-pointer transition-all">
-                    <FileUp size={24} className="text-text-muted mb-2" />
-                    <span className="text-xs font-bold text-text-primary mb-0.5">
-                      {isRestoring ? 'Restaurando archivo...' : 'Seleccionar archivo .json para inspeccionar'}
-                    </span>
-                    <span className="text-[11px] text-text-muted">El sistema validará su contenido antes de aplicar</span>
-                    <input
-                      type="file"
-                      accept=".json,application/json"
-                      className="hidden"
-                      onChange={handleFileRestore}
-                      disabled={isRestoring}
-                    />
-                  </label>
+              <div>
+                <label className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-xl hover:border-rojo bg-surface-soft/60 cursor-pointer transition-all">
+                  <FileUp size={24} className="text-text-muted mb-2" />
+                  <span className="text-xs font-bold text-text-primary mb-0.5">
+                    {isRestoring ? 'Restaurando archivo...' : 'Seleccionar archivo .json para inspeccionar'}
+                  </span>
+                  <span className="text-[11px] text-text-muted">El sistema validará su contenido antes de aplicar</span>
+                  <input
+                    type="file"
+                    accept=".json,application/json"
+                    className="hidden"
+                    onChange={handleFileRestore}
+                    disabled={isRestoring}
+                  />
+                </label>
 
-                  {restoreStatus && (
-                    <div className="mt-3 p-3 rounded-xl bg-surface-soft border border-border text-xs font-medium text-text-secondary text-center">
-                      {restoreStatus}
-                    </div>
-                  )}
-                </div>
-              )}
+                {restoreStatus && (
+                  <div className="mt-3 p-3 rounded-xl bg-surface-soft border border-border text-xs font-medium text-text-secondary text-center">
+                    {restoreStatus}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -388,7 +357,7 @@ export function BackupManager({
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-2">
               <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <strong>Confirmación de seguridad:</strong> Los registros serán actualizados o insertados directamente en PostgreSQL. Para confirmar, escribe <strong>RESTAURAR</strong> a continuación:
+                <strong>Confirmación de seguridad:</strong> Los registros serán actualizados o insertados directamente en la base de datos. Para confirmar, escribe <strong>RESTAURAR</strong> a continuación:
               </div>
             </div>
 

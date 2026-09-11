@@ -110,19 +110,20 @@ export default function HomeClient({
       {/* 1. Hero: identidad + una sola accion primaria (la Ruta). */}
       <HeroSection destinations={initialDestinations} />
 
-      {/* 2. Orientacion para quien llega escaneando un QR en la calle. */}
+      {/* 2. La Ruta: el producto del proyecto, con datos reales del catastro. */}
+      <RutaShowcase route={featuredRoute} stops={routeStops} />
+
+      {/* 3. Orientacion para quien llega escaneando un QR en la calle. Va
+             pegada a La Ruta (misma clave oscura) para no partir en dos la
+             franja oscura con una banda clara en el medio. */}
       <QuickActions
         onGPSClick={locate}
         isLocating={isLocating}
         onOpenEmergencyModal={openEmergencyModal}
       />
 
-      {/* 3. Respuesta del GPS, pegada al boton que la dispara. */}
+      {/* 4. Respuesta del GPS, pegada al boton que la dispara. */}
       {hasGPS && <NearbySection nearbyList={nearbyList} onRefresh={locate} />}
-
-      {/* 4. La Ruta: el producto del proyecto, con datos reales del catastro.
-             Subio de la posicion 4 a ser el primer bloque de contenido. */}
-      <RutaShowcase route={featuredRoute} stops={routeStops} />
 
       {/* 5. Destacados en composicion editorial (1 grande + filas). */}
       <FeaturedSection featured={initialFeatured} />

@@ -12,6 +12,8 @@ import {
   Loader2,
   AlertCircle,
   Sparkles,
+  Pencil,
+  PenLine,
 } from 'lucide-react';
 import {
   APIProvider,
@@ -27,7 +29,9 @@ interface LocationMapPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialCoordinates?: Coordinates | null;
-  /** `direccion` viene con la mejor dirección disponible (buscada o geocodificada); puede venir vacía si el punto no tiene una dirección reconocible. */
+  /** Dirección ya confirmada previamente (si se está ajustando una ubicación existente). */
+  initialDireccion?: string | null;
+  /** `direccion` viene con la mejor dirección disponible (buscada, geocodificada o escrita a mano); puede venir vacía si el punto no tiene una dirección reconocible y tampoco se escribió una manual. */
   onConfirm: (coords: Coordinates, direccion?: string) => void;
   title?: string;
 }
@@ -37,9 +41,113 @@ export const DEFAULT_CUMPEO_COORDS: Coordinates = {
   lng: -71.258714,
 };
 
+/**
+ * Detecta si una cadena contiene un Google Plus Code (ej: "QP5W+MF", "843XQP5W+MF")
+ */
+function containsPlusCode(text: string): boolean {
+  if (!text) return false;
+  return /\b[A-Z0-9]{2,8}\+[A-Z0-9]{2,}\b/i.test(text);
+}
+
+/**
+ * Limpia Plus Codes de una cadena de dirección formateada
+ */
+function cleanAddressText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/\b[A-Z0-9]{2,8}\+[A-Z0-9]{2,}\b\s*,?\s*/gi, '')
+    .replace(/^[,\s]+|[,\s]+$/g, '')
+    .replace(/,\s*,/g, ',')
+    .trim();
+}
+
+/**
+ * Verifica si el texto resultante tras limpiar códigos queda vacío o es solo el país
+ */
+function isOnlyPlusCodeOrCountry(text: string): boolean {
+  if (!text) return true;
+  const cleaned = cleanAddressText(text);
+  return cleaned === '' || cleaned.toLowerCase() === 'chile';
+}
+
+/**
+ * Prioriza nombres de calles, rutas y lugares reales por sobre Plus Codes o códigos alfanuméricos
+ */
+function extractBestStreetAddress(results: google.maps.GeocoderResult[]): string | null {
+  if (!results || results.length === 0) return null;
+
+  const streetPriorityTypes = [
+    'street_address',
+    'premise',
+    'subpremise',
+    'intersection',
+    'route',
+    'establishment',
+    'point_of_interest',
+  ];
+
+  // 1. Primer resultado que sea calle, ruta o punto de interés y no contenga Plus Code
+  for (const r of results) {
+    const isStreet = r.types?.some((t) => streetPriorityTypes.includes(t));
+    const hasCode = r.types?.includes('plus_code') || containsPlusCode(r.formatted_address);
+    if (isStreet && !hasCode && r.formatted_address) {
+      const cleaned = cleanAddressText(r.formatted_address);
+      if (cleaned) return cleaned;
+    }
+  }
+
+  // 2. Si hay un resultado tipo calle/ruta pero Google le antepuso un Plus Code, limpiar el código y devolver la calle
+  for (const r of results) {
+    const isStreet = r.types?.some((t) => streetPriorityTypes.includes(t));
+    if (isStreet && r.formatted_address) {
+      const cleaned = cleanAddressText(r.formatted_address);
+      if (cleaned && !isOnlyPlusCodeOrCountry(r.formatted_address)) return cleaned;
+    }
+  }
+
+  // 3. Revisar si en los componentes de dirección viene el nombre de la calle/ruta ("route")
+  for (const r of results) {
+    if (r.types?.includes('plus_code')) continue;
+    const routeComp = r.address_components?.find((c) => c.types.includes('route'));
+    if (routeComp?.long_name) {
+      const streetNum = r.address_components?.find((c) => c.types.includes('street_number'))?.long_name;
+      const locality = r.address_components?.find((c) =>
+        c.types.includes('locality') ||
+        c.types.includes('sublocality') ||
+        c.types.includes('administrative_area_level_3')
+      )?.long_name || 'Cumpeo';
+
+      const streetName = streetNum ? `${routeComp.long_name} ${streetNum}` : routeComp.long_name;
+      return `${streetName}, ${locality}`;
+    }
+  }
+
+  // 4. Cualquier resultado que no sea Plus Code puro (localidad, comuna, barrio: ej. "Cumpeo, Río Claro")
+  for (const r of results) {
+    const hasCode = r.types?.includes('plus_code') || containsPlusCode(r.formatted_address);
+    if (!hasCode && r.formatted_address) {
+      const cleaned = cleanAddressText(r.formatted_address);
+      if (cleaned && cleaned.toLowerCase() !== 'chile') return cleaned;
+    }
+  }
+
+  // 5. Fallback: Limpiar el Plus Code del mejor resultado disponible
+  for (const r of results) {
+    if (r.formatted_address) {
+      const cleaned = cleanAddressText(r.formatted_address);
+      if (cleaned && cleaned.toLowerCase() !== 'chile') {
+        return cleaned;
+      }
+    }
+  }
+
+  return null;
+}
+
 // ── Componente Interno con acceso al contexto de Google Maps ─────────
 interface InnerMapPickerProps {
   initialCoords: Coordinates;
+  initialDireccion?: string | null;
   onClose: () => void;
   onConfirm: (coords: Coordinates, direccion?: string) => void;
   title: string;
@@ -47,6 +155,7 @@ interface InnerMapPickerProps {
 
 function InnerMapPicker({
   initialCoords,
+  initialDireccion,
   onClose,
   onConfirm,
   title,
@@ -60,9 +169,14 @@ function InnerMapPicker({
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isGettingGps, setIsGettingGps] = useState(false);
-  /** Mejor dirección disponible para el punto actual. null = el punto no tiene una dirección reconocible (ej: un rincón de una plaza). */
-  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+  /** Mejor dirección disponible para el punto actual (sin Plus Codes) */
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(
+    initialDireccion ? cleanAddressText(initialDireccion) : null
+  );
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
+  /** Modo personalizado: para cuando el usuario ingresa una dirección distinta a la que figura en Google Maps */
+  const [isCustomAddressActive, setIsCustomAddressActive] = useState(false);
+  const [customAddressInput, setCustomAddressInput] = useState(initialDireccion || '');
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -79,9 +193,7 @@ function InnerMapPicker({
     [map]
   );
 
-  // Geocodificación inversa: dado un punto, intenta obtener la dirección más cercana.
-  // No todos los puntos tienen una (ej: un rincón de una plaza sin numeración), y eso es
-  // esperado: en ese caso resolvedAddress queda en null y no se sobrescribe la dirección.
+  // Geocodificación inversa: dado un punto, obtiene la calle o ruta más cercana sin Plus Codes
   const reverseGeocode = useCallback(
     async (point: Coordinates) => {
       if (!geocodingLib) return;
@@ -90,14 +202,21 @@ function InnerMapPicker({
         const geocoder = new geocodingLib.Geocoder();
         const address = await new Promise<string | null>((resolve) => {
           geocoder.geocode({ location: point }, (results, status) => {
-            if (status === 'OK' && results && results[0]?.formatted_address) {
-              resolve(results[0].formatted_address);
+            if (status === 'OK' && results && results.length > 0) {
+              const best = extractBestStreetAddress(results);
+              resolve(best);
             } else {
               resolve(null);
             }
           });
         });
         setResolvedAddress(address);
+        setIsCustomAddressActive((active) => {
+          if (!active) {
+            setCustomAddressInput(address || '');
+          }
+          return active;
+        });
       } catch {
         setResolvedAddress(null);
       } finally {
@@ -132,9 +251,13 @@ function InnerMapPicker({
         };
         panToCoords(found, 17);
         setSearchError(null);
-        setResolvedAddress(place.formatted_address || null);
-        if (place.formatted_address || place.name) {
-          setSearchQuery(place.name || place.formatted_address || '');
+        const cleanAddr = place.formatted_address ? cleanAddressText(place.formatted_address) : null;
+        const best = cleanAddr || place.name || null;
+        setResolvedAddress(best);
+        setIsCustomAddressActive(false);
+        setCustomAddressInput(best || '');
+        if (best) {
+          setSearchQuery(place.name || best);
         }
       }
     });
@@ -148,9 +271,11 @@ function InnerMapPicker({
     };
   }, [placesLib, panToCoords]);
 
-  // Centrar inicialmente el mapa
+  // Centrar inicialmente el mapa una sola vez al montar
+  const hasCenteredRef = useRef(false);
   useEffect(() => {
-    if (map && initialCoords) {
+    if (map && initialCoords && !hasCenteredRef.current) {
+      hasCenteredRef.current = true;
       map.panTo(initialCoords);
       map.setZoom(16);
     }
@@ -298,6 +423,7 @@ function InnerMapPicker({
     e.preventDefault();
     e.stopPropagation();
     panToCoords(DEFAULT_CUMPEO_COORDS, 16);
+    reverseGeocode(DEFAULT_CUMPEO_COORDS);
   };
 
   // Obtener GPS del usuario
@@ -330,7 +456,11 @@ function InnerMapPicker({
   const handleConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onConfirm(coords, resolvedAddress || undefined);
+    const finalAddress =
+      isCustomAddressActive && customAddressInput.trim()
+        ? customAddressInput.trim()
+        : (resolvedAddress || customAddressInput.trim() || undefined);
+    onConfirm(coords, finalAddress);
     onClose();
   };
 
@@ -341,12 +471,7 @@ function InnerMapPicker({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-start justify-center p-3 sm:p-4 overflow-y-auto">
       {/* Estilos para que el autocompletado de Google Places aparezca por encima del modal */}
       <style>{`
         .pac-container {
@@ -372,11 +497,11 @@ function InnerMapPicker({
       `}</style>
 
       <div
-        className="bg-white w-full max-w-[760px] rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col my-4"
+        className="bg-white w-full max-w-[760px] rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col my-4 max-h-[calc(100vh-2rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-5 py-3.5 border-b border-border bg-white sticky top-0 z-10">
+        <div className="flex justify-between items-center px-5 py-3.5 border-b border-border bg-white shrink-0">
           <div>
             <h3 className="font-display font-bold text-base sm:text-lg text-text-primary flex items-center gap-2">
               <MapPin size={20} className="text-rojo" />
@@ -389,14 +514,14 @@ function InnerMapPicker({
           <button
             type="button"
             onClick={handleCancel}
-            className="text-text-muted hover:text-rojo hover:bg-[#FFE0E2] transition-all p-1.5 rounded-lg"
+            className="text-text-muted hover:text-rojo hover:bg-[#FFE0E2] transition-all p-1.5 rounded-lg shrink-0"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Cuerpo del Modal (IMPORTANTE: NO USAR <form> para evitar submits anidados) */}
-        <div className="p-4 sm:p-5 flex flex-col gap-3">
+        <div className="p-4 sm:p-5 flex flex-col gap-3 overflow-y-auto">
           {/* Barra de Búsqueda con Google Places Autocomplete */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
@@ -471,7 +596,7 @@ function InnerMapPicker({
           <div className="relative w-full h-[380px] sm:h-[420px] rounded-xl overflow-hidden border border-border">
             <Map
               defaultCenter={initialCoords || DEFAULT_CUMPEO_COORDS}
-              defaultZoom={15}
+              defaultZoom={16}
               mapId="LOCATION_PICKER_MAP"
               disableDefaultUI={false}
               zoomControl={true}
@@ -509,32 +634,102 @@ function InnerMapPicker({
             </div>
           </div>
 
-          {/* Punto seleccionado: la dirección es el dato que le importa al usuario; las coordenadas quedan como detalle secundario */}
-          <div className="flex items-center gap-2.5 p-3 bg-surface-soft rounded-xl border border-border">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <div className="min-w-0 flex-1">
-              {isResolvingAddress ? (
-                <div className="text-xs text-text-muted flex items-center gap-1.5">
-                  <Loader2 size={12} className="animate-spin" /> Buscando la dirección de este punto…
+          {/* Panel de Dirección y Coordenadas */}
+          <div className="flex flex-col gap-2.5 p-3.5 bg-surface-soft rounded-xl border border-border">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">
+                      {isCustomAddressActive ? 'Dirección Personalizada' : 'Dirección Detectada'}
+                    </span>
+                    {isCustomAddressActive && (
+                      <span className="text-[10px] bg-amber-100 text-amber-800 font-medium px-1.5 py-0.5 rounded">
+                        Modo manual
+                      </span>
+                    )}
+                  </div>
+
+                  {isResolvingAddress ? (
+                    <div className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
+                      <Loader2 size={12} className="animate-spin" /> Buscando calle o referencia…
+                    </div>
+                  ) : isCustomAddressActive ? (
+                    <div className="mt-1.5 flex flex-col gap-1">
+                      <input
+                        type="text"
+                        value={customAddressInput}
+                        onChange={(e) => setCustomAddressInput(e.target.value)}
+                        placeholder="Ej: Camino Los Cristales Km 4, Parcela 12 (frente al retén)"
+                        className="w-full px-3 py-1.5 text-xs rounded-lg border border-amber-300 bg-white text-text-primary focus:border-rojo focus:ring-1 focus:ring-rojo outline-none"
+                      />
+                      <div className="flex items-center justify-between text-[10px] text-text-muted">
+                        <span>Esta dirección se guardará mientras el pin conserva sus coordenadas GPS.</span>
+                        {resolvedAddress && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsCustomAddressActive(false);
+                              setCustomAddressInput(resolvedAddress);
+                            }}
+                            className="text-rojo hover:underline cursor-pointer font-medium ml-2 shrink-0"
+                          >
+                            Usar dirección detectada del mapa
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : resolvedAddress ? (
+                    <div className="text-xs font-semibold text-text-primary truncate mt-0.5" title={resolvedAddress}>
+                      {resolvedAddress}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-text-muted mt-0.5">
+                      No se detectó un nombre de calle exacto para este punto en el mapa.
+                    </div>
+                  )}
+
+                  <div className="text-[10px] font-mono text-text-muted mt-1">
+                    GPS: {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+                  </div>
                 </div>
-              ) : resolvedAddress ? (
-                <div className="text-xs font-semibold text-text-primary truncate" title={resolvedAddress}>
-                  {resolvedAddress}
-                </div>
-              ) : (
-                <div className="text-xs text-text-muted">
-                  Sin dirección reconocible para este punto — se usará solo la ubicación en el mapa.
-                </div>
-              )}
-              <div className="text-[10px] font-mono text-text-muted mt-0.5">
-                {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
               </div>
+
+              {/* Opción secundaria: botón para personalizar la dirección si el usuario lo requiere */}
+              {!isCustomAddressActive && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomAddressActive(true);
+                    setCustomAddressInput(customAddressInput || resolvedAddress || initialDireccion || '');
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border bg-white hover:bg-surface-soft text-text-secondary hover:text-text-primary transition-colors cursor-pointer shrink-0"
+                  title="Permite escribir una dirección personalizada si no coincide con la del mapa"
+                >
+                  <Pencil size={12} className="text-rojo" />
+                  <span>Personalizar dirección</span>
+                </button>
+              )}
             </div>
+
+            {/* Si no hubo dirección detectada y no está activo el modo personalizado, permitir escribirla */}
+            {!isResolvingAddress && !resolvedAddress && !isCustomAddressActive && (
+              <div className="pt-1">
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-white focus:border-rojo focus:ring-2 focus:ring-rojo/10 outline-none transition-all placeholder:text-text-muted/70"
+                  placeholder="Escribe la dirección o referencia para este punto (ej: Camino Vecinal S/N)"
+                  value={customAddressInput}
+                  onChange={(e) => setCustomAddressInput(e.target.value)}
+                />
+              </div>
+            )}
           </div>
         </div>
 
         {/* Footer con acciones */}
-        <div className="flex items-center justify-end gap-2.5 px-5 py-3.5 border-t border-border bg-gray-50/70">
+        <div className="flex items-center justify-end gap-2.5 px-5 py-3.5 border-t border-border bg-gray-50/70 shrink-0">
           <button
             type="button"
             onClick={handleCancel}
@@ -561,6 +756,7 @@ export function LocationMapPickerModal({
   isOpen,
   onClose,
   initialCoordinates,
+  initialDireccion,
   onConfirm,
   title = 'Seleccionar Ubicación Geográfica',
 }: LocationMapPickerModalProps) {
@@ -571,24 +767,27 @@ export function LocationMapPickerModal({
     setMounted(true);
   }, []);
 
-  if (!isOpen || !mounted) return null;
+  const validCoords: Coordinates = React.useMemo(() => {
+    if (initialCoordinates) {
+      const latNum = Number(initialCoordinates.lat);
+      const lngNum = Number(initialCoordinates.lng);
+      if (!isNaN(latNum) && !isNaN(lngNum) && isFinite(latNum) && isFinite(lngNum)) {
+        return {
+          lat: Number(latNum.toFixed(6)),
+          lng: Number(lngNum.toFixed(6)),
+        };
+      }
+    }
+    return DEFAULT_CUMPEO_COORDS;
+  }, [initialCoordinates?.lat, initialCoordinates?.lng]);
 
-  const validCoords: Coordinates =
-    initialCoordinates &&
-    typeof initialCoordinates.lat === 'number' &&
-    typeof initialCoordinates.lng === 'number' &&
-    !isNaN(initialCoordinates.lat) &&
-    !isNaN(initialCoordinates.lng)
-      ? {
-          lat: Number(initialCoordinates.lat.toFixed(6)),
-          lng: Number(initialCoordinates.lng.toFixed(6)),
-        }
-      : DEFAULT_CUMPEO_COORDS;
+  if (!isOpen || !mounted) return null;
 
   const modalContent = (
     <APIProvider apiKey={apiKey} libraries={['places', 'marker', 'geocoding']}>
       <InnerMapPicker
         initialCoords={validCoords}
+        initialDireccion={initialDireccion}
         onClose={onClose}
         onConfirm={onConfirm}
         title={title}

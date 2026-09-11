@@ -72,14 +72,14 @@ const TABS: Array<{
     label: 'Restaurantes',
     icon: UtensilsCrossed,
     color: 'text-rojo',
-    seccion: 'Comer y dormir (pestaña Comer)',
+    seccion: 'Comidas y Alojamientos (pestaña Comer)',
   },
   {
     id: 'alojamientos',
     label: 'Alojamientos',
     icon: BedDouble,
     color: 'text-cielo',
-    seccion: 'Comer y dormir (pestaña Dormir)',
+    seccion: 'Comidas y Alojamientos (pestaña Dormir)',
   },
   {
     id: 'eventos',
@@ -191,7 +191,7 @@ export function OrdenPortadaManager({
 
   return (
     <div className="space-y-5">
-      <div className="bg-white rounded-2xl border border-border p-5 shadow-2xs">
+      <div id="tour-orden-header" className="bg-white rounded-2xl border border-border p-5 shadow-2xs">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="min-w-0">
             <h2 className="font-display font-extrabold text-xl text-text-primary flex items-center gap-2">
@@ -234,7 +234,7 @@ export function OrdenPortadaManager({
         )}
 
         {/* Pestañas por catastro */}
-        <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1" role="tablist">
+        <div id="tour-orden-tabs" className="flex items-center gap-2 mt-4 overflow-x-auto pb-1" role="tablist">
           {TABS.map((t) => {
             const Icon = t.icon;
             const activa = tab === t.id;
@@ -268,7 +268,7 @@ export function OrdenPortadaManager({
       </div>
 
       {/* Lista ordenable */}
-      <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-2xs">
+      <div id="tour-orden-list" className="bg-white rounded-2xl border border-border overflow-hidden shadow-2xs">
         <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-[#FAF8F5]">
           <div className="text-[11px] font-semibold text-text-secondary">
             Aparece en la portada como{' '}

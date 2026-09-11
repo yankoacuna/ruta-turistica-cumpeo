@@ -21,7 +21,7 @@ const emptyDest = (): Partial<Destination> => ({
   galeria: [],
 });
 
-export function useDestinos(initial: Destination[], { showToast, onAuthError }: HookOptions) {
+export function useDestinos(initial: Destination[], { showToast, confirmAction, onAuthError }: HookOptions) {
   const [destinos, setDestinos] = useState<Destination[]>(initial);
   const [editing, setEditing] = useState<Partial<Destination> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -54,8 +54,13 @@ export function useDestinos(initial: Destination[], { showToast, onAuthError }: 
     });
   };
 
-  const handleDelete = (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async (id: string, nombre: string) => {
+    const ok = await confirmAction(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`, {
+      title: 'Eliminar destino',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteDestination(id);

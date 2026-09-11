@@ -202,7 +202,7 @@ export default async function DestinoDetailPage({ params }: { params: { slug: st
                   <MapPin size={16} /> Waze
                 </a>
                 <a
-                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Descubre este lugar en Turismo Cumpeo! ${destination.nombre} en https://cumpeo-turismo.vercel.app/destino/${destination.slug || destination.id}`)}`}
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Descubre este lugar en Turismo Cumpeo! ${destination.nombre} en https://turismocumpeo.cl/destino/${destination.slug || destination.id}`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 py-2.5 px-5 rounded-full font-bold text-sm text-green-700 bg-green-50 border-2 border-green-300 hover:bg-green-100 transition-all no-underline"

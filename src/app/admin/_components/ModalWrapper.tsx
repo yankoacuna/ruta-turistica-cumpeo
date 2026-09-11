@@ -10,17 +10,16 @@ interface ModalWrapperProps {
 
 export function ModalWrapper({ title, onClose, children }: ModalWrapperProps) {
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white w-full max-w-[680px] rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.3)] my-8">
         {/* Sticky header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-border sticky top-0 bg-white rounded-t-2xl z-10">
           <h2 className="font-display font-bold text-lg text-text-primary">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
-            className="text-text-muted hover:text-rojo hover:bg-[#FFE0E2] transition-all p-1.5 rounded-lg"
+            aria-label="Cerrar modal"
+            className="text-text-muted hover:text-rojo hover:bg-[#FFE0E2] transition-all p-1.5 rounded-lg cursor-pointer"
           >
             <X size={20} />
           </button>

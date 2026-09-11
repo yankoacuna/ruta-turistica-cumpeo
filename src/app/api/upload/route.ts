@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { join, basename } from "path";
-import { existsSync } from "fs";
+import { basename } from "path";
 import sharp from "sharp";
 import { getAdminSession } from "@/app/admin/actions";
+import { supabaseAdmin, UPLOADS_BUCKET } from "@/lib/supabase-admin";
 
-const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
 const MAX_SIZE_MB = 5;
 const MAX_DIMENSION = 1920;
 
 // La extensión final siempre sale de este mapa, nunca del nombre de archivo
 // que manda el cliente, para evitar que un mimetype falso cuele una extensión
-// ejecutable/peligrosa (.html, .svg, etc.) en public/uploads.
+// ejecutable/peligrosa (.html, .svg, etc.) en el bucket.
 const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/jpg": "jpg",
@@ -29,10 +27,6 @@ export async function POST(req: NextRequest) {
         { error: "No autorizado: Se requiere rol de Administrador o Editor para subir archivos" },
         { status: 403 }
       );
-    }
-
-    if (!existsSync(UPLOAD_DIR)) {
-      await mkdir(UPLOAD_DIR, { recursive: true });
     }
 
     const formData = await req.formData();
@@ -81,9 +75,19 @@ export async function POST(req: NextRequest) {
       outputBuffer = await pipeline.toBuffer();
     }
 
-    await writeFile(join(UPLOAD_DIR, filename), outputBuffer);
+    const contentType = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from(UPLOADS_BUCKET)
+      .upload(filename, outputBuffer, { contentType, upsert: false });
 
-    return NextResponse.json({ url: `/uploads/${filename}`, filename });
+    if (uploadError) {
+      console.error("Supabase upload error:", uploadError);
+      return NextResponse.json({ error: "Error al subir la imagen al storage" }, { status: 500 });
+    }
+
+    const { data } = supabaseAdmin.storage.from(UPLOADS_BUCKET).getPublicUrl(filename);
+
+    return NextResponse.json({ url: data.publicUrl, filename });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Error interno al subir la imagen" }, { status: 500 });
@@ -107,15 +111,19 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "URL o nombre de archivo requerido" }, { status: 400 });
     }
 
-    // Sanitizar y asegurar que solo se borren archivos dentro de public/uploads
-    const safeFilename = basename(targetUrl);
-    const filePath = join(UPLOAD_DIR, safeFilename);
+    // Sanitizar: solo nos quedamos con el nombre de archivo, sin importar si
+    // llega como "/uploads/x.jpg" (legado) o la URL pública completa de Supabase.
+    const safeFilename = basename(targetUrl.split("?")[0]);
 
-    if (!existsSync(filePath)) {
-      return NextResponse.json({ error: "El archivo no existe en el servidor", notFound: true }, { status: 404 });
+    const { error: removeError } = await supabaseAdmin.storage
+      .from(UPLOADS_BUCKET)
+      .remove([safeFilename]);
+
+    if (removeError) {
+      console.error("Supabase remove error:", removeError);
+      return NextResponse.json({ error: "Error al eliminar el archivo del storage" }, { status: 500 });
     }
 
-    await unlink(filePath);
     return NextResponse.json({ success: true, message: "Archivo eliminado correctamente", filename: safeFilename });
   } catch (error) {
     console.error("Delete upload error:", error);

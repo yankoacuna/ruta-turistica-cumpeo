@@ -32,6 +32,8 @@ export function restaurantToCard(r: Restaurant): CatalogItem {
     tags: r.mediosPago,
     telefono: r.telefono,
     whatsapp: r.whatsapp,
+    instagram: r.contacto?.instagram,
+    facebook: r.contacto?.facebook,
     coords: r.coordenadas,
     horario: r.horario,
   };
@@ -51,6 +53,8 @@ export function accommodationToCard(a: Accommodation): CatalogItem {
     tags: a.servicios,
     telefono: a.telefono,
     whatsapp: a.whatsapp,
+    instagram: a.contacto?.instagram,
+    facebook: a.contacto?.facebook,
     coords: a.coordenadas,
   };
 }

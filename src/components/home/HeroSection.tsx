@@ -183,12 +183,6 @@ export function HeroSection({ destinations }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* Guiño al caso de uso real del EETT: se llega escaneando el QR de la
-            señaletica en la calle. Solo desktop, donde hay aire de sobra. */}
-        <div className="hidden lg:flex absolute bottom-8 right-6 z-10 items-center gap-2.5 px-4 py-2.5 rounded-full bg-white/10 border border-white/25 backdrop-blur-sm text-white">
-          <QrCode size={17} className="text-sol shrink-0" />
-          <Editable k="home.hero.qrAviso" className="text-xs font-semibold" />
-        </div>
       </section>
     </>
   );

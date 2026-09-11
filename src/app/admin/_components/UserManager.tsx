@@ -16,8 +16,10 @@ import {
   Calendar,
   UserCheck,
   UserX,
+  KeyRound,
 } from 'lucide-react';
 import { AdminUser, UserRole } from '@/lib/types';
+import { Tooltip } from './Tooltip';
 
 interface UserManagerProps {
   users: AdminUser[];
@@ -116,37 +118,6 @@ export function UserManager({
         </button>
       </div>
 
-      {/* Roles info cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-        <div className="p-4 rounded-xl bg-white border border-red-100 shadow-2xs">
-          <div className="flex items-center gap-2 text-rojo font-bold text-xs mb-1">
-            <ShieldAlert size={15} />
-            <span>Administrador</span>
-          </div>
-          <p className="text-[11px] text-text-muted leading-relaxed">
-            Acceso total: crear, editar, eliminar atractivos y circuitos, respaldos de base de datos y gestión de usuarios.
-          </p>
-        </div>
-        <div className="p-4 rounded-xl bg-white border border-purple-100 shadow-2xs">
-          <div className="flex items-center gap-2 text-purple-700 font-bold text-xs mb-1">
-            <Shield size={15} />
-            <span>Editor</span>
-          </div>
-          <p className="text-[11px] text-text-muted leading-relaxed">
-            Puede agregar y modificar cualquier atractivo, restaurante, alojamiento y evento. No puede eliminar registros.
-          </p>
-        </div>
-        <div className="p-4 rounded-xl bg-white border border-emerald-100 shadow-2xs">
-          <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs mb-1">
-            <Eye size={15} />
-            <span>Lector</span>
-          </div>
-          <p className="text-[11px] text-text-muted leading-relaxed">
-            Solo lectura: puede visualizar métricas, tablas y descargar códigos QR sin permisos de modificación.
-          </p>
-        </div>
-      </div>
-
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-border">
         <div className="relative flex-1 max-w-sm">
@@ -236,17 +207,28 @@ export function UserManager({
 
                       {/* Status */}
                       <td className="py-3 px-4">
-                        {user.activo ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                            <CheckCircle2 size={12} />
-                            Activo
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
-                            <XCircle size={12} />
-                            Desactivado
-                          </span>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {user.activo ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                              <CheckCircle2 size={12} />
+                              Activo
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+                              <XCircle size={12} />
+                              Desactivado
+                            </span>
+                          )}
+                          {user.mustChangePassword && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200"
+                              title="Todavía no cambia la contraseña temporal que se le asignó"
+                            >
+                              <KeyRound size={12} />
+                              Clave pendiente
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Created date */}
@@ -283,15 +265,24 @@ export function UserManager({
                             <Pencil size={15} />
                           </button>
 
-                          {/* Delete */}
-                          <button
-                            onClick={() => onDeleteUser(user.id, user.nombre)}
-                            className="p-1.5 text-rojo hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            title={isCurrent ? 'No puedes eliminar tu propia cuenta' : 'Eliminar usuario'}
-                            disabled={isCurrent}
+                          {/* Delete: solo si ya está desactivado */}
+                          <Tooltip
+                            label={
+                              isCurrent
+                                ? 'No puedes eliminar tu propia cuenta'
+                                : user.activo
+                                ? 'Primero desactiva el acceso antes de poder eliminarlo'
+                                : 'Eliminar usuario'
+                            }
                           >
-                            <Trash2 size={15} />
-                          </button>
+                            <button
+                              onClick={() => onDeleteUser(user.id, user.nombre)}
+                              className="p-1.5 text-rojo hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              disabled={isCurrent || user.activo}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

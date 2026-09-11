@@ -19,7 +19,7 @@ const emptyEvento = (): Partial<CumpeoEvent> => ({
   activo: true,
 });
 
-export function useEventos(initial: CumpeoEvent[], { showToast, onAuthError }: HookOptions) {
+export function useEventos(initial: CumpeoEvent[], { showToast, confirmAction, onAuthError }: HookOptions) {
   const [eventos, setEventos] = useState<CumpeoEvent[]>(initial);
   const [editing, setEditing] = useState<Partial<CumpeoEvent> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -57,8 +57,13 @@ export function useEventos(initial: CumpeoEvent[], { showToast, onAuthError }: H
     });
   };
 
-  const handleDelete = (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleDelete = async (id: string, nombre: string) => {
+    const ok = await confirmAction(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`, {
+      title: 'Eliminar evento',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteEvent(id);

@@ -36,7 +36,7 @@ export function RestauranteModal({
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {/* Nombre + Estado Activo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div id="tour-rest-nombre" className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div className="md:col-span-2">
             <Field label="Nombre" required>
               <input
@@ -90,24 +90,27 @@ export function RestauranteModal({
         </Field>
 
         {/* Descripción */}
-        <Field label="Descripción" required>
-          <textarea
-            required
-            className={textareaCls}
-            placeholder="Descripción del restaurante y su propuesta gastronómica…"
-            value={editing.descripcion || ''}
-            onChange={(e) => set({ descripcion: e.target.value })}
-          />
-        </Field>
+        <div id="tour-rest-desc">
+          <Field label="Descripción" required>
+            <textarea
+              required
+              className={textareaCls}
+              placeholder="Descripción del restaurante y su propuesta gastronómica…"
+              value={editing.descripcion || ''}
+              onChange={(e) => set({ descripcion: e.target.value })}
+            />
+          </Field>
+        </div>
 
         {/* Ubicación: dirección + mapa sincronizados */}
-        <LocationField
-          direccion={editing.direccion}
-          onDireccionChange={(direccion) => set({ direccion })}
-          coordinates={editing.coordenadas}
-          onCoordinatesChange={(coordenadas) => set({ coordenadas })}
-          modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
-        />
+        <div id="tour-rest-ubicacion">
+          <LocationField
+            direccion={editing.direccion}
+            coordinates={editing.coordenadas}
+            onChange={({ direccion, coordenadas }) => set({ direccion, coordenadas })}
+            modalTitle={`Ubicación de ${editing.nombre || 'Restaurante'}`}
+          />
+        </div>
 
         {/* Horario de Atención */}
         <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
@@ -147,7 +150,8 @@ export function RestauranteModal({
           onChange={({ contacto, telefono, whatsapp }) =>
             set({ contacto, telefono, whatsapp })
           }
-          instagramPlaceholder="@nombre_local"
+          instagramPlaceholder="nombre_local"
+          facebookPlaceholder="NombreDelLocal"
         />
 
         {/* URL menú */}
@@ -160,14 +164,18 @@ export function RestauranteModal({
           />
         </Field>
 
-        <MediaFields
-          imagenPrincipal={editing.imagenPrincipal}
-          onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
-          galeria={editing.galeria}
-          onGaleriaChange={(galeria) => set({ galeria })}
-        />
+        <div id="tour-rest-image">
+          <MediaFields
+            imagenPrincipal={editing.imagenPrincipal}
+            onImagenChange={(imagenPrincipal) => set({ imagenPrincipal })}
+            galeria={editing.galeria}
+            onGaleriaChange={(galeria) => set({ galeria })}
+          />
+        </div>
 
-        <ModalActions onClose={onClose} isPending={isPending} />
+        <div id="tour-rest-actions">
+          <ModalActions onClose={onClose} isPending={isPending} />
+        </div>
       </form>
     </ModalWrapper>
   );

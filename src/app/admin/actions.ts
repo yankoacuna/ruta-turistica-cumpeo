@@ -2,13 +2,25 @@
 
 import { prisma } from '@/lib/prisma';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, UserRole, AdminUser, AdminSessionUser, OrderableEntity } from '@/lib/types';
-import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, shouldRefreshToken, SESSION_COOKIE_NAME } from '@/lib/auth';
+import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, shouldRefreshToken, generateTemporaryPassword, SESSION_COOKIE_NAME } from '@/lib/auth';
 
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD;
+
+/**
+ * Próximo valor de `orden` para una ficha nueva: el mayor actual + 1.
+ * Sin esto, una ficha nueva nace en 0 y salta al primer lugar de la portada,
+ * por delante de todo lo que el municipio ya ordenó a mano.
+ */
+async function nextOrden(
+  model: 'destination' | 'restaurant' | 'accommodation' | 'event'
+): Promise<number> {
+  const agg = await (prisma[model] as any).aggregate({ _max: { orden: true } });
+  return (agg._max.orden ?? -1) + 1;
+}
 
 // ─── AUTHENTICATION HELPERS & ROLE MANAGEMENT ───────────────────────────────
 
@@ -96,7 +108,7 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
   try {
     const user = await prisma.user.findUnique({
       where: { id: session.id },
-      select: { id: true, email: true, nombre: true, role: true, activo: true },
+      select: { id: true, email: true, nombre: true, role: true, activo: true, mustChangePassword: true },
     });
     if (!user || !user.activo) {
       return null;
@@ -106,6 +118,7 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
       email: user.email,
       nombre: user.nombre,
       role: user.role as UserRole,
+      mustChangePassword: user.mustChangePassword,
     };
 
     // Renovación deslizante automática (Sliding Session) si quedan menos de 3 días
@@ -191,6 +204,7 @@ export async function loginAdmin(
         email: user.email,
         nombre: user.nombre,
         role: user.role as UserRole,
+        mustChangePassword: user.mustChangePassword,
       };
     } else {
       sessionUser = await getMasterAdminUser();
@@ -234,6 +248,7 @@ export async function loginAdmin(
     email: user.email,
     nombre: user.nombre,
     role: user.role as UserRole,
+    mustChangePassword: user.mustChangePassword,
   };
 
   const token = createSessionToken(sessionUser);
@@ -306,6 +321,16 @@ export async function assertAuthorized(token?: string) {
 
 // ─── DESTINATIONS ─────────────────────────────────────────────────────────────
 
+/**
+ * Listado para el panel: a diferencia de `getDestinations` (usada por el sitio
+ * público), incluye también los registros inactivos/ocultos, para que el
+ * admin pueda encontrarlos, reactivarlos o eliminarlos.
+ */
+export async function getAdminDestinations(): Promise<Destination[]> {
+  const data = await prisma.destination.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+  return data.map((d) => ({ ...d, coordenadas: d.coordenadas as any })) as Destination[];
+}
+
 export async function saveDestination(
   tokenOrData: string | Partial<Destination>,
   maybeData?: Partial<Destination>
@@ -359,11 +384,11 @@ export async function saveDestination(
       rating: data.rating,
       destacado: data.destacado || false,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('destination')) } as any),
     },
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   revalidatePath('/destino/[slug]', 'page');
   return result;
@@ -376,12 +401,22 @@ export async function deleteDestination(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.destination.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
 
 // ─── RESTAURANTS ──────────────────────────────────────────────────────────────
+
+/** Listado para el panel: incluye también los inactivos/ocultos (ver `getAdminDestinations`). */
+export async function getAdminRestaurants(): Promise<Restaurant[]> {
+  const data = await prisma.restaurant.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+  return data.map((r) => ({
+    ...r,
+    coordenadas: r.coordenadas as any,
+    horario: r.horario as any,
+    contacto: r.contacto as any,
+  })) as Restaurant[];
+}
 
 export async function saveRestaurant(
   tokenOrData: string | Partial<Restaurant>,
@@ -436,11 +471,11 @@ export async function saveRestaurant(
       menuUrl: data.menuUrl,
       contacto: data.contacto as any,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('restaurant')) } as any),
     },
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return result;
 }
@@ -452,12 +487,21 @@ export async function deleteRestaurant(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.restaurant.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
 
 // ─── ACCOMMODATIONS ───────────────────────────────────────────────────────────
+
+/** Listado para el panel: incluye también los inactivos/ocultos (ver `getAdminDestinations`). */
+export async function getAdminAccommodations(): Promise<Accommodation[]> {
+  const data = await prisma.accommodation.findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+  return data.map((a) => ({
+    ...a,
+    coordenadas: a.coordenadas as any,
+    contacto: a.contacto as any,
+  })) as Accommodation[];
+}
 
 export async function saveAccommodation(
   tokenOrData: string | Partial<Accommodation>,
@@ -504,11 +548,11 @@ export async function saveAccommodation(
       galeria: data.galeria ?? [],
       contacto: data.contacto as any,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('accommodation')) } as any),
     },
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return result;
 }
@@ -520,7 +564,6 @@ export async function deleteAccommodation(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.accommodation.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
@@ -643,7 +686,6 @@ export async function restoreDatabaseBackup(tokenOrData: string | any, maybeData
   }
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   revalidatePath('/ruta');
   return { success: true };
@@ -683,7 +725,6 @@ export async function bulkImportEntitiesAction(
             coordenadas: item.coordenadas,
             direccion: item.direccion || null,
             horario: item.horario || null,
-            precio: item.precio || null,
             duracionVisita: item.duracionVisita || null,
             comoLlegar: item.comoLlegar || null,
             tags: item.tags || [],
@@ -706,7 +747,6 @@ export async function bulkImportEntitiesAction(
             coordenadas: item.coordenadas,
             direccion: item.direccion || null,
             horario: item.horario || null,
-            precio: item.precio || null,
             duracionVisita: item.duracionVisita || null,
             comoLlegar: item.comoLlegar || null,
             tags: item.tags || [],
@@ -857,7 +897,6 @@ export async function bulkImportEntitiesAction(
   }
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   revalidatePath('/ruta');
 
@@ -915,7 +954,6 @@ export async function updateEntityOrder(
   await prisma.$transaction(updates);
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return { actualizados: ids.length };
 }
@@ -959,7 +997,7 @@ export async function saveEvent(
     create: {
       id,
       nombre: data.nombre || 'Nuevo Evento',
-      tipo: data.tipo || 'cultural',
+      tipo: data.tipo || 'ferias-libres',
       descripcion: data.descripcion || '',
       descripcionLarga: data.descripcionLarga,
       fecha: data.fecha,
@@ -971,11 +1009,11 @@ export async function saveEvent(
       tags: data.tags ?? [],
       destacado: data.destacado ?? false,
       activo: data.activo ?? true,
+      ...({ orden: data.orden ?? (await nextOrden('event')) } as any),
     },
   });
 
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return result;
 }
@@ -987,7 +1025,6 @@ export async function deleteEvent(tokenOrId: string, maybeId?: string) {
   await requireRole(['ADMIN'], token);
   await prisma.event.delete({ where: { id } });
   revalidatePath('/');
-  revalidatePath('/admin');
   revalidatePath('/mapa');
   return true;
 }
@@ -1033,6 +1070,7 @@ export async function saveTourRoute(
       dificultad: data.dificultad || 'Fácil',
       hitos: (data.hitos as any) ?? undefined,
       consejos: (data.consejos as any) ?? undefined,
+      tiemposParada: (data.tiemposParada as any) ?? undefined,
       mapaImagen: data.mapaImagen,
       destacada: data.destacada ?? false,
       activo: data.activo ?? true,
@@ -1050,6 +1088,7 @@ export async function saveTourRoute(
       dificultad: data.dificultad || 'Fácil',
       hitos: (data.hitos as any) ?? [],
       consejos: (data.consejos as any) ?? [],
+      tiemposParada: (data.tiemposParada as any) ?? {},
       mapaImagen: data.mapaImagen,
       destacada: data.destacada ?? false,
       activo: data.activo ?? true,
@@ -1060,7 +1099,6 @@ export async function saveTourRoute(
   revalidatePath('/');
   revalidatePath('/ruta');
   revalidatePath('/mapa');
-  revalidatePath('/admin');
   return result;
 }
 
@@ -1073,7 +1111,6 @@ export async function deleteTourRoute(tokenOrId: string, maybeId?: string) {
   revalidatePath('/');
   revalidatePath('/ruta');
   revalidatePath('/mapa');
-  revalidatePath('/admin');
   return true;
 }
 
@@ -1104,7 +1141,6 @@ export async function updateTourRouteStops(
   revalidatePath('/');
   revalidatePath('/ruta');
   revalidatePath('/mapa');
-  revalidatePath('/admin');
 }
 
 // ─── USER MANAGEMENT (SOLO ADMINISTRADOR) ───────────────────────────────────
@@ -1118,6 +1154,7 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
       nombre: true,
       role: true,
       activo: true,
+      mustChangePassword: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -1129,9 +1166,8 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
 export async function createAdminUser(data: {
   email: string;
   nombre: string;
-  password: string;
   role: UserRole;
-}): Promise<AdminUser> {
+}): Promise<{ user: AdminUser; temporaryPassword: string }> {
   await requireRole(['ADMIN']);
 
   const email = data.email.trim().toLowerCase();
@@ -1141,22 +1177,24 @@ export async function createAdminUser(data: {
   if (!data.nombre || data.nombre.trim().length === 0) {
     throw new Error('El nombre es requerido');
   }
-  if (!data.password || data.password.length < 6) {
-    throw new Error('La contraseña debe tener al menos 6 caracteres');
-  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     throw new Error('Ya existe un usuario con este correo electrónico');
   }
 
+  // El admin no elige la clave del nuevo usuario: se genera una temporal que
+  // deberá entregarle, y el sistema exige cambiarla en el primer ingreso.
+  const temporaryPassword = generateTemporaryPassword(email);
+
   const user = await prisma.user.create({
     data: {
       email,
       nombre: data.nombre.trim(),
-      password: hashPassword(data.password),
+      password: hashPassword(temporaryPassword),
       role: data.role,
       activo: true,
+      mustChangePassword: true,
     },
     select: {
       id: true,
@@ -1164,13 +1202,13 @@ export async function createAdminUser(data: {
       nombre: true,
       role: true,
       activo: true,
+      mustChangePassword: true,
       createdAt: true,
       updatedAt: true,
     },
   });
 
-  revalidatePath('/admin');
-  return user as unknown as AdminUser;
+  return { user: user as unknown as AdminUser, temporaryPassword };
 }
 
 export async function updateAdminUser(
@@ -1179,9 +1217,10 @@ export async function updateAdminUser(
     nombre?: string;
     role?: UserRole;
     activo?: boolean;
-    password?: string;
+    /** El admin no escribe la clave: pide generar una nueva temporal para este usuario. */
+    resetPassword?: boolean;
   }
-): Promise<AdminUser> {
+): Promise<{ user: AdminUser; temporaryPassword?: string }> {
   const currentSession = await requireRole(['ADMIN']);
 
   // Prevenir que el único admin activo se auto-desactive o se cambie a lector/editor
@@ -1198,8 +1237,15 @@ export async function updateAdminUser(
   if (data.nombre) updateData.nombre = data.nombre.trim();
   if (data.role) updateData.role = data.role;
   if (typeof data.activo === 'boolean') updateData.activo = data.activo;
-  if (data.password && data.password.trim().length >= 6) {
-    updateData.password = hashPassword(data.password.trim());
+
+  let temporaryPassword: string | undefined;
+  if (data.resetPassword) {
+    // Reseteo: se genera una clave temporal nueva, no la elige el admin.
+    const target = await prisma.user.findUnique({ where: { id }, select: { email: true } });
+    if (!target) throw new Error('Usuario no encontrado');
+    temporaryPassword = generateTemporaryPassword(target.email);
+    updateData.password = hashPassword(temporaryPassword);
+    updateData.mustChangePassword = true;
   }
 
   const user = await prisma.user.update({
@@ -1211,13 +1257,13 @@ export async function updateAdminUser(
       nombre: true,
       role: true,
       activo: true,
+      mustChangePassword: true,
       createdAt: true,
       updatedAt: true,
     },
   });
 
-  revalidatePath('/admin');
-  return user as unknown as AdminUser;
+  return { user: user as unknown as AdminUser, temporaryPassword };
 }
 
 export async function deleteAdminUser(id: string): Promise<boolean> {
@@ -1238,7 +1284,6 @@ export async function deleteAdminUser(id: string): Promise<boolean> {
   }
 
   await prisma.user.delete({ where: { id } });
-  revalidatePath('/admin');
   return true;
 }
 
@@ -1274,7 +1319,7 @@ export async function changeOwnPassword(
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { password: hashPassword(newPassword) },
+    data: { password: hashPassword(newPassword), mustChangePassword: false },
   });
 
   return { success: true };

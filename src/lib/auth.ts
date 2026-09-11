@@ -42,6 +42,19 @@ export function verifyPassword(password: string, combinedHash: string): boolean 
   }
 }
 
+/**
+ * Genera una contraseña temporal a partir del usuario del correo (parte antes
+ * de la @) más 4 dígitos al azar, para que sea fácil de leer y transcribir al
+ * entregarla por teléfono o WhatsApp. Es intencionalmente simple: solo dura
+ * hasta el primer inicio de sesión, donde el sistema exige cambiarla (ver
+ * mustChangePassword), así que la ventana de exposición es mínima.
+ */
+export function generateTemporaryPassword(email: string): string {
+  const localPart = (email.split('@')[0] || 'usuario').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const digits = crypto.randomInt(1000, 10000);
+  return `${localPart || 'usuario'}${digits}`;
+}
+
 export interface SessionTokenPayload extends AdminSessionUser {
   iat?: number;
   exp?: number;

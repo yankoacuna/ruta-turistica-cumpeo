@@ -4,6 +4,7 @@ import './globals.css';
 import SiteLayout from '@/components/SiteLayout';
 import PWARegister from '@/components/PWARegister';
 import { ToastProvider } from '@/components/Toast';
+import { ConfirmProvider } from '@/components/ConfirmDialog';
 import { SiteTextProvider } from '@/components/site-text';
 import { getResolvedSiteTexts } from '@/lib/data';
 
@@ -12,7 +13,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://cumpeo-turismo.vercel.app'),
+  metadataBase: new URL('https://turismocumpeo.cl'),
   title: 'Turismo Cumpeo',
   description: 'Descubre Cumpeo, el pueblo de Condorito en el corazón del Maule. Historia, naturaleza, gastronomía y rutas interactivas con GPS.',
   keywords: ['Cumpeo', 'turismo', 'Condorito', 'Chile', 'Río Claro', 'pueblo temático'],
@@ -44,14 +45,16 @@ export default async function RootLayout({
       </head>
       <body className="w-full min-h-[100dvh] bg-bg text-text-primary font-sans antialiased flex flex-col overflow-x-hidden relative">
         <ToastProvider>
-          <SiteTextProvider initial={siteTexts}>
-            <SiteLayout>
-              {children}
-            </SiteLayout>
+          <ConfirmProvider>
+            <SiteTextProvider initial={siteTexts}>
+              <SiteLayout>
+                {children}
+              </SiteLayout>
 
-            {/* PWA Offline Service Worker Registration */}
-            <PWARegister />
-          </SiteTextProvider>
+              {/* PWA Offline Service Worker Registration */}
+              <PWARegister />
+            </SiteTextProvider>
+          </ConfirmProvider>
         </ToastProvider>
       </body>
     </html>

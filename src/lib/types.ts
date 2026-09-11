@@ -42,7 +42,6 @@ export interface Destination {
   infoUtil?: Record<string, string>;
   rating?: number;
   activo?: boolean;
-  publicado?: boolean;
   /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
   orden?: number;
   createdAt?: string | Date;
@@ -65,12 +64,12 @@ export interface Accommodation {
     email?: string;
     web?: string;
     instagram?: string;
+    facebook?: string;
   } | null;
   servicios?: string[];
   imagenPrincipal?: string | null;
   galeria?: string[];
   activo?: boolean;
-  publicado?: boolean;
   /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
   orden?: number;
   createdAt?: string | Date;
@@ -94,6 +93,7 @@ export interface Restaurant {
     email?: string;
     web?: string;
     instagram?: string;
+    facebook?: string;
   } | null;
   mediosPago?: string[];      // desde catastro: ["Efectivo", "Débito"]
   horario?: Horario | string | null;
@@ -102,7 +102,6 @@ export interface Restaurant {
   menuUrl?: string | null;
   tags?: string[];
   activo?: boolean;
-  publicado?: boolean;
   /** Orden manual en la portada: menor primero, empate resuelto por nombre. */
   orden?: number;
   createdAt?: string | Date;
@@ -113,7 +112,6 @@ export interface EmergencyContact {
   id: string;
   institucion: string;
   telefono: string;
-  icono?: string | null;
   direccion?: string | null;
   orden: number;
   activo: boolean;
@@ -126,7 +124,7 @@ export interface CumpeoEvent {
   tipo: 'fiestas-religiosas' | 'ferias-libres' | 'centros-de-evento' | string;
   descripcion: string;
   descripcionLarga?: string | null;
-  fecha?: string | null;       // "20 de enero" / "Fines de semana"
+  fecha?: string | null;       // "1 de enero" / "Fines de semana"
   recurrente: boolean;
   coordenadas?: Coordinates | null;
   direccion?: string | null;
@@ -185,7 +183,6 @@ export interface RouteMilestone {
 }
 
 export interface RouteTip {
-  icono?: string;
   titulo: string;
   texto: string;
 }
@@ -202,6 +199,8 @@ export interface TourRoute {
   dificultad?: string | null;
   hitos?: RouteMilestone[] | any | null;
   consejos?: RouteTip[] | any | null;
+  /** Minutos extra a sumar por parada (aparte del tiempo de manejo), por id de POI. */
+  tiemposParada?: Record<string, number> | null;
   mapaImagen?: string | null;
   destacada?: boolean;
   activo?: boolean;
@@ -218,6 +217,8 @@ export interface AdminUser {
   nombre: string;
   role: UserRole;
   activo: boolean;
+  /** true si la contraseña actual la asignó un admin (alta o reseteo) y falta que el usuario la cambie. */
+  mustChangePassword?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
@@ -227,6 +228,7 @@ export interface AdminSessionUser {
   email: string;
   nombre: string;
   role: UserRole;
+  mustChangePassword?: boolean;
 }
 
 // ─── TEXTOS EDITABLES DEL SITIO ───────────────────────────────────────────────

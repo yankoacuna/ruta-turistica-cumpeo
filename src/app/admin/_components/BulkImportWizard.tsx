@@ -210,7 +210,7 @@ export function BulkImportWizard({
   return (
     <div className="space-y-6">
       {/* ── Selector de Entidad con contadores ───────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
+      <div id="tour-bulk-entity" className="bg-white rounded-2xl border border-border p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-border">
           <div>
             <h3 className="font-display font-bold text-base text-text-primary flex items-center gap-2">
@@ -266,7 +266,7 @@ export function BulkImportWizard({
       </div>
 
       {/* ── Descarga de Plantillas Oficiales ─────────────────────────────────── */}
-      <div className="bg-[#FAF8F5] rounded-2xl border border-border p-5">
+      <div id="tour-bulk-template" className="bg-[#FAF8F5] rounded-2xl border border-border p-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1 max-w-xl">
             <div className="flex items-center gap-2">
@@ -304,7 +304,7 @@ export function BulkImportWizard({
 
       {/* ── Zona de Arrastre y Subida de Archivo ─────────────────────────────── */}
       {!selectedFile ? (
-        <div className="bg-white rounded-2xl border-2 border-dashed border-border hover:border-rojo p-8 text-center transition-all bg-surface-soft/40 hover:bg-[#FFF9F9]/40">
+        <div id="tour-bulk-upload" className="bg-white rounded-2xl border-2 border-dashed border-border hover:border-rojo p-8 text-center transition-all bg-surface-soft/40 hover:bg-[#FFF9F9]/40">
           <label className="cursor-pointer block">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FFE0E2] text-rojo flex items-center justify-center mb-3 shadow-inner">
               <UploadCloud size={28} />

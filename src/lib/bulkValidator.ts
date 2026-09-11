@@ -191,7 +191,6 @@ export function validateDestinationRow(
   const historia = String(getColValue(row, ['historia', 'antecedentes']) || '');
   const direccion = String(getColValue(row, ['direccion', 'ubicacion', 'calle']) || '');
   const horario = String(getColValue(row, ['horario', 'atencion', 'horas']) || '');
-  const precio = String(getColValue(row, ['precio', 'tarifa', 'valor']) || '');
   const duracionVisita = String(getColValue(row, ['duracionvisita', 'duracion_visita', 'duracion']) || '');
   const comoLlegar = String(getColValue(row, ['comollegar', 'como_llegar', 'acceso']) || '');
   const tags = parseList(getColValue(row, ['tags', 'etiquetas']));
@@ -223,7 +222,6 @@ export function validateDestinationRow(
       coordenadas: coords,
       direccion,
       horario,
-      precio,
       duracionVisita,
       comoLlegar,
       tags,
@@ -555,7 +553,6 @@ export const TEMPLATE_SCHEMAS: Record<
       'Latitud',
       'Longitud',
       'Horario',
-      'Precio',
       'Duracion_Visita',
       'Destacado (SI/NO)',
       'Tags',
@@ -571,7 +568,6 @@ export const TEMPLATE_SCHEMAS: Record<
         Latitud: -35.2671,
         Longitud: -71.2498,
         Horario: 'Todo el día',
-        Precio: 'Gratuito',
         Duracion_Visita: '30 min',
         'Destacado (SI/NO)': 'SI',
         Tags: 'Condorito, Fotografía, Familiar, Plaza',
@@ -586,7 +582,6 @@ export const TEMPLATE_SCHEMAS: Record<
         Latitud: -35.2685,
         Longitud: -71.2512,
         Horario: 'Todo el día',
-        Precio: 'Gratuito',
         Duracion_Visita: '20 min',
         'Destacado (SI/NO)': 'NO',
         Tags: 'Escultura, Niños, Condorito',
@@ -797,7 +792,6 @@ export function exportDatasetToXLSX(entityType: BulkEntityType, items: any[]) {
       Latitud: d.coordenadas?.lat ?? '',
       Longitud: d.coordenadas?.lng ?? '',
       Horario: d.horario || '',
-      Precio: d.precio || '',
       Duracion_Visita: d.duracionVisita || '',
       Como_Llegar: d.comoLlegar || '',
       Tags: (d.tags || []).join(', '),
