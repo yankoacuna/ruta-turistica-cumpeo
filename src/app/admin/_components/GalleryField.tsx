@@ -161,7 +161,10 @@ export function GalleryField({ images = [], onChange }: GalleryFieldProps) {
 
   const handleRemovePhoto = async (idx: number) => {
     const targetUrl = images[idx];
-    if (targetUrl && targetUrl.startsWith("/uploads/")) {
+    // "/uploads/" es el formato legado (disco local); "/storage/v1/object/public/"
+    // es una URL publica de nuestro bucket de Supabase. Cualquier otra URL externa
+    // pegada por el usuario no se toca.
+    if (targetUrl && (targetUrl.startsWith("/uploads/") || targetUrl.includes("/storage/v1/object/public/"))) {
       try {
         await fetch("/api/upload", {
           method: "DELETE",

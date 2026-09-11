@@ -202,8 +202,8 @@ export function ImageUploadField({
   );
 
   const handleRemove = async () => {
-    // Solo eliminamos fisicamente del disco si fue un archivo subido en esta misma sesion
-    if (value && value.startsWith("/uploads/") && uploadedInThisSession.current.has(value)) {
+    // Solo eliminamos fisicamente del storage si fue un archivo subido en esta misma sesion
+    if (value && uploadedInThisSession.current.has(value)) {
       try {
         await fetch("/api/upload", {
           method: "DELETE",
