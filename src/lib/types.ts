@@ -279,6 +279,32 @@ export interface EditModeAccess {
 /** Catastros cuyo orden en la portada se puede administrar. */
 export type OrderableEntity = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';
 
+// ─── APARIENCIA EDITABLE DEL SITIO ────────────────────────────────────────────
+
+/** Apariencia guardada desde el CMS. Un campo en null usa el valor por defecto. */
+export interface ThemeConfigRecord {
+  colorPrimario: string | null;
+  colorAcento: string | null;
+  colorFondo: string | null;
+  colorTexto: string | null;
+  fontBody: string | null;
+  fontDisplay: string | null;
+  /** ISO string: las fechas viajan serializadas al cliente. */
+  updatedAt: string;
+  updatedByEmail?: string | null;
+  updatedByNombre?: string | null;
+}
+
+/** Lo que envía el formulario del CMS al guardar. */
+export interface ThemeSaveInput {
+  colorPrimario?: string | null;
+  colorAcento?: string | null;
+  colorFondo?: string | null;
+  colorTexto?: string | null;
+  fontBody?: string | null;
+  fontDisplay?: string | null;
+}
+
 // ─── VISITAS DEL SITIO PÚBLICO ────────────────────────────────────────────────
 
 /** Períodos que ofrece el selector del panel de visitantes. */

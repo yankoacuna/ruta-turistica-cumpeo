@@ -181,6 +181,29 @@ model SiteTextRevision {
   @@index([key, createdAt])
 }
 
+/// Apariencia editable del sitio: paleta de colores y tipografías.
+/// Fila única (id fijo "default"). Solo guarda lo que un editor cambió: los
+/// valores por defecto viven en el código (src/lib/theme.ts). Si esta tabla
+/// está vacía, el sitio se ve exactamente igual que sin esta funcionalidad.
+model ThemeConfig {
+  id              String   @id @default("default")
+  /// Hex del color dominante (rojo Condorito). Claro/oscuro se derivan solos.
+  colorPrimario   String?
+  /// Hex del color de acento (sol).
+  colorAcento     String?
+  /// Hex del fondo/papel base.
+  colorFondo      String?
+  /// Hex del texto/tinta base.
+  colorTexto      String?
+  /// Clave del catálogo de tipografías de texto (src/lib/theme.ts).
+  fontBody        String?
+  /// Clave del catálogo de tipografías de titulares (src/lib/theme.ts).
+  fontDisplay     String?
+  updatedAt       DateTime @updatedAt
+  updatedByEmail  String?
+  updatedByNombre String?
+}
+
 /// Registro anónimo de visitas al sitio público (no al panel /admin).
 /// No guarda IP ni datos personales: solo un id aleatorio de dispositivo
 /// (visitorId, vive en localStorage) y uno de sesión (sessionId), para poder

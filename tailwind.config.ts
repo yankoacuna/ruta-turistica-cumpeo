@@ -17,57 +17,62 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── Dominante: rojo Condorito ──
+        // ── Dominante, acento, papel y tinta apuntan a variables CSS (ver
+        // globals.css) en vez de hex fijos: es lo que le permite al CMS
+        // (src/lib/theme.ts) reteñir todo el sitio en tiempo real sin tocar
+        // ninguna clase de Tailwind. Los valores por defecto de esas
+        // variables son los mismos hex que había acá antes. ──
         rojo: {
-          DEFAULT: '#E63946',
-          light: '#FF5A66',
-          dark: '#C1121F',
+          DEFAULT: 'var(--color-rojo)',
+          light: 'var(--color-rojo-light)',
+          dark: 'var(--color-rojo-dark)',
         },
-        // ── Acento: amarillo sol (solo destacados y sobre tinta) ──
         sol: {
-          DEFAULT: '#FFC300',
-          light: '#FFD54A',
-          dark: '#E0A900',
+          DEFAULT: 'var(--color-sol)',
+          light: 'var(--color-sol-light)',
+          dark: 'var(--color-sol-dark)',
         },
-        // ── Tinta: negro calido de imprenta, reemplaza al negro azulado ──
         ink: {
-          DEFAULT: '#231F20',
-          soft: '#3D3733',
-          line: '#C9BFA8',
+          DEFAULT: 'var(--color-ink)',
+          soft: 'var(--color-ink-soft)',
+          line: 'var(--color-ink-line)',
         },
-        // ── Papel: crema de diario, mas calido que el gris anterior ──
         paper: {
-          DEFAULT: '#F7F3E8',
-          warm: '#FDFBF4',
-          deep: '#EFE8D6',
+          DEFAULT: 'var(--color-paper)',
+          warm: 'var(--color-paper-warm)',
+          deep: 'var(--color-paper-deep)',
         },
 
-        // ── Semanticos de datos (mapa / categorias). No usar como decoracion ──
+        // ── Semanticos de datos (mapa / categorias). No usar como decoracion.
+        // Fijos a propósito: no son parte de la paleta de marca editable. ──
         cielo: { DEFAULT: '#0077B6', light: '#0096C7', dark: '#023E8A' },
         verde: { DEFAULT: '#2A9D8F', light: '#38B000', dark: '#1A759F' },
         tierra: { DEFAULT: '#D97706', light: '#F59E0B', dark: '#B45309' },
 
         // ── Roles (mismos nombres que antes: no rompe el resto del sitio) ──
-        bg: '#F7F3E8',
+        bg: 'var(--color-bg)',
         surface: {
-          DEFAULT: '#FFFFFF',
-          soft: '#FDFBF4',
-          hover: '#EFE8D6',
+          DEFAULT: 'var(--color-surface)',
+          soft: 'var(--color-surface-soft)',
+          hover: 'var(--color-surface-hover)',
         },
         text: {
-          primary: '#231F20',   // 14.9:1 sobre papel
-          secondary: '#574F45', //  7.3:1 sobre papel
-          muted: '#6B6055',     //  5.6:1 sobre papel (antes 2.9:1 = fallaba AA)
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+          muted: 'var(--color-text-muted)',
         },
         border: {
-          DEFAULT: '#E0D8C6',
-          strong: '#C9BFA8',
-          hover: '#E63946',
+          DEFAULT: 'var(--color-border)',
+          strong: 'var(--color-border-strong)',
+          hover: 'var(--color-border-hover)',
         },
       },
       fontFamily: {
-        sans: ['Outfit', 'system-ui', 'sans-serif'],
-        display: ['Fredoka', 'Outfit', 'sans-serif'],
+        // Apuntan a variables CSS por el mismo motivo que los colores: el CMS
+        // puede cambiar la tipografía del sitio sobreescribiendo --font-body
+        // y --font-display, sin recompilar Tailwind.
+        sans: ['var(--font-body)', 'Outfit', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Fredoka', 'Outfit', 'sans-serif'],
       },
       fontSize: {
         // Escala real. 0.75rem (12px) es el piso duro: nada de 10-11px.

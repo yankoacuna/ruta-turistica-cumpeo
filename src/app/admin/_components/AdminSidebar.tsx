@@ -12,6 +12,7 @@ import {
   QrCode,
   Database,
   Type,
+  Palette,
   ListOrdered,
   ExternalLink,
   LogOut,
@@ -181,6 +182,13 @@ export function AdminSidebar({
           icon: Type,
           count: counts.textos,
           color: 'text-sky-500',
+        },
+        {
+          id: 'apariencia' as AdminSection,
+          label: 'Apariencia',
+          icon: Palette,
+          count: undefined,
+          color: 'text-pink-500',
         },
         {
           id: 'orden' as AdminSection,

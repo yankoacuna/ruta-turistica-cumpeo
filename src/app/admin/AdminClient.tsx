@@ -13,6 +13,7 @@ import {
   AdminSessionUser,
   UserRole,
   SiteTextRecord,
+  ThemeConfigRecord,
   OrderableEntity,
 } from '@/lib/types';
 import { useToast } from '@/components/Toast';
@@ -36,6 +37,7 @@ import { QRGenerator } from './_components/QRGenerator';
 import { BackupManager } from './_components/BackupManager';
 import { UserManager } from './_components/UserManager';
 import { SiteTextsManager } from './_components/SiteTextsManager';
+import { ThemeManager } from './_components/ThemeManager';
 import { OrdenPortadaManager } from './_components/OrdenPortadaManager';
 import { DestinoModal } from './_components/modals/DestinoModal';
 import { RestauranteModal } from './_components/modals/RestauranteModal';
@@ -73,6 +75,8 @@ interface Props {
   initialAuthenticated?: boolean;
   /** Textos del sitio que fueron modificados desde el CMS. */
   initialSiteTexts?: SiteTextRecord[];
+  /** Apariencia (paleta y tipografías) guardada desde el CMS, si la hay. */
+  initialTheme?: ThemeConfigRecord | null;
 }
 
 export default function AdminClient({
@@ -86,6 +90,7 @@ export default function AdminClient({
   initialUsers = [],
   initialAuthenticated = false,
   initialSiteTexts = [],
+  initialTheme = null,
 }: Props) {
   const { showToast } = useToast();
   const { confirm: confirmAction } = useConfirm();
@@ -548,6 +553,7 @@ export default function AdminClient({
             activeSection !== 'solicitudes' &&
             activeSection !== 'rutas' &&
             activeSection !== 'textos' &&
+            activeSection !== 'apariencia' &&
             activeSection !== 'orden' &&
             activeSection !== 'qrcodes' &&
             activeSection !== 'backups' &&
@@ -589,6 +595,17 @@ export default function AdminClient({
           {activeSection === 'textos' && (
             <SiteTextsManager
               overrides={initialSiteTexts}
+              role={role}
+              showToast={showToast}
+              confirmAction={confirmAction}
+              onAuthError={handleAuthError}
+            />
+          )}
+
+          {/* Apariencia: paleta de colores y tipografías del sitio */}
+          {activeSection === 'apariencia' && (
+            <ThemeManager
+              initial={initialTheme}
               role={role}
               showToast={showToast}
               confirmAction={confirmAction}

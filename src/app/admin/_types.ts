@@ -7,6 +7,7 @@ export type AdminSection =
   | 'alojamientos'
   | 'eventos'
   | 'textos'
+  | 'apariencia'
   | 'orden'
   | 'qrcodes'
   | 'backups'

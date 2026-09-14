@@ -7,11 +7,13 @@ import VisitTracker from '@/components/VisitTracker';
 import { ToastProvider } from '@/components/Toast';
 import { ConfirmProvider } from '@/components/ConfirmDialog';
 import { SiteTextProvider } from '@/components/site-text';
-import { getResolvedSiteTexts } from '@/lib/data';
+import { getResolvedSiteTexts, getResolvedTheme } from '@/lib/data';
+import { themeToStyleTag, themeToGoogleFontsHref } from '@/lib/theme';
 
-export const viewport: Viewport = {
-  themeColor: '#E63946',
-};
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await getResolvedTheme();
+  return { themeColor: theme.cssVars['--color-rojo'] };
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://turismocumpeo.cl'),
@@ -38,11 +40,20 @@ export default async function RootLayout({
   // está cacheada y se invalida sola cuando alguien guarda un texto.
   const siteTexts = await getResolvedSiteTexts();
 
+  // Apariencia (paleta y tipografías). Misma lógica: se resuelve una vez acá
+  // y llega a todas las páginas, incluido el propio panel /admin. Las fuentes
+  // se cargan siempre (por defecto u override); las variables de color solo
+  // se sobreescriben cuando alguien personalizó algo, para que el sitio sin
+  // cambios se vea con los hex exactos definidos en globals.css.
+  const theme = await getResolvedTheme();
+
   return (
     <html lang="es-CL">
       <head>
         <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
         <link rel="apple-touch-icon" href="/assets/icons/icon-180.png" />
+        <link rel="stylesheet" href={themeToGoogleFontsHref(theme)} />
+        {!theme.isDefault && <style>{themeToStyleTag(theme)}</style>}
       </head>
       <body className="w-full min-h-[100dvh] bg-bg text-text-primary font-sans antialiased flex flex-col overflow-x-hidden relative">
         <ToastProvider>
