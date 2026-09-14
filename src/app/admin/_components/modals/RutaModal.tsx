@@ -16,8 +16,16 @@ import {
 import { TourRoute, POI } from '@/lib/types';
 import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
-import { Field, inputCls, textareaCls, selectCls } from '../Field';
+import { Field, inputCls, textareaCls } from '../Field';
+import { SearchableSelect, SearchableSelectOption } from '@/components/SearchableSelect';
 import { useToast } from '@/components/Toast';
+
+const TIPO_LABELS: Record<string, string> = {
+  destino: 'Destino',
+  alojamiento: 'Alojamiento',
+  restaurante: 'Restaurante',
+  evento: 'Evento',
+};
 
 interface RutaModalProps {
   editing: Partial<TourRoute>;
@@ -336,18 +344,22 @@ export function RutaModal({
 
           {/* Selector para añadir nueva parada */}
           <div className="mt-3 pt-3 border-t border-border flex flex-col sm:flex-row items-center gap-2">
-            <select
-              className={selectCls + ' text-xs flex-1'}
+            <SearchableSelect
+              className="flex-1 w-full"
               value={selectedPoiToAdd}
-              onChange={(e) => setSelectedPoiToAdd(e.target.value)}
-            >
-              <option value="">Seleccionar lugar o hito para agregar como parada…</option>
-              {unselectedPois.map((p) => (
-                <option key={p.id} value={p.id}>
-                  [{p.tipo.toUpperCase()}] {p.nombre} ({p.categoria})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedPoiToAdd}
+              placeholder="Buscar lugar o hito para agregar como parada…"
+              searchPlaceholder="Buscar por nombre o categoría…"
+              emptyMessage="No hay más lugares disponibles"
+              options={unselectedPois.map(
+                (p): SearchableSelectOption => ({
+                  value: p.id,
+                  label: p.nombre,
+                  description: p.categoria,
+                  badge: TIPO_LABELS[p.tipo] || p.tipo,
+                })
+              )}
+            />
             <button
               type="button"
               disabled={!selectedPoiToAdd}

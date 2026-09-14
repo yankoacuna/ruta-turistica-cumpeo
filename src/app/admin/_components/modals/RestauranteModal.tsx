@@ -2,7 +2,8 @@ import React from 'react';
 import { CreditCard } from 'lucide-react';
 import { Restaurant } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
-import { Field, inputCls, textareaCls, selectCls } from '../Field';
+import { Field, inputCls, textareaCls } from '../Field';
+import { SearchableSelect } from '@/components/SearchableSelect';
 import {
   LocationField,
   ContactoSection,
@@ -11,6 +12,16 @@ import {
   MediaFields,
   PropietarioField,
 } from './common';
+
+const TIPO_OPTIONS = [
+  { value: 'restaurante', label: 'Restaurante' },
+  { value: 'picada', label: 'Picada' },
+  { value: 'restaurante-bar', label: 'Restaurante-Bar' },
+  { value: 'restaurante-tematico', label: 'Restaurante Temático' },
+  { value: 'cafeteria', label: 'Cafetería' },
+  { value: 'parrilla', label: 'Parrilla / Quincho' },
+  { value: 'minimarket', label: 'Minimarket' },
+];
 
 interface RestauranteModalProps {
   editing: Partial<Restaurant>;
@@ -58,20 +69,12 @@ export function RestauranteModal({
         {/* Tipo + Propietario */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Tipo de Local">
-            <select
-              className={selectCls}
+            <SearchableSelect
               value={editing.tipo || ''}
-              onChange={(e) => set({ tipo: e.target.value })}
-            >
-              <option value="">Seleccionar tipo…</option>
-              <option value="restaurante">Restaurante</option>
-              <option value="picada">Picada</option>
-              <option value="restaurante-bar">Restaurante-Bar</option>
-              <option value="restaurante-tematico">Restaurante Temático</option>
-              <option value="cafeteria">Cafetería</option>
-              <option value="parrilla">Parrilla / Quincho</option>
-              <option value="minimarket">Minimarket</option>
-            </select>
+              onChange={(v) => set({ tipo: v })}
+              placeholder="Seleccionar tipo…"
+              options={TIPO_OPTIONS}
+            />
           </Field>
           <PropietarioField
             value={editing.propietario}

@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Destination, Restaurant, Accommodation } from '@/lib/types';
 import { QrCode, Download, ExternalLink, Sparkles, Printer, Copy, Check } from 'lucide-react';
-import { Field, selectCls, inputCls } from './Field';
+import { Field, inputCls } from './Field';
+import { SearchableSelect } from '@/components/SearchableSelect';
 import { useToast } from '@/components/Toast';
 
 interface QRGeneratorProps {
@@ -185,49 +186,31 @@ export function QRGenerator({
           {/* Dynamic Selectors */}
           {selectedType === 'destino' && (
             <Field label="Selecciona el Destino Turístico" required>
-              <select
-                className={selectCls}
+              <SearchableSelect
                 value={selectedId}
-                onChange={(e) => setSelectedId(e.target.value)}
-              >
-                {destinos.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.nombre} ({d.categoria})
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedId}
+                options={destinos.map((d) => ({ value: d.id, label: d.nombre, description: d.categoria }))}
+              />
             </Field>
           )}
 
           {selectedType === 'restaurante' && (
             <Field label="Selecciona el Restaurante" required>
-              <select
-                className={selectCls}
+              <SearchableSelect
                 value={selectedId}
-                onChange={(e) => setSelectedId(e.target.value)}
-              >
-                {restaurantes.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedId}
+                options={restaurantes.map((r) => ({ value: r.id, label: r.nombre }))}
+              />
             </Field>
           )}
 
           {selectedType === 'alojamiento' && (
             <Field label="Selecciona el Alojamiento" required>
-              <select
-                className={selectCls}
+              <SearchableSelect
                 value={selectedId}
-                onChange={(e) => setSelectedId(e.target.value)}
-              >
-                {alojamientos.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.nombre} ({a.tipo || 'Hospedaje'})
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedId}
+                options={alojamientos.map((a) => ({ value: a.id, label: a.nombre, description: a.tipo || 'Hospedaje' }))}
+              />
             </Field>
           )}
 
