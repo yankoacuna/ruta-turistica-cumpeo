@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MapPin,
   UtensilsCrossed,
@@ -20,6 +20,7 @@ import {
   Users,
   Eye,
   UserRound,
+  Inbox,
   Shield,
   ShieldAlert,
   Sparkles,
@@ -29,6 +30,7 @@ import { formatHorario } from '@/lib/openingHours';
 import { StatCard } from './StatCard';
 import { VisitasPanel } from './VisitasPanel';
 import { useVisitStats } from '../_hooks/useVisitStats';
+import { contarSolicitudesPendientes } from '../solicitudActions';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   ADMIN: 'Administrador',
@@ -76,6 +78,15 @@ export function AdminDashboard({
 
   // Una sola consulta de visitas para la tarjeta del grid y el panel detallado.
   const visitas = useVisitStats('30d');
+
+  // Solicitudes sin revisar. Se consulta aparte de las listas del panel porque
+  // no es contenido publicado, sino trabajo pendiente que llego desde el sitio.
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState(0);
+  useEffect(() => {
+    contarSolicitudesPendientes()
+      .then(setSolicitudesPendientes)
+      .catch(() => setSolicitudesPendientes(0));
+  }, []);
 
   const totalItems =
     destinos.length + restaurantes.length + alojamientos.length + eventos.length + rutas.length;
@@ -182,6 +193,34 @@ export function AdminDashboard({
           )}
         </div>
       </div>
+
+      {/* Solicitudes por revisar: lo primero que deberia ver el encargado, porque
+          es gente esperando respuesta, no contenido que ya esta publicado */}
+      {solicitudesPendientes > 0 && (
+        <button
+          type="button"
+          onClick={() => onNavigate('solicitudes')}
+          className="w-full flex items-center gap-3.5 p-4 sm:p-5 rounded-2xl bg-white border-2 border-rojo/30 hover:border-rojo shadow-sm transition-all text-left group"
+        >
+          <span className="w-10 h-10 rounded-xl bg-red-50 text-rojo flex items-center justify-center shrink-0">
+            <Inbox size={20} />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-text-primary">
+              {solicitudesPendientes === 1
+                ? 'Tienes 1 solicitud sin revisar'
+                : `Tienes ${solicitudesPendientes} solicitudes sin revisar`}
+            </span>
+            <span className="block text-xs text-text-secondary leading-relaxed mt-0.5">
+              Postulaciones y consultas que llegaron desde el sitio público y esperan respuesta.
+            </span>
+          </span>
+          <ArrowRight
+            size={18}
+            className="text-rojo shrink-0 group-hover:translate-x-0.5 transition-transform"
+          />
+        </button>
+      )}
 
       {/* Quick Action Shortcuts or Read-Only Notice */}
       {!isLector ? (

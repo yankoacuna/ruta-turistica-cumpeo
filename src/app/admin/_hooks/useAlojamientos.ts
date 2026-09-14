@@ -14,7 +14,7 @@ const emptyAcc = (): Partial<Accommodation> => ({
   contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '', facebook: '' },
 });
 
-export function useAlojamientos(initial: Accommodation[], { showToast, confirmAction, onAuthError }: HookOptions) {
+export function useAlojamientos(initial: Accommodation[], { showToast, confirmAction, onAuthError, onSaved }: HookOptions) {
   const [alojamientos, setAlojamientos] = useState<Accommodation[]>(initial);
   const [editing, setEditing] = useState<Partial<Accommodation> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -41,6 +41,7 @@ export function useAlojamientos(initial: Accommodation[], { showToast, confirmAc
             : [...prev, updated];
         });
         showToast(`"${saved.nombre}" guardado`, 'success');
+        onSaved?.(saved);
         close();
       } catch (err: any) {
         if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {

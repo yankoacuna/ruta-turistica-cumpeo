@@ -22,6 +22,7 @@ import {
   Eye,
   Radio,
   Users,
+  Inbox,
   KeyRound,
   ChevronLeft,
   ChevronRight,
@@ -40,6 +41,8 @@ interface AdminSidebarProps {
     usuarios?: number;
     /** Cuántos textos del sitio fueron modificados desde el CMS. */
     textos?: number;
+    /** Solicitudes del sitio público sin revisar: se muestran en rojo. */
+    solicitudes?: number;
   };
   currentUser?: AdminSessionUser | null;
   onChangePassword?: () => void;
@@ -124,6 +127,13 @@ export function AdminSidebar({
           icon: LayoutDashboard,
           count: undefined,
           highlight: false,
+        },
+        {
+          id: 'solicitudes' as AdminSection,
+          label: 'Solicitudes',
+          icon: Inbox,
+          count: counts.solicitudes,
+          color: 'text-rojo',
         },
       ],
     },

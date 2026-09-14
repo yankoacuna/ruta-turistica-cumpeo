@@ -1,5 +1,6 @@
 export type AdminSection =
   | 'dashboard'
+  | 'solicitudes'
   | 'rutas'
   | 'destinos'
   | 'restaurantes'
@@ -22,4 +23,10 @@ export interface HookOptions {
   confirmAction: ConfirmFn;
   onAuthError?: () => void;
   password?: string;
+  /**
+   * Se llama tras guardar con exito una ficha. Lo usa el panel para cerrar el
+   * ciclo de una solicitud: la ficha creada a partir de ella queda enlazada y
+   * la solicitud pasa a "publicada", sin que nadie tenga que acordarse.
+   */
+  onSaved?: (saved: { id: string; nombre?: string }) => void;
 }

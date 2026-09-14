@@ -327,3 +327,67 @@ export interface VisitStats {
   dispositivos: Array<{ device: string; visitas: number; visitantes: number }>;
   origenes: Array<{ referrer: string; visitas: number; visitantes: number }>;
 }
+
+// ─── SOLICITUDES DEL SITIO PÚBLICO ────────────────────────────────────────────
+
+/** Qué está pidiendo quien escribe: sumar su negocio, o una consulta general. */
+export type SolicitudTipo = 'RESTAURANTE' | 'ALOJAMIENTO' | 'DESTINO' | 'EVENTO' | 'CONSULTA';
+
+/**
+ * Ciclo de vida de una solicitud dentro del municipio:
+ * NUEVA → EN_REVISION → APROBADA → PUBLICADA (o RECHAZADA en cualquier punto).
+ */
+export type SolicitudEstado = 'NUEVA' | 'EN_REVISION' | 'APROBADA' | 'RECHAZADA' | 'PUBLICADA';
+
+/** Lo que envía el formulario público. Todo llega como texto y se valida en el servidor. */
+export interface SolicitudInput {
+  tipo: SolicitudTipo;
+  solicitanteNombre: string;
+  solicitanteEmail: string;
+  solicitanteTelefono?: string;
+  solicitanteRol?: string;
+  nombre: string;
+  descripcion: string;
+  categoriaSugerida?: string;
+  especialidad?: string;
+  direccion?: string;
+  coordenadas?: Coordinates | null;
+  horario?: Horario | null;
+  telefono?: string;
+  whatsapp?: string;
+  email?: string;
+  web?: string;
+  instagram?: string;
+  facebook?: string;
+  servicios?: string[];
+  mediosPago?: string[];
+  fecha?: string;
+  fotos?: string[];
+  mensaje?: string;
+}
+
+/** Una solicitud tal como la lee el panel. */
+export interface SolicitudRecord extends Omit<SolicitudInput, 'coordenadas' | 'horario'> {
+  id: string;
+  estado: SolicitudEstado;
+  coordenadas?: Coordinates | null;
+  horario?: Horario | null;
+  notaInterna?: string | null;
+  revisadoPorId?: string | null;
+  revisadoPorNombre?: string | null;
+  revisadoEn?: string | Date | null;
+  /** Ficha creada a partir de esta solicitud, para no publicarla dos veces. */
+  publicadoComoId?: string | null;
+  publicadoComoTipo?: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+/** Resultado del envío del formulario público. */
+export interface SolicitudEnvioResult {
+  ok: boolean;
+  id?: string;
+  /** Mensajes por campo, para marcar el que falta sin perder lo ya escrito. */
+  errores?: Record<string, string>;
+  error?: string;
+}

@@ -15,6 +15,7 @@ import {
   Cloud,
   CloudSun,
   CloudRain,
+  Store,
 } from 'lucide-react';
 import { Editable, useSiteText } from '@/components/site-text';
 
@@ -301,6 +302,16 @@ export default function Navbar() {
                 onClick={() => setDrawerOpen(false)}
               >
                 <Phone size={18} className="text-rojo" /> <Editable k="nav.contactoLargo" />
+              </Link>
+
+              <Link
+                href="/sumate"
+                className={`flex items-center gap-3 py-3 px-6 text-sm font-bold text-text-primary no-underline transition-colors hover:bg-surface-soft ${
+                  isActive('/sumate') ? 'bg-rojo/10 text-rojo border-l-4 border-rojo' : ''
+                }`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                <Store size={18} className="text-rojo" /> <Editable k="nav.sumateLargo" />
               </Link>
 
               <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2.5 px-4">

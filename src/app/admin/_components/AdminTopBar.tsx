@@ -51,6 +51,7 @@ export function AdminTopBar({
     { category: string; label: string }
   > = {
     dashboard: { category: 'Visión General', label: 'Dashboard Ejecutivo' },
+    solicitudes: { category: 'Visión General', label: 'Solicitudes Recibidas' },
     destinos: { category: 'Contenido Editable', label: 'Destinos Turísticos' },
     restaurantes: { category: 'Contenido Editable', label: 'Restaurantes y Picadas' },
     alojamientos: { category: 'Contenido Editable', label: 'Alojamientos y Cabañas' },

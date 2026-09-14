@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
   Destination,
@@ -27,6 +27,7 @@ import { useSessionHeartbeat } from './_hooks/useSessionHeartbeat';
 
 import { AdminLogin } from './_components/AdminLogin';
 import { AdminSidebar } from './_components/AdminSidebar';
+import { SolicitudesManager } from './_components/SolicitudesManager';
 import { AdminTopBar } from './_components/AdminTopBar';
 import { AdminDashboard } from './_components/AdminDashboard';
 import { AdminTable } from './_components/AdminTable';
@@ -57,6 +58,8 @@ import {
 } from './actions';
 
 import { AdminSection } from './_types';
+import { SolicitudRecord } from '@/lib/types';
+import { contarSolicitudesPendientes, marcarSolicitudPublicada } from './solicitudActions';
 
 interface Props {
   initialDestinos: Destination[];
@@ -94,6 +97,14 @@ export default function AdminClient({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
 
+  // Solicitudes del sitio publico pendientes de revisar: alimentan el contador
+  // de la barra lateral y el aviso del dashboard.
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState(0);
+  // Solicitud que dio origen a la ficha que se esta creando. Va en un ref y no
+  // en estado porque lo lee el callback de guardado de los hooks, que se crea
+  // una sola vez: con estado leeria siempre el valor inicial.
+  const solicitudEnCurso = useRef<{ id: string; seccion: AdminSection } | null>(null);
+
   // Users management state
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [editingUser, setEditingUser] = useState<
@@ -124,11 +135,142 @@ export default function AdminClient({
     onRefreshed: setSession,
   });
 
-  const destinos = useDestinos(initialDestinos, { showToast, confirmAction, onAuthError: handleAuthError });
-  const restaurantes = useRestaurantes(initialRestaurantes, { showToast, confirmAction, onAuthError: handleAuthError });
-  const alojamientos = useAlojamientos(initialAlojamientos, { showToast, confirmAction, onAuthError: handleAuthError });
-  const eventos = useEventos(initialEventos, { showToast, confirmAction, onAuthError: handleAuthError });
+  /**
+   * Cierra el ciclo de una solicitud cuando la ficha que nacio de ella se
+   * guarda: la enlaza con la ficha creada y la marca como publicada, para que
+   * el mismo negocio no se publique dos veces por olvido.
+   */
+  const cerrarSolicitudSiCorresponde = (saved: { id: string; nombre?: string }) => {
+    const pendiente = solicitudEnCurso.current;
+    if (!pendiente) return;
+    solicitudEnCurso.current = null;
+
+    marcarSolicitudPublicada(pendiente.id, saved.id, pendiente.seccion)
+      .then(() => {
+        setSolicitudesPendientes((prev) => Math.max(0, prev - 1));
+        showToast('La solicitud quedo marcada como publicada', 'success');
+      })
+      .catch((e) => {
+        // La ficha ya se guardo: que falle el enlace no es motivo para alarmar,
+        // pero si hay que avisar, porque la solicitud sigue apareciendo abierta.
+        console.error('No se pudo enlazar la solicitud con la ficha:', e);
+        showToast('La ficha se guardo, pero la solicitud quedo sin marcar', 'info');
+      });
+  };
+
+  const opcionesFicha = {
+    showToast,
+    confirmAction,
+    onAuthError: handleAuthError,
+    onSaved: cerrarSolicitudSiCorresponde,
+  };
+
+  const destinos = useDestinos(initialDestinos, opcionesFicha);
+  const restaurantes = useRestaurantes(initialRestaurantes, opcionesFicha);
+  const alojamientos = useAlojamientos(initialAlojamientos, opcionesFicha);
+  const eventos = useEventos(initialEventos, opcionesFicha);
   const rutas = useRutas(initialRutas, { showToast, confirmAction, onAuthError: handleAuthError });
+
+  // Contador de solicitudes sin revisar. Se pide una vez al entrar: no cambia
+  // solo, y la bandeja lo refresca cuando el usuario actua sobre ella.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    contarSolicitudesPendientes()
+      .then(setSolicitudesPendientes)
+      .catch(() => setSolicitudesPendientes(0));
+  }, [isAuthenticated]);
+
+  /**
+   * Abre el formulario de ficha con los datos que mando el emprendedor.
+   *
+   * Este es el punto de todo el modulo: el encargado revisa, corrige lo que
+   * haga falta y guarda, en vez de transcribir a mano un correo. Los campos de
+   * la solicitud son deliberadamente los mismos que los de una ficha, asi que
+   * el traspaso es directo.
+   */
+  const handleCrearFichaDesdeSolicitud = (s: SolicitudRecord) => {
+    const contacto = {
+      telefono: s.telefono || '',
+      whatsapp: s.whatsapp || '',
+      email: s.email || '',
+      web: s.web || '',
+      instagram: s.instagram || '',
+      facebook: s.facebook || '',
+    };
+    const comun = {
+      nombre: s.nombre,
+      direccion: s.direccion || '',
+      coordenadas: s.coordenadas || undefined,
+      // La primera foto queda de portada y el resto en la galeria, que es como
+      // se ordenan en la ficha publicada.
+      imagenPrincipal: s.fotos?.[0] || '',
+      galeria: s.fotos?.slice(1) || [],
+    };
+
+    switch (s.tipo) {
+      case 'RESTAURANTE':
+        restaurantes.setEditing({
+          ...comun,
+          tipo: s.categoriaSugerida || '',
+          descripcion: s.descripcion,
+          especialidad: s.especialidad || '',
+          horario: s.horario || undefined,
+          mediosPago: s.mediosPago || [],
+          contacto,
+          telefono: s.telefono || '',
+          whatsapp: s.whatsapp || '',
+          tags: [],
+        } as any);
+        solicitudEnCurso.current = { id: s.id, seccion: 'restaurantes' };
+        setActiveSection('restaurantes');
+        break;
+
+      case 'ALOJAMIENTO':
+        alojamientos.setEditing({
+          ...comun,
+          tipo: s.categoriaSugerida || '',
+          descripcion: s.descripcion,
+          servicios: s.servicios || [],
+          contacto,
+          telefono: s.telefono || '',
+          whatsapp: s.whatsapp || '',
+        } as any);
+        solicitudEnCurso.current = { id: s.id, seccion: 'alojamientos' };
+        setActiveSection('alojamientos');
+        break;
+
+      case 'DESTINO':
+        destinos.setEditing({
+          ...comun,
+          // La categoria del catalogo es acotada: lo que sugirio el emprendedor
+          // es solo una pista, y el encargado la elige en el formulario.
+          categoria: undefined,
+          descripcionCorta: s.descripcion.slice(0, 160),
+          descripcionLarga: s.descripcion,
+          horario: s.horario || undefined,
+          tags: [],
+        } as any);
+        solicitudEnCurso.current = { id: s.id, seccion: 'destinos' };
+        setActiveSection('destinos');
+        break;
+
+      case 'EVENTO':
+        eventos.setEditing({
+          ...comun,
+          tipo: s.categoriaSugerida || '',
+          descripcion: s.descripcion,
+          descripcionLarga: s.descripcion,
+          fecha: s.fecha || '',
+          tags: [],
+        } as any);
+        solicitudEnCurso.current = { id: s.id, seccion: 'eventos' };
+        setActiveSection('eventos');
+        break;
+
+      default:
+        showToast('Una consulta general no crea una ficha', 'info');
+    }
+  };
 
   /**
    * Deja las listas del panel en el mismo orden que se acaba de guardar, para
@@ -327,6 +469,7 @@ export default function AdminClient({
           rutas: rutas.rutas.length,
           usuarios: users.length,
           textos: initialSiteTexts.length,
+          solicitudes: solicitudesPendientes,
         }}
         currentUser={session}
         onChangePassword={() => setIsChangePasswordOpen(true)}
@@ -377,6 +520,16 @@ export default function AdminClient({
             />
           )}
 
+          {/* Solicitudes del sitio publico */}
+          {activeSection === 'solicitudes' && (
+            <SolicitudesManager
+              currentUser={session}
+              showToast={showToast}
+              confirmAction={confirmAction}
+              onCrearFicha={handleCrearFichaDesdeSolicitud}
+            />
+          )}
+
           {/* Rutas y Paradas Manager */}
           {activeSection === 'rutas' && (
             <RutasManager
@@ -392,6 +545,7 @@ export default function AdminClient({
 
           {/* Tables for Destinos, Restaurantes, Alojamientos, Eventos */}
           {activeSection !== 'dashboard' &&
+            activeSection !== 'solicitudes' &&
             activeSection !== 'rutas' &&
             activeSection !== 'textos' &&
             activeSection !== 'orden' &&
