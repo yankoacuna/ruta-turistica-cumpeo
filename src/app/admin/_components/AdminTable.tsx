@@ -25,6 +25,7 @@ import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types
 import { formatHorario } from '@/lib/openingHours';
 import { AdminSection } from '../_types';
 import { Tooltip } from './Tooltip';
+import { SearchableSelect } from '@/components/SearchableSelect';
 
 interface EntityHandlers<T> {
   onNew: () => void;
@@ -745,18 +746,13 @@ export function AdminTable({
                 <th key={col.key} className={`px-4 pb-3 pt-0 font-normal ${col.thClassName || ''}`}>
                   {col.filterable &&
                     (col.filterType === 'select' ? (
-                      <select
+                      <SearchableSelect
                         value={columnFilters[col.key] || ''}
-                        onChange={(e) => setColumnFilters((f) => ({ ...f, [col.key]: e.target.value }))}
-                        className="w-full px-2 py-1 rounded-md border border-border bg-white text-[11px] font-medium text-text-secondary outline-none focus:border-rojo"
-                      >
-                        <option value="">Todos</option>
-                        {col.filterOptions?.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => setColumnFilters((f) => ({ ...f, [col.key]: v }))}
+                        placeholder="Todos"
+                        triggerClassName="w-full flex items-center justify-between gap-1.5 px-2 py-1 rounded-md border border-border bg-white text-[11px] font-medium text-text-secondary outline-none focus:border-rojo cursor-pointer"
+                        options={[{ value: '', label: 'Todos' }, ...(col.filterOptions || [])]}
+                      />
                     ) : (
                       <input
                         type="text"
@@ -813,18 +809,15 @@ export function AdminTable({
             <label htmlFor="page-size" className="text-text-muted">
               Filas por página:
             </label>
-            <select
+            <SearchableSelect
               id="page-size"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="px-2 py-1 rounded-md border border-border bg-surface-soft text-xs font-medium text-text-primary outline-none focus:border-rojo"
-            >
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+              className="w-16"
+              value={String(pageSize)}
+              onChange={(v) => setPageSize(Number(v))}
+              searchable={false}
+              triggerClassName="w-full flex items-center justify-between gap-1 px-2 py-1 rounded-md border border-border bg-surface-soft text-xs font-medium text-text-primary outline-none focus:border-rojo cursor-pointer"
+              options={PAGE_SIZE_OPTIONS.map((size) => ({ value: String(size), label: String(size) }))}
+            />
           </span>
         </div>
 

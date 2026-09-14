@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, CheckCircle2, Send, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { MapPin, Phone, Mail, CheckCircle2, Send, Loader2, Store } from 'lucide-react';
 import { Editable, useSiteText } from '@/components/site-text';
 
 export default function ContactoPage() {
@@ -14,6 +15,7 @@ export default function ContactoPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -21,17 +23,50 @@ export default function ContactoPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /**
+   * Envia la consulta al panel, donde queda en la bandeja de Solicitudes junto
+   * a las postulaciones. Antes esto era un setTimeout que simulaba el envio:
+   * la persona veia "mensaje enviado" y el mensaje no llegaba a nadie.
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (isSubmitting) return;
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setIsSubmitting(true);
+    setError('');
+    try {
+      const respuesta = await fetch('/api/solicitudes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'CONSULTA',
+          solicitanteNombre: formData.nombre,
+          solicitanteEmail: formData.email,
+          nombre: formData.asunto || 'Consulta desde el sitio',
+          descripcion: '',
+          mensaje: formData.mensaje,
+        }),
+      });
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok || !resultado.ok) {
+        const errores: Record<string, string> = resultado.errores || {};
+        setError(
+          Object.values(errores)[0] ||
+            resultado.error ||
+            'No pudimos enviar tu mensaje. Intentalo de nuevo.'
+        );
+        return;
+      }
+
       setIsSuccess(true);
       setFormData({ nombre: '', email: '', asunto: '', mensaje: '' });
-
-      setTimeout(() => setIsSuccess(false), 5000);
-    }, 1200);
+      setTimeout(() => setIsSuccess(false), 8000);
+    } catch {
+      setError('No pudimos enviar tu mensaje. Revisa tu conexion.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -145,6 +180,22 @@ export default function ContactoPage() {
             </div>
           </div>
 
+          {/* Aviso para emprendedores: llegan a contacto buscando como sumarse,
+              y el formulario de consultas no recoge los datos que hacen falta */}
+          <div className="md:col-span-2 order-first flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl bg-sol/10 border border-sol/40">
+            <Store size={22} className="text-rojo shrink-0" />
+            <p className="text-sm text-text-secondary flex-1 leading-relaxed">
+              <strong className="text-text-primary">¿Tienes un negocio turístico en Cumpeo?</strong>{' '}
+              Postula para aparecer en la plataforma con tu ficha, fotos y datos de contacto.
+            </p>
+            <Link
+              href="/sumate"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-rojo hover:bg-rojo-dark text-white text-sm font-bold no-underline transition-colors shrink-0"
+            >
+              Súmate a la plataforma
+            </Link>
+          </div>
+
           {/* Lado Derecho: Formulario */}
           <div className="bg-surface-soft p-6 sm:p-7 rounded-xl border border-border flex flex-col justify-center">
             <Editable
@@ -170,6 +221,12 @@ export default function ContactoPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+                {error && (
+                  <p className="px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-rojo">
+                    {error}
+                  </p>
+                )}
+
                 <div className="flex flex-col gap-1">
                   <label htmlFor="nombre" className="text-xs font-bold text-text-secondary">
                     Nombre Completo

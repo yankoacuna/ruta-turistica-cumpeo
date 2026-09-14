@@ -11,7 +11,7 @@ import {
 } from '@/lib/data';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const BADGE_STYLES: Record<string, string> = {
@@ -25,7 +25,8 @@ const BADGE_STYLES: Record<string, string> = {
 };
 const getBadgeStyle = (colorClass: string) => BADGE_STYLES[colorClass] || BADGE_STYLES.gray;
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const config = await getConfig();
   const cat = config.categorias?.find((c: any) => c.id === params.id);
   if (!cat) return { title: 'Categoría no encontrada' };
@@ -35,7 +36,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CategoryPage({ params }: PageProps) {
+export default async function CategoryPage(props: PageProps) {
+  const params = await props.params;
   const config = await getConfig();
   const category = config.categorias?.find((c: any) => c.id === params.id);
   if (!category) notFound();

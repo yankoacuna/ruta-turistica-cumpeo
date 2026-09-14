@@ -7,6 +7,7 @@ import { POI, TourRoute } from '@/lib/types';
 import { calcDistanceKm, formatDistance, formatImgUrl, sortByDistance } from '@/lib/data';
 import { useOpeningStatus } from '@/hooks/useOpeningStatus';
 import { useToast } from '@/components/Toast';
+import { SearchableSelect } from '@/components/SearchableSelect';
 import {
   Crosshair,
   Map as MapIcon,
@@ -128,8 +129,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
     setActiveRoute(null);
   };
 
-  const handleRouteSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const routeId = e.target.value;
+  const handleRouteSelect = (routeId: string) => {
     if (!routeId) {
       setActiveRoute(null);
       return;
@@ -313,19 +313,19 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
 
             {/* Route Selector Dropdown */}
             {tourRoutes.length > 0 && (
-              <div className="shrink-0">
-                <select
-                  className="px-3 py-1 rounded-full border border-border text-xs font-bold bg-white text-text-secondary outline-none focus:border-rojo cursor-pointer"
+              <div className="shrink-0 w-[220px] sm:w-[260px]">
+                <SearchableSelect
                   value={activeRoute?.id || ''}
                   onChange={handleRouteSelect}
-                >
-                  <option value="">Rutas Turísticas...</option>
-                  {tourRoutes.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.nombre} ({r.poiIds.length} paradas)
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Rutas Turísticas..."
+                  searchPlaceholder="Buscar ruta…"
+                  triggerClassName="w-full flex items-center justify-between gap-1.5 px-3 py-1 rounded-full border border-border text-xs font-bold bg-white text-text-secondary outline-none focus:border-rojo cursor-pointer"
+                  options={tourRoutes.map((r) => ({
+                    value: r.id,
+                    label: r.nombre,
+                    description: `${r.poiIds.length} paradas`,
+                  }))}
+                />
               </div>
             )}
           </div>

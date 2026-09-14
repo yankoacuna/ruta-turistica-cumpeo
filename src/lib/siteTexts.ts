@@ -63,6 +63,12 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       { key: 'nav.historiaLargo', label: 'Menú: historia (largo)', value: 'Historia del Pueblo' },
       { key: 'nav.contacto', label: 'Menú: contacto (corto)', value: 'Contacto' },
       { key: 'nav.contactoLargo', label: 'Menú: contacto (largo)', value: 'Contacto e Información' },
+      { key: 'nav.sumate', label: 'Menú: súmate (corto)', value: 'Súmate' },
+      {
+        key: 'nav.sumateLargo',
+        label: 'Menú: súmate (largo)',
+        value: 'Súmate a la plataforma',
+      },
       { key: 'nav.mapa', label: 'Menú: mapa (corto)', value: 'Mapa GPS' },
       { key: 'nav.mapaCta', label: 'Botón del mapa', value: 'Abrir Mapa GPS' },
       { key: 'nav.admin', label: 'Menú: administración', value: 'Panel de Administración' },

@@ -36,7 +36,8 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function DestinoDetailPage({ params }: { params: { slug: string } }) {
+export default async function DestinoDetailPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const destination = await getDestinationByIdOrSlug(params.slug);
 
   if (!destination) {

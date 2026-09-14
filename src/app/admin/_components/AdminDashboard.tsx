@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MapPin,
   UtensilsCrossed,
@@ -19,6 +19,8 @@ import {
   Map,
   Users,
   Eye,
+  UserRound,
+  Inbox,
   Shield,
   ShieldAlert,
   Sparkles,
@@ -26,6 +28,9 @@ import {
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser, UserRole } from '@/lib/types';
 import { formatHorario } from '@/lib/openingHours';
 import { StatCard } from './StatCard';
+import { VisitasPanel } from './VisitasPanel';
+import { useVisitStats } from '../_hooks/useVisitStats';
+import { contarSolicitudesPendientes } from '../solicitudActions';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   ADMIN: 'Administrador',
@@ -70,6 +75,18 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const isLector = currentUser?.role === 'LECTOR';
   const isAdmin = currentUser?.role === 'ADMIN';
+
+  // Una sola consulta de visitas para la tarjeta del grid y el panel detallado.
+  const visitas = useVisitStats('30d');
+
+  // Solicitudes sin revisar. Se consulta aparte de las listas del panel porque
+  // no es contenido publicado, sino trabajo pendiente que llego desde el sitio.
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState(0);
+  useEffect(() => {
+    contarSolicitudesPendientes()
+      .then(setSolicitudesPendientes)
+      .catch(() => setSolicitudesPendientes(0));
+  }, []);
 
   const totalItems =
     destinos.length + restaurantes.length + alojamientos.length + eventos.length + rutas.length;
@@ -177,6 +194,34 @@ export function AdminDashboard({
         </div>
       </div>
 
+      {/* Solicitudes por revisar: lo primero que deberia ver el encargado, porque
+          es gente esperando respuesta, no contenido que ya esta publicado */}
+      {solicitudesPendientes > 0 && (
+        <button
+          type="button"
+          onClick={() => onNavigate('solicitudes')}
+          className="w-full flex items-center gap-3.5 p-4 sm:p-5 rounded-2xl bg-white border-2 border-rojo/30 hover:border-rojo shadow-sm transition-all text-left group"
+        >
+          <span className="w-10 h-10 rounded-xl bg-red-50 text-rojo flex items-center justify-center shrink-0">
+            <Inbox size={20} />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-text-primary">
+              {solicitudesPendientes === 1
+                ? 'Tienes 1 solicitud sin revisar'
+                : `Tienes ${solicitudesPendientes} solicitudes sin revisar`}
+            </span>
+            <span className="block text-xs text-text-secondary leading-relaxed mt-0.5">
+              Postulaciones y consultas que llegaron desde el sitio público y esperan respuesta.
+            </span>
+          </span>
+          <ArrowRight
+            size={18}
+            className="text-rojo shrink-0 group-hover:translate-x-0.5 transition-transform"
+          />
+        </button>
+      )}
+
       {/* Quick Action Shortcuts or Read-Only Notice */}
       {!isLector ? (
         <div className="bg-white rounded-2xl border border-border p-4 sm:p-5 shadow-2xs">
@@ -242,7 +287,22 @@ export function AdminDashboard({
       )}
 
       {/* KPI Cards Grid */}
-      <div id="tour-stat-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div
+        id="tour-stat-cards"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5"
+      >
+        <StatCard
+          label="Visitantes"
+          value={visitas.stats?.visitantesRango ?? 0}
+          icon={<UserRound size={22} />}
+          color="text-cielo"
+          bg="bg-sky-100"
+          sub={
+            visitas.cargando && !visitas.stats
+              ? 'Cargando…'
+              : `Personas distintas · ${visitas.stats?.rangoLabel ?? ''}`
+          }
+        />
         <StatCard
           label="Destinos"
           value={destinos.length}
@@ -289,6 +349,19 @@ export function AdminDashboard({
           onClick={() => onNavigate('rutas')}
         />
       </div>
+
+      {/* Visitantes reales del sitio publico */}
+      <VisitasPanel
+        stats={visitas.stats}
+        preset={visitas.preset}
+        desde={visitas.desde}
+        hasta={visitas.hasta}
+        cargando={visitas.cargando}
+        error={visitas.error}
+        onPresetChange={visitas.setPreset}
+        onRangoPersonalizado={visitas.setRangoPersonalizado}
+        onRecargar={visitas.recargar}
+      />
 
       {/* Analytics & Health: Calidad y Cobertura Visual */}
       <div id="tour-visual-coverage" className="bg-white rounded-2xl border border-border shadow-2xs p-5">

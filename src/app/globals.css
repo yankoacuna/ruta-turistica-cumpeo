@@ -1,12 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fredoka:wght@500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Variables CSS (compatibilidad con código existente) ──────────────
+/* ── Variables CSS: fuente de verdad de la paleta y la tipografía ──────
    Sistema "Papel de Historieta": tinta cálida + papel crema + rojo Condorito.
-   Los valores se mantienen sincronizados con tailwind.config.ts.
+   tailwind.config.ts apunta sus colores y fuentes a estas variables, así que
+   cambiarlas acá (o sobreescribirlas desde el CMS, ver src/lib/theme.ts y
+   RootLayout) retiñe todo el sitio sin tocar una sola clase de Tailwind.
+   Las hojas de Google Fonts se cargan dinámicamente desde el layout raíz,
+   según la tipografía resuelta (por defecto u overrides del CMS).
    ------------------------------------------------------------------- */
 :root {
   /* Dominante */

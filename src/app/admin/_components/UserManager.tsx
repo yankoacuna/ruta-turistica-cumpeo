@@ -20,6 +20,14 @@ import {
 } from 'lucide-react';
 import { AdminUser, UserRole } from '@/lib/types';
 import { Tooltip } from './Tooltip';
+import { SearchableSelect } from '@/components/SearchableSelect';
+
+const ROLE_FILTER_OPTIONS = [
+  { value: 'all', label: 'Todos los roles' },
+  { value: 'ADMIN', label: 'Administradores' },
+  { value: 'EDITOR', label: 'Editores' },
+  { value: 'LECTOR', label: 'Lectores' },
+];
 
 interface UserManagerProps {
   users: AdminUser[];
@@ -132,17 +140,14 @@ export function UserManager({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-text-muted">Filtrar rol:</span>
-          <select
-            className="text-xs bg-surface-soft border border-border rounded-lg px-2.5 py-1.5 text-text-secondary focus:outline-none focus:border-rojo"
+          <span className="text-[11px] font-bold text-text-muted shrink-0">Filtrar rol:</span>
+          <SearchableSelect
+            className="w-44"
+            triggerClassName="w-full flex items-center justify-between gap-1.5 text-xs bg-surface-soft border border-border rounded-lg px-2.5 py-1.5 text-text-secondary outline-none focus:border-rojo cursor-pointer"
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
-            <option value="all">Todos los roles</option>
-            <option value="ADMIN">Administradores</option>
-            <option value="EDITOR">Editores</option>
-            <option value="LECTOR">Lectores</option>
-          </select>
+            onChange={setRoleFilter}
+            options={ROLE_FILTER_OPTIONS}
+          />
         </div>
       </div>
 

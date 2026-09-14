@@ -24,13 +24,14 @@ export const metadata: Metadata = {
 };
 
 interface RutaPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     ruta?: string;
     slug?: string;
-  };
+  }>;
 }
 
-export default async function RutaPage({ searchParams }: RutaPageProps) {
+export default async function RutaPage(props: RutaPageProps) {
+  const searchParams = await props.searchParams;
   // ── CARGA DINÁMICA DE LA BASE DE DATOS Y CONFIGURACIÓN ──
   const [routes, allPois, textos] = await Promise.all([
     getTourRoutes(),

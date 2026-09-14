@@ -51,12 +51,14 @@ export function AdminTopBar({
     { category: string; label: string }
   > = {
     dashboard: { category: 'Visión General', label: 'Dashboard Ejecutivo' },
+    solicitudes: { category: 'Visión General', label: 'Solicitudes Recibidas' },
     destinos: { category: 'Contenido Editable', label: 'Destinos Turísticos' },
     restaurantes: { category: 'Contenido Editable', label: 'Restaurantes y Picadas' },
     alojamientos: { category: 'Contenido Editable', label: 'Alojamientos y Cabañas' },
     eventos: { category: 'Contenido Editable', label: 'Eventos y Festividades' },
     rutas: { category: 'Contenido Editable', label: 'Circuitos y Rutas' },
     textos: { category: 'Contenido Editable', label: 'Textos del Sitio' },
+    apariencia: { category: 'Contenido Editable', label: 'Apariencia del Sitio' },
     orden: { category: 'Contenido Editable', label: 'Orden de la Portada' },
     qrcodes: { category: 'Herramientas', label: 'Generador de Códigos QR' },
     backups: { category: 'Sistema', label: 'Copias de Seguridad (Backup)' },

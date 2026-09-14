@@ -21,7 +21,7 @@ const emptyDest = (): Partial<Destination> => ({
   galeria: [],
 });
 
-export function useDestinos(initial: Destination[], { showToast, confirmAction, onAuthError }: HookOptions) {
+export function useDestinos(initial: Destination[], { showToast, confirmAction, onAuthError, onSaved }: HookOptions) {
   const [destinos, setDestinos] = useState<Destination[]>(initial);
   const [editing, setEditing] = useState<Partial<Destination> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -44,6 +44,7 @@ export function useDestinos(initial: Destination[], { showToast, confirmAction, 
             : [...prev, updated];
         });
         showToast(`"${saved.nombre}" guardado`, 'success');
+        onSaved?.(saved);
         close();
       } catch (err: any) {
         if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {

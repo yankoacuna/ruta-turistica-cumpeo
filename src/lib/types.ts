@@ -278,3 +278,142 @@ export interface EditModeAccess {
 
 /** Catastros cuyo orden en la portada se puede administrar. */
 export type OrderableEntity = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';
+
+// ─── APARIENCIA EDITABLE DEL SITIO ────────────────────────────────────────────
+
+/** Apariencia guardada desde el CMS. Un campo en null usa el valor por defecto. */
+export interface ThemeConfigRecord {
+  colorPrimario: string | null;
+  colorAcento: string | null;
+  colorFondo: string | null;
+  colorTexto: string | null;
+  fontBody: string | null;
+  fontDisplay: string | null;
+  /** ISO string: las fechas viajan serializadas al cliente. */
+  updatedAt: string;
+  updatedByEmail?: string | null;
+  updatedByNombre?: string | null;
+}
+
+/** Lo que envía el formulario del CMS al guardar. */
+export interface ThemeSaveInput {
+  colorPrimario?: string | null;
+  colorAcento?: string | null;
+  colorFondo?: string | null;
+  colorTexto?: string | null;
+  fontBody?: string | null;
+  fontDisplay?: string | null;
+}
+
+// ─── VISITAS DEL SITIO PÚBLICO ────────────────────────────────────────────────
+
+/** Períodos que ofrece el selector del panel de visitantes. */
+export type VisitRangoPreset =
+  | 'hoy'
+  | '7d'
+  | '30d'
+  | 'mes-actual'
+  | 'mes-pasado'
+  /** Rango libre: el panel manda las fechas de inicio y fin. */
+  | 'personalizado';
+
+/**
+ * Métricas de visitas que muestra el dashboard del CMS.
+ *
+ * El indicador principal es "visitantes" (dispositivos distintos): "visitas"
+ * cuenta cada página abierta, así que un mismo turista recorriendo el sitio
+ * infla esa cifra sin que haya llegado más gente. Las visitas quedan como dato
+ * secundario, para leer cuánto explora cada persona.
+ *
+ * `disponible: false` significa que no se pudo consultar la tabla: el panel lo
+ * avisa en vez de mostrar ceros que parecerían "no vino nadie".
+ */
+export interface VisitStats {
+  disponible: boolean;
+  preset: VisitRangoPreset;
+  /** Nombre del período tal como se muestra: "Hoy", "Septiembre 2026", etc. */
+  rangoLabel: string;
+  /** 'hora' solo en el período "Hoy"; el resto se grafica por día. */
+  granularidad: 'dia' | 'hora';
+  visitasHoy: number;
+  visitantesHoy: number;
+  visitas7: number;
+  visitantes7: number;
+  visitasRango: number;
+  visitantesRango: number;
+  sesionesRango: number;
+  visitasTotal: number;
+  visitantesTotal: number;
+  /** Fecha ISO de la primera visita registrada, para mostrar desde cuándo se mide. */
+  midiendoDesde: string | null;
+  /** Un tramo por barra del gráfico: "2026-09-13" por día, "2026-09-13T14" por hora. */
+  serie: Array<{ clave: string; visitas: number; visitantes: number }>;
+  paginas: Array<{ path: string; titulo: string | null; visitas: number; visitantes: number }>;
+  secciones: Array<{ seccion: string; visitas: number; visitantes: number }>;
+  dispositivos: Array<{ device: string; visitas: number; visitantes: number }>;
+  origenes: Array<{ referrer: string; visitas: number; visitantes: number }>;
+}
+
+// ─── SOLICITUDES DEL SITIO PÚBLICO ────────────────────────────────────────────
+
+/** Qué está pidiendo quien escribe: sumar su negocio, o una consulta general. */
+export type SolicitudTipo = 'RESTAURANTE' | 'ALOJAMIENTO' | 'DESTINO' | 'EVENTO' | 'CONSULTA';
+
+/**
+ * Ciclo de vida de una solicitud dentro del municipio:
+ * NUEVA → EN_REVISION → APROBADA → PUBLICADA (o RECHAZADA en cualquier punto).
+ */
+export type SolicitudEstado = 'NUEVA' | 'EN_REVISION' | 'APROBADA' | 'RECHAZADA' | 'PUBLICADA';
+
+/** Lo que envía el formulario público. Todo llega como texto y se valida en el servidor. */
+export interface SolicitudInput {
+  tipo: SolicitudTipo;
+  solicitanteNombre: string;
+  solicitanteEmail: string;
+  solicitanteTelefono?: string;
+  solicitanteRol?: string;
+  nombre: string;
+  descripcion: string;
+  categoriaSugerida?: string;
+  especialidad?: string;
+  direccion?: string;
+  coordenadas?: Coordinates | null;
+  horario?: Horario | null;
+  telefono?: string;
+  whatsapp?: string;
+  email?: string;
+  web?: string;
+  instagram?: string;
+  facebook?: string;
+  servicios?: string[];
+  mediosPago?: string[];
+  fecha?: string;
+  fotos?: string[];
+  mensaje?: string;
+}
+
+/** Una solicitud tal como la lee el panel. */
+export interface SolicitudRecord extends Omit<SolicitudInput, 'coordenadas' | 'horario'> {
+  id: string;
+  estado: SolicitudEstado;
+  coordenadas?: Coordinates | null;
+  horario?: Horario | null;
+  notaInterna?: string | null;
+  revisadoPorId?: string | null;
+  revisadoPorNombre?: string | null;
+  revisadoEn?: string | Date | null;
+  /** Ficha creada a partir de esta solicitud, para no publicarla dos veces. */
+  publicadoComoId?: string | null;
+  publicadoComoTipo?: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+/** Resultado del envío del formulario público. */
+export interface SolicitudEnvioResult {
+  ok: boolean;
+  id?: string;
+  /** Mensajes por campo, para marcar el que falta sin perder lo ya escrito. */
+  errores?: Record<string, string>;
+  error?: string;
+}

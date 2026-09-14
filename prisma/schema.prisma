@@ -180,3 +180,118 @@ model SiteTextRevision {
 
   @@index([key, createdAt])
 }
+
+/// Apariencia editable del sitio: paleta de colores y tipografías.
+/// Fila única (id fijo "default"). Solo guarda lo que un editor cambió: los
+/// valores por defecto viven en el código (src/lib/theme.ts). Si esta tabla
+/// está vacía, el sitio se ve exactamente igual que sin esta funcionalidad.
+model ThemeConfig {
+  id              String   @id @default("default")
+  /// Hex del color dominante (rojo Condorito). Claro/oscuro se derivan solos.
+  colorPrimario   String?
+  /// Hex del color de acento (sol).
+  colorAcento     String?
+  /// Hex del fondo/papel base.
+  colorFondo      String?
+  /// Hex del texto/tinta base.
+  colorTexto      String?
+  /// Clave del catálogo de tipografías de texto (src/lib/theme.ts).
+  fontBody        String?
+  /// Clave del catálogo de tipografías de titulares (src/lib/theme.ts).
+  fontDisplay     String?
+  updatedAt       DateTime @updatedAt
+  updatedByEmail  String?
+  updatedByNombre String?
+}
+
+/// Registro anónimo de visitas al sitio público (no al panel /admin).
+/// No guarda IP ni datos personales: solo un id aleatorio de dispositivo
+/// (visitorId, vive en localStorage) y uno de sesión (sessionId), para poder
+/// distinguir "visitas" de "visitantes" sin identificar a nadie.
+model PageView {
+  id        String   @id @default(cuid())
+  path      String // ruta visitada, ej. "/destino/plaza-de-cumpeo"
+  titulo    String? // título legible de la página al momento de la visita
+  seccion   String // inicio | destino | ruta | mapa | categoria | historia | contacto | otro
+  visitorId String // id anónimo por dispositivo (localStorage)
+  sessionId String // id anónimo por sesión del navegador
+  referrer  String? // dominio de origen (google.com, qr, etc.), sin querystring
+  device    String? // movil | tablet | escritorio
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([seccion, createdAt])
+  @@index([path, createdAt])
+  @@index([visitorId, createdAt])
+}
+
+enum SolicitudTipo {
+  RESTAURANTE
+  ALOJAMIENTO
+  DESTINO
+  EVENTO
+  CONSULTA
+}
+
+enum SolicitudEstado {
+  NUEVA
+  EN_REVISION
+  APROBADA
+  RECHAZADA
+  PUBLICADA
+}
+
+/// Solicitudes que llegan desde el sitio público: emprendedores que piden
+/// sumarse a la plataforma (/sumate) y consultas del formulario de contacto.
+///
+/// Los campos del negocio son deliberadamente los mismos que usa una ficha
+/// publicada (Destination / Restaurant / Accommodation / Event): así el panel
+/// puede abrir el formulario de creación ya relleno con lo que envió el
+/// emprendedor, en vez de obligar a copiar el dato a mano.
+model Solicitud {
+  id     String          @id @default(cuid())
+  tipo   SolicitudTipo
+  estado SolicitudEstado @default(NUEVA)
+
+  // ── Quién solicita ──
+  solicitanteNombre   String
+  solicitanteEmail    String
+  solicitanteTelefono String?
+  solicitanteRol      String? // dueño, encargado, familiar, etc.
+
+  // ── Datos del lugar o negocio (vacíos en una consulta simple) ──
+  nombre            String
+  descripcion       String
+  categoriaSugerida String? // categoría del destino / tipo de local / tipo de alojamiento
+  especialidad      String?
+  direccion         String?
+  coordenadas       Json? // { lat, lng } marcado en el mapa
+  horario           Json? // { apertura, cierre, descripcion }
+  telefono          String?
+  whatsapp          String?
+  email             String?
+  web               String?
+  instagram         String?
+  facebook          String?
+  servicios         String[] // alojamientos
+  mediosPago        String[] // locales de comida
+  fecha             String? // eventos: "20 de enero", "Fines de semana"
+  fotos             String[] // URLs en Supabase Storage
+  mensaje           String? // comentario libre del solicitante
+
+  // ── Gestión interna del municipio ──
+  notaInterna       String?
+  revisadoPorId     String?
+  revisadoPorNombre String?
+  revisadoEn        DateTime?
+  /// Ficha creada a partir de esta solicitud, para no publicarla dos veces.
+  publicadoComoId   String?
+  publicadoComoTipo String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([estado, createdAt])
+  @@index([tipo, createdAt])
+  @@index([createdAt])
+}

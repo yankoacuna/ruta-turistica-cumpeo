@@ -12,6 +12,7 @@ import {
   QrCode,
   Database,
   Type,
+  Palette,
   ListOrdered,
   ExternalLink,
   LogOut,
@@ -22,6 +23,7 @@ import {
   Eye,
   Radio,
   Users,
+  Inbox,
   KeyRound,
   ChevronLeft,
   ChevronRight,
@@ -40,6 +42,8 @@ interface AdminSidebarProps {
     usuarios?: number;
     /** Cuántos textos del sitio fueron modificados desde el CMS. */
     textos?: number;
+    /** Solicitudes del sitio público sin revisar: se muestran en rojo. */
+    solicitudes?: number;
   };
   currentUser?: AdminSessionUser | null;
   onChangePassword?: () => void;
@@ -125,6 +129,13 @@ export function AdminSidebar({
           count: undefined,
           highlight: false,
         },
+        {
+          id: 'solicitudes' as AdminSection,
+          label: 'Solicitudes',
+          icon: Inbox,
+          count: counts.solicitudes,
+          color: 'text-rojo',
+        },
       ],
     },
     {
@@ -171,6 +182,13 @@ export function AdminSidebar({
           icon: Type,
           count: counts.textos,
           color: 'text-sky-500',
+        },
+        {
+          id: 'apariencia' as AdminSection,
+          label: 'Apariencia',
+          icon: Palette,
+          count: undefined,
+          color: 'text-pink-500',
         },
         {
           id: 'orden' as AdminSection,

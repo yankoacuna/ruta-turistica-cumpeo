@@ -16,7 +16,7 @@ const emptyRest = (): Partial<Restaurant> => ({
   tags: [],
 });
 
-export function useRestaurantes(initial: Restaurant[], { showToast, confirmAction, onAuthError }: HookOptions) {
+export function useRestaurantes(initial: Restaurant[], { showToast, confirmAction, onAuthError, onSaved }: HookOptions) {
   const [restaurantes, setRestaurantes] = useState<Restaurant[]>(initial);
   const [editing, setEditing] = useState<Partial<Restaurant> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -44,6 +44,7 @@ export function useRestaurantes(initial: Restaurant[], { showToast, confirmActio
             : [...prev, updated];
         });
         showToast(`"${saved.nombre}" guardado`, 'success');
+        onSaved?.(saved);
         close();
       } catch (err: any) {
         if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {

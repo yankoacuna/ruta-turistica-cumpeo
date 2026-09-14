@@ -1,7 +1,8 @@
 import React from 'react';
 import { Accommodation } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
-import { Field, inputCls, textareaCls, selectCls } from '../Field';
+import { Field, inputCls, textareaCls } from '../Field';
+import { SearchableSelect } from '@/components/SearchableSelect';
 import {
   LocationField,
   ContactoSection,
@@ -10,6 +11,15 @@ import {
   MediaFields,
   PropietarioField,
 } from './common';
+
+const TIPO_OPTIONS = [
+  { value: 'Cabaña', label: 'Cabaña' },
+  { value: 'Hostal', label: 'Hostal' },
+  { value: 'Hotel', label: 'Hotel' },
+  { value: 'Camping', label: 'Camping' },
+  { value: 'Residencial', label: 'Residencial' },
+  { value: 'Agroturismo', label: 'Agroturismo' },
+];
 
 interface AlojamientoModalProps {
   editing: Partial<Accommodation>;
@@ -46,19 +56,12 @@ export function AlojamientoModal({
             />
           </Field>
           <Field label="Tipo de Alojamiento">
-            <select
-              className={selectCls}
+            <SearchableSelect
               value={editing.tipo || ''}
-              onChange={(e) => set({ tipo: e.target.value })}
-            >
-              <option value="">Seleccionar tipo…</option>
-              <option value="Cabaña">Cabaña</option>
-              <option value="Hostal">Hostal</option>
-              <option value="Hotel">Hotel</option>
-              <option value="Camping">Camping</option>
-              <option value="Residencial">Residencial</option>
-              <option value="Agroturismo">Agroturismo</option>
-            </select>
+              onChange={(v) => set({ tipo: v })}
+              placeholder="Seleccionar tipo…"
+              options={TIPO_OPTIONS}
+            />
           </Field>
           <ActivoToggle
             id="acc-activo"

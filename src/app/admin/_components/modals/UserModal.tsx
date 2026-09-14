@@ -2,7 +2,14 @@ import React from 'react';
 import { Shield, ShieldAlert, Eye, UserCheck, KeyRound, Info } from 'lucide-react';
 import { AdminUser, UserRole } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
-import { Field, inputCls, selectCls } from '../Field';
+import { Field, inputCls } from '../Field';
+import { SearchableSelect } from '@/components/SearchableSelect';
+
+const ROLE_OPTIONS = [
+  { value: 'LECTOR', label: 'Lector', description: 'Solo consulta y visualización, sin edición' },
+  { value: 'EDITOR', label: 'Editor', description: 'Crear y editar atractivos, gastronomía, eventos y circuitos' },
+  { value: 'ADMIN', label: 'Administrador', description: 'Control total: eliminar registros, respaldos y gestión de usuarios' },
+];
 
 interface UserModalProps {
   editing: Partial<AdminUser> & { resetPassword?: boolean };
@@ -67,15 +74,11 @@ export function UserModal({
             required
             hint="Determina qué acciones puede realizar este usuario en el panel"
           >
-            <select
-              className={selectCls}
+            <SearchableSelect
               value={editing.role || 'LECTOR'}
-              onChange={(e) => set({ role: e.target.value as UserRole })}
-            >
-              <option value="LECTOR">Lector (Solo consulta y visualización, sin edición)</option>
-              <option value="EDITOR">Editor (Crear y editar atractivos, gastronomía, eventos y circuitos)</option>
-              <option value="ADMIN">Administrador (Control total: eliminar registros, respaldos y gestión de usuarios)</option>
-            </select>
+              onChange={(v) => set({ role: v as UserRole })}
+              options={ROLE_OPTIONS}
+            />
           </Field>
 
           {/* Role Explanation Card */}

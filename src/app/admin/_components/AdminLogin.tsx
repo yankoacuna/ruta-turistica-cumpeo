@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShieldCheck, Loader2, AlertCircle, Lock, Mail, KeyRound } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertCircle, Mail } from 'lucide-react';
 import { Field, inputCls } from './Field';
 import { PasswordInput } from './PasswordInput';
 
@@ -12,30 +12,12 @@ interface AdminLoginProps {
 export function AdminLogin({ onLogin }: AdminLoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
-  const [emergencyPass, setEmergencyPass] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError(null);
-
-    if (isEmergencyMode) {
-      if (!emergencyPass.trim()) {
-        setError('Por favor ingresa la clave de acceso de emergencia');
-        return;
-      }
-      setLoading(true);
-      try {
-        await onLogin(emergencyPass.trim());
-      } catch (err: any) {
-        setError(err.message || 'Error al iniciar sesión');
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
 
     if (!email.trim() || !password.trim()) {
       setError('Por favor completa tanto el correo como la contraseña');
@@ -78,52 +60,33 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
         {/* Card */}
         <div className="bg-white rounded-2xl border border-border p-7 shadow-md">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {!isEmergencyMode ? (
-              <>
-                <Field label="Correo Electrónico" required>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      className={inputCls}
-                      placeholder="ej: correo@turismocumpeo.cl"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setError(null);
-                      }}
-                      autoFocus
-                    />
-                    <Mail size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
-                  </div>
-                </Field>
-
-                <Field label="Contraseña" required>
-                  <PasswordInput
-                    placeholder="Ingresa tu contraseña personal..."
-                    value={password}
-                    onChange={(v) => {
-                      setPassword(v);
-                      setError(null);
-                    }}
-                  />
-                </Field>
-              </>
-            ) : (
-              <Field label="Clave Maestra de Respaldo" required>
-                <PasswordInput
-                  placeholder="Clave maestra de emergencia..."
-                  value={emergencyPass}
-                  onChange={(v) => {
-                    setEmergencyPass(v);
+            <Field label="Correo Electrónico" required>
+              <div className="relative">
+                <input
+                  type="email"
+                  className={inputCls}
+                  placeholder="ej: correo@turismocumpeo.cl"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
                     setError(null);
                   }}
                   autoFocus
                 />
-                <p className="text-[11px] text-text-muted mt-1.5 leading-relaxed">
-                  Modo de acceso directo usando la clave maestra de configuración.
-                </p>
-              </Field>
-            )}
+                <Mail size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" />
+              </div>
+            </Field>
+
+            <Field label="Contraseña" required>
+              <PasswordInput
+                placeholder="Ingresa tu contraseña personal..."
+                value={password}
+                onChange={(v) => {
+                  setPassword(v);
+                  setError(null);
+                }}
+              />
+            </Field>
 
             {error && (
               <div className="flex items-center gap-2 text-rojo text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
@@ -144,22 +107,6 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
               )}
               {loading ? 'Verificando…' : 'Acceder al Panel'}
             </button>
-
-            {/* Toggle Emergency mode */}
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEmergencyMode(!isEmergencyMode);
-                  setError(null);
-                }}
-                className="text-xs text-text-muted hover:text-rojo transition-colors underline decoration-dotted"
-              >
-                {isEmergencyMode
-                  ? '← Volver al acceso con Correo y Contraseña'
-                  : '¿Acceder con clave de rescate del servidor?'}
-              </button>
-            </div>
           </form>
         </div>
       </div>

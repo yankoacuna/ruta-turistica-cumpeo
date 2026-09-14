@@ -2,8 +2,15 @@ import React from 'react';
 import { Calendar, Tag } from 'lucide-react';
 import { CumpeoEvent } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
-import { Field, inputCls, textareaCls, selectCls } from '../Field';
+import { Field, inputCls, textareaCls } from '../Field';
+import { SearchableSelect } from '@/components/SearchableSelect';
 import { LocationField, CommaSeparatedField, MediaFields } from './common';
+
+const TIPO_OPTIONS = [
+  { value: 'fiestas-religiosas', label: 'Fiestas Religiosas' },
+  { value: 'ferias-libres', label: 'Ferias Libres' },
+  { value: 'centros-de-evento', label: 'Centros de Evento' },
+];
 
 interface EventoModalProps {
   editing: Partial<CumpeoEvent>;
@@ -42,16 +49,12 @@ export function EventoModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Tipo de Evento">
-              <select
-                className={selectCls}
+              <SearchableSelect
                 value={editing.tipo || ''}
-                onChange={(e) => set({ tipo: e.target.value })}
-              >
-                <option value="">Seleccionar tipo…</option>
-                <option value="fiestas-religiosas">Fiestas Religiosas</option>
-                <option value="ferias-libres">Ferias Libres</option>
-                <option value="centros-de-evento">Centros de Evento</option>
-              </select>
+                onChange={(v) => set({ tipo: v })}
+                placeholder="Seleccionar tipo…"
+                options={TIPO_OPTIONS}
+              />
             </Field>
             <Field label="Fecha" hint="Ej: 1 de enero / Fines de semana">
               <div className="relative">

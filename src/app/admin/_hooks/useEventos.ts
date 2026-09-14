@@ -19,7 +19,7 @@ const emptyEvento = (): Partial<CumpeoEvent> => ({
   activo: true,
 });
 
-export function useEventos(initial: CumpeoEvent[], { showToast, confirmAction, onAuthError }: HookOptions) {
+export function useEventos(initial: CumpeoEvent[], { showToast, confirmAction, onAuthError, onSaved }: HookOptions) {
   const [eventos, setEventos] = useState<CumpeoEvent[]>(initial);
   const [editing, setEditing] = useState<Partial<CumpeoEvent> | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -47,6 +47,7 @@ export function useEventos(initial: CumpeoEvent[], { showToast, confirmAction, o
             : [...prev, updated];
         });
         showToast(`"${saved.nombre}" guardado`, 'success');
+        onSaved?.(saved);
         close();
       } catch (err: any) {
         if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {

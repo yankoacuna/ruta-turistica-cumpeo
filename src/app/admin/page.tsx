@@ -9,8 +9,9 @@ import {
   getAdminTourRoutes,
 } from './actions';
 import { getSiteTextsAdmin } from './siteTextActions';
+import { getThemeConfigAdmin } from './themeActions';
 import AdminClient from './AdminClient';
-import { AdminUser, SiteTextRecord } from '@/lib/types';
+import { AdminUser, SiteTextRecord, ThemeConfigRecord } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,11 +38,17 @@ export default async function AdminPage() {
   // Textos del sitio ya modificados. Solo se piden con sesion: sin ella el
   // panel muestra el login y no hay nada que listar.
   let initialSiteTexts: SiteTextRecord[] = [];
+  let initialTheme: ThemeConfigRecord | null = null;
   if (session) {
     try {
       initialSiteTexts = await getSiteTextsAdmin();
     } catch (e) {
       console.error('Error fetching site texts:', e);
+    }
+    try {
+      initialTheme = await getThemeConfigAdmin();
+    } catch (e) {
+      console.error('Error fetching theme config:', e);
     }
   }
 
@@ -56,6 +63,7 @@ export default async function AdminPage() {
       initialSession={session}
       initialUsers={initialUsers}
       initialSiteTexts={initialSiteTexts}
+      initialTheme={initialTheme}
     />
   );
 }

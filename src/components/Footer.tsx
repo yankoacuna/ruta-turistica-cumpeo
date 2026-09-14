@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   Info, Bus, CalendarDays, Thermometer, Phone, AlertTriangle,
   Building2, Navigation, Home, Map, Target, UtensilsCrossed,
-  BedDouble, MapPin
+  BedDouble, MapPin, Store
 } from 'lucide-react';
 import { Editable } from '@/components/site-text';
 
@@ -169,6 +169,11 @@ export default function Footer() {
                 <li>
                   <Link href="/contacto" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
                     <Phone size={11} /> <Editable k="nav.contactoLargo" />
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/sumate" className="text-xs text-gray-400 no-underline transition-colors hover:text-sol flex items-center gap-1.5">
+                    <Store size={11} /> <Editable k="nav.sumateLargo" />
                   </Link>
                 </li>
               </ul>

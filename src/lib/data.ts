@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache';
 import { SITE_TEXT_DEFAULTS, SiteTexts, isKnownSiteTextKey } from './siteTexts';
 import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates, TourRoute, CumpeoEvent, EmergencyContact } from './types';
 import { prisma } from './prisma';
+import { resolveTheme, ResolvedTheme, ThemeOverrides } from './theme';
 
 export async function getConfig(): Promise<AppConfig> {
   const config = await prisma.config.findUnique({ where: { id: 'default' } });
@@ -290,4 +291,44 @@ export const getSiteTexts = unstable_cache(
 export async function getResolvedSiteTexts(): Promise<SiteTexts> {
   const overrides = await getSiteTexts();
   return { ...SITE_TEXT_DEFAULTS, ...overrides };
+}
+
+// ─── APARIENCIA EDITABLE DEL SITIO ────────────────────────────────────────────
+
+/**
+ * Lee la fila de apariencia que un editor haya guardado desde el CMS.
+ *
+ * Mismo patrón que getSiteTexts: envuelto en unstable_cache, sin leer cookies,
+ * invalidado por revalidateTag(THEME_TAG) desde themeActions.ts. Si la tabla
+ * no existe o la base está caída devuelve null, y el sitio cae a los valores
+ * por defecto del código.
+ */
+export const THEME_TAG = 'theme-config';
+
+export const getThemeOverrides = unstable_cache(
+  async (): Promise<ThemeOverrides> => {
+    try {
+      const row = await prisma.themeConfig.findUnique({ where: { id: 'default' } });
+      if (!row) return {};
+      return {
+        colorPrimario: row.colorPrimario,
+        colorAcento: row.colorAcento,
+        colorFondo: row.colorFondo,
+        colorTexto: row.colorTexto,
+        fontBody: row.fontBody,
+        fontDisplay: row.fontDisplay,
+      };
+    } catch (error) {
+      console.warn('Error fetching theme config from DB:', error);
+      return {};
+    }
+  },
+  ['theme-config'],
+  { tags: [THEME_TAG] }
+);
+
+/** Apariencia ya resuelta para renderizar: por defecto + cambios del CMS. */
+export async function getResolvedTheme(): Promise<ResolvedTheme> {
+  const overrides = await getThemeOverrides();
+  return resolveTheme(overrides);
 }

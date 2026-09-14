@@ -3,7 +3,8 @@ import { Star, Tag } from 'lucide-react';
 import { Destination } from '@/lib/types';
 import { slugify } from '@/lib/slug';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
-import { Field, inputCls, textareaCls, selectCls } from '../Field';
+import { Field, inputCls, textareaCls } from '../Field';
+import { SearchableSelect } from '@/components/SearchableSelect';
 import {
   LocationField,
   CommaSeparatedField,
@@ -11,6 +12,15 @@ import {
   HorarioField,
   ActivoToggle,
 } from './common';
+
+const CATEGORIA_OPTIONS = [
+  { value: 'cultural', label: 'Cultural' },
+  { value: 'historico', label: 'Histórico' },
+  { value: 'naturaleza', label: 'Naturaleza' },
+  { value: 'gastronomia', label: 'Gastronomía' },
+  { value: 'patrimonio', label: 'Patrimonio' },
+  { value: 'entretencion', label: 'Entretención' },
+];
 
 interface DestinoModalProps {
   editing: Partial<Destination>;
@@ -57,18 +67,11 @@ export function DestinoModal({
             />
           </Field>
           <Field label="Categoría" required>
-            <select
-              className={selectCls}
-              value={editing.categoria}
-              onChange={(e) => set({ categoria: e.target.value as Destination['categoria'] })}
-            >
-              <option value="cultural">Cultural</option>
-              <option value="historico">Histórico</option>
-              <option value="naturaleza">Naturaleza</option>
-              <option value="gastronomia">Gastronomía</option>
-              <option value="patrimonio">Patrimonio</option>
-              <option value="entretencion">Entretención</option>
-            </select>
+            <SearchableSelect
+              value={editing.categoria || ''}
+              onChange={(v) => set({ categoria: v as Destination['categoria'] })}
+              options={CATEGORIA_OPTIONS}
+            />
           </Field>
           <ActivoToggle
             id="dest-activo"
