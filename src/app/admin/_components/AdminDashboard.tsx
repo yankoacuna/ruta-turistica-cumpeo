@@ -19,6 +19,7 @@ import {
   Map,
   Users,
   Eye,
+  UserRound,
   Shield,
   ShieldAlert,
   Sparkles,
@@ -26,6 +27,8 @@ import {
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser, UserRole } from '@/lib/types';
 import { formatHorario } from '@/lib/openingHours';
 import { StatCard } from './StatCard';
+import { VisitasPanel } from './VisitasPanel';
+import { useVisitStats } from '../_hooks/useVisitStats';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   ADMIN: 'Administrador',
@@ -70,6 +73,9 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const isLector = currentUser?.role === 'LECTOR';
   const isAdmin = currentUser?.role === 'ADMIN';
+
+  // Una sola consulta de visitas para la tarjeta del grid y el panel detallado.
+  const visitas = useVisitStats('30d');
 
   const totalItems =
     destinos.length + restaurantes.length + alojamientos.length + eventos.length + rutas.length;
@@ -242,7 +248,22 @@ export function AdminDashboard({
       )}
 
       {/* KPI Cards Grid */}
-      <div id="tour-stat-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div
+        id="tour-stat-cards"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5"
+      >
+        <StatCard
+          label="Visitantes"
+          value={visitas.stats?.visitantesRango ?? 0}
+          icon={<UserRound size={22} />}
+          color="text-cielo"
+          bg="bg-sky-100"
+          sub={
+            visitas.cargando && !visitas.stats
+              ? 'Cargando…'
+              : `Personas distintas · ${visitas.stats?.rangoLabel ?? ''}`
+          }
+        />
         <StatCard
           label="Destinos"
           value={destinos.length}
@@ -289,6 +310,19 @@ export function AdminDashboard({
           onClick={() => onNavigate('rutas')}
         />
       </div>
+
+      {/* Visitantes reales del sitio publico */}
+      <VisitasPanel
+        stats={visitas.stats}
+        preset={visitas.preset}
+        desde={visitas.desde}
+        hasta={visitas.hasta}
+        cargando={visitas.cargando}
+        error={visitas.error}
+        onPresetChange={visitas.setPreset}
+        onRangoPersonalizado={visitas.setRangoPersonalizado}
+        onRecargar={visitas.recargar}
+      />
 
       {/* Analytics & Health: Calidad y Cobertura Visual */}
       <div id="tour-visual-coverage" className="bg-white rounded-2xl border border-border shadow-2xs p-5">

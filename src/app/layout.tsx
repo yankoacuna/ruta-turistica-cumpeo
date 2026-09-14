@@ -3,6 +3,7 @@ import Link from 'next/link';
 import './globals.css';
 import SiteLayout from '@/components/SiteLayout';
 import PWARegister from '@/components/PWARegister';
+import VisitTracker from '@/components/VisitTracker';
 import { ToastProvider } from '@/components/Toast';
 import { ConfirmProvider } from '@/components/ConfirmDialog';
 import { SiteTextProvider } from '@/components/site-text';
@@ -53,6 +54,9 @@ export default async function RootLayout({
 
               {/* PWA Offline Service Worker Registration */}
               <PWARegister />
+
+              {/* Conteo anonimo de visitas del sitio publico (excluye /admin) */}
+              <VisitTracker />
             </SiteTextProvider>
           </ConfirmProvider>
         </ToastProvider>

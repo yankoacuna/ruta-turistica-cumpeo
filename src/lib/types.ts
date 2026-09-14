@@ -278,3 +278,52 @@ export interface EditModeAccess {
 
 /** Catastros cuyo orden en la portada se puede administrar. */
 export type OrderableEntity = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';
+
+// ─── VISITAS DEL SITIO PÚBLICO ────────────────────────────────────────────────
+
+/** Períodos que ofrece el selector del panel de visitantes. */
+export type VisitRangoPreset =
+  | 'hoy'
+  | '7d'
+  | '30d'
+  | 'mes-actual'
+  | 'mes-pasado'
+  /** Rango libre: el panel manda las fechas de inicio y fin. */
+  | 'personalizado';
+
+/**
+ * Métricas de visitas que muestra el dashboard del CMS.
+ *
+ * El indicador principal es "visitantes" (dispositivos distintos): "visitas"
+ * cuenta cada página abierta, así que un mismo turista recorriendo el sitio
+ * infla esa cifra sin que haya llegado más gente. Las visitas quedan como dato
+ * secundario, para leer cuánto explora cada persona.
+ *
+ * `disponible: false` significa que no se pudo consultar la tabla: el panel lo
+ * avisa en vez de mostrar ceros que parecerían "no vino nadie".
+ */
+export interface VisitStats {
+  disponible: boolean;
+  preset: VisitRangoPreset;
+  /** Nombre del período tal como se muestra: "Hoy", "Septiembre 2026", etc. */
+  rangoLabel: string;
+  /** 'hora' solo en el período "Hoy"; el resto se grafica por día. */
+  granularidad: 'dia' | 'hora';
+  visitasHoy: number;
+  visitantesHoy: number;
+  visitas7: number;
+  visitantes7: number;
+  visitasRango: number;
+  visitantesRango: number;
+  sesionesRango: number;
+  visitasTotal: number;
+  visitantesTotal: number;
+  /** Fecha ISO de la primera visita registrada, para mostrar desde cuándo se mide. */
+  midiendoDesde: string | null;
+  /** Un tramo por barra del gráfico: "2026-09-13" por día, "2026-09-13T14" por hora. */
+  serie: Array<{ clave: string; visitas: number; visitantes: number }>;
+  paginas: Array<{ path: string; titulo: string | null; visitas: number; visitantes: number }>;
+  secciones: Array<{ seccion: string; visitas: number; visitantes: number }>;
+  dispositivos: Array<{ device: string; visitas: number; visitantes: number }>;
+  origenes: Array<{ referrer: string; visitas: number; visitantes: number }>;
+}
