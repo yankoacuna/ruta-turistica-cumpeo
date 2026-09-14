@@ -6,9 +6,6 @@ import { hashPassword, verifyPassword, createSessionToken, verifySessionToken, s
 
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
-import crypto from 'crypto';
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD;
 
 /**
  * Próximo valor de `orden` para una ficha nueva: el mayor actual + 1.
@@ -23,36 +20,6 @@ async function nextOrden(
 }
 
 // ─── AUTHENTICATION HELPERS & ROLE MANAGEMENT ───────────────────────────────
-
-/**
- * Obtiene el usuario administrador de rescate buscando en la base de datos o en .env.
- * No utiliza valores fijos ni hardcodeados como fallback.
- */
-async function getMasterAdminUser(): Promise<AdminSessionUser | null> {
-  const dbAdmin = await prisma.user.findFirst({ where: { role: 'ADMIN', activo: true } });
-  if (dbAdmin) {
-    return {
-      id: dbAdmin.id,
-      email: dbAdmin.email,
-      nombre: dbAdmin.nombre,
-      role: 'ADMIN',
-    };
-  }
-
-  const envEmail = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
-  const envName = process.env.INITIAL_ADMIN_NAME?.trim();
-
-  if (envEmail && envName) {
-    return {
-      id: 'master-admin',
-      email: envEmail,
-      nombre: envName,
-      role: 'ADMIN',
-    };
-  }
-
-  return null;
-}
 
 export async function ensureInitialAdmin(): Promise<void> {
   try {
@@ -86,24 +53,12 @@ export async function ensureInitialAdmin(): Promise<void> {
 
 export async function getAdminSession(): Promise<AdminSessionUser | null> {
   await ensureInitialAdmin();
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
 
-  // Compatibilidad con token legado simple (si coincide con ADMIN_SECRET)
-  if (ADMIN_SECRET) {
-    const legacyToken = crypto.createHmac('sha256', ADMIN_SECRET).update('cumpeo_admin_logged_in').digest('hex');
-    if (token === legacyToken) {
-      return await getMasterAdminUser();
-    }
-  }
-
   const session = verifySessionToken(token);
   if (!session) return null;
-
-  if (session.id === 'master-admin') {
-    return session;
-  }
 
   try {
     const user = await prisma.user.findUnique({
@@ -192,7 +147,7 @@ export async function loginAdmin(
   };
 
   const token = createSessionToken(sessionUser);
-  cookies().set(SESSION_COOKIE_NAME, token, {
+  (await cookies()).set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -205,7 +160,7 @@ export async function loginAdmin(
 
 export async function logoutAdmin(): Promise<boolean> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE_NAME, '', {
       path: '/',
       maxAge: 0,
@@ -226,21 +181,15 @@ export async function verifyAdminSession(): Promise<boolean> {
   return session !== null;
 }
 
+/**
+ * Única puerta de autorización del panel. La sesión sale exclusivamente de la
+ * cookie firmada: no existe ninguna clave maestra ni token de rescate que la
+ * sustituya, porque un secreto aceptado por parámetro es un secreto que
+ * cualquiera puede mandar desde fuera.
+ */
 export async function requireRole(
-  allowedRoles: UserRole[],
-  token?: string
+  allowedRoles: UserRole[]
 ): Promise<AdminSessionUser> {
-  const masterPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET;
-  if (token && masterPass && (token === masterPass || token === ADMIN_SECRET)) {
-    const masterUser = await getMasterAdminUser();
-    if (!masterUser) {
-      throw new Error(
-        'Acceso denegado: No se encontró usuario administrador en la base de datos ni variables de administrador en .env'
-      );
-    }
-    return masterUser;
-  }
-
   const session = await getAdminSession();
   if (!session) {
     throw new Error('No autorizado: Inicia sesión para continuar');
@@ -255,8 +204,8 @@ export async function requireRole(
   return session;
 }
 
-export async function assertAuthorized(token?: string) {
-  return requireRole(['ADMIN', 'EDITOR'], token);
+export async function assertAuthorized() {
+  return requireRole(['ADMIN', 'EDITOR']);
 }
 
 // ─── DESTINATIONS ─────────────────────────────────────────────────────────────
@@ -272,13 +221,9 @@ export async function getAdminDestinations(): Promise<Destination[]> {
 }
 
 export async function saveDestination(
-  tokenOrData: string | Partial<Destination>,
-  maybeData?: Partial<Destination>
+  data: Partial<Destination>
 ) {
-  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
-  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
-
-  await assertAuthorized(token);
+  await assertAuthorized();
   const slug =
     data.slug ||
     data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
@@ -334,11 +279,8 @@ export async function saveDestination(
   return result;
 }
 
-export async function deleteDestination(tokenOrId: string, maybeId?: string) {
-  const token = maybeId ? tokenOrId : undefined;
-  const id = maybeId ? maybeId : tokenOrId;
-
-  await requireRole(['ADMIN'], token);
+export async function deleteDestination(id: string) {
+  await requireRole(['ADMIN']);
   await prisma.destination.delete({ where: { id } });
   revalidatePath('/');
   revalidatePath('/mapa');
@@ -359,13 +301,9 @@ export async function getAdminRestaurants(): Promise<Restaurant[]> {
 }
 
 export async function saveRestaurant(
-  tokenOrData: string | Partial<Restaurant>,
-  maybeData?: Partial<Restaurant>
+  data: Partial<Restaurant>
 ) {
-  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
-  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
-
-  await assertAuthorized(token);
+  await assertAuthorized();
   const id =
     data.id ||
     data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
@@ -420,11 +358,8 @@ export async function saveRestaurant(
   return result;
 }
 
-export async function deleteRestaurant(tokenOrId: string, maybeId?: string) {
-  const token = maybeId ? tokenOrId : undefined;
-  const id = maybeId ? maybeId : tokenOrId;
-
-  await requireRole(['ADMIN'], token);
+export async function deleteRestaurant(id: string) {
+  await requireRole(['ADMIN']);
   await prisma.restaurant.delete({ where: { id } });
   revalidatePath('/');
   revalidatePath('/mapa');
@@ -444,13 +379,9 @@ export async function getAdminAccommodations(): Promise<Accommodation[]> {
 }
 
 export async function saveAccommodation(
-  tokenOrData: string | Partial<Accommodation>,
-  maybeData?: Partial<Accommodation>
+  data: Partial<Accommodation>
 ) {
-  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
-  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
-
-  await assertAuthorized(token);
+  await assertAuthorized();
   const id =
     data.id ||
     data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
@@ -497,11 +428,8 @@ export async function saveAccommodation(
   return result;
 }
 
-export async function deleteAccommodation(tokenOrId: string, maybeId?: string) {
-  const token = maybeId ? tokenOrId : undefined;
-  const id = maybeId ? maybeId : tokenOrId;
-
-  await requireRole(['ADMIN'], token);
+export async function deleteAccommodation(id: string) {
+  await requireRole(['ADMIN']);
   await prisma.accommodation.delete({ where: { id } });
   revalidatePath('/');
   revalidatePath('/mapa');
@@ -510,8 +438,8 @@ export async function deleteAccommodation(tokenOrId: string, maybeId?: string) {
 
 // ─── BACKUP & RESTORE ─────────────────────────────────────────────────────────
 
-export async function exportDatabaseBackup(token?: string) {
-  await requireRole(['ADMIN'], token);
+export async function exportDatabaseBackup() {
+  await requireRole(['ADMIN']);
   const [
     destinations,
     restaurants,
@@ -546,11 +474,8 @@ export async function exportDatabaseBackup(token?: string) {
   };
 }
 
-export async function restoreDatabaseBackup(tokenOrData: string | any, maybeData?: any) {
-  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
-  const backupData = typeof tokenOrData === 'string' ? maybeData : tokenOrData;
-
-  await requireRole(['ADMIN'], token);
+export async function restoreDatabaseBackup(backupData: any) {
+  await requireRole(['ADMIN']);
 
   if (!backupData?.data) {
     throw new Error('Formato de copia de seguridad inválido');
@@ -634,10 +559,9 @@ export async function restoreDatabaseBackup(tokenOrData: string | any, maybeData
 export async function bulkImportEntitiesAction(
   entityType: 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos',
   items: any[],
-  mode: 'upsert' | 'create_only' = 'upsert',
-  token?: string
+  mode: 'upsert' | 'create_only' = 'upsert'
 ) {
-  await requireRole(['ADMIN', 'EDITOR'], token);
+  await requireRole(['ADMIN', 'EDITOR']);
 
   let createdCount = 0;
   let updatedCount = 0;
@@ -905,13 +829,9 @@ export async function getEvents() {
 }
 
 export async function saveEvent(
-  tokenOrData: string | Partial<CumpeoEvent>,
-  maybeData?: Partial<CumpeoEvent>
+  data: Partial<CumpeoEvent>
 ) {
-  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
-  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
-
-  await assertAuthorized(token);
+  await assertAuthorized();
   const id =
     data.id ||
     data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
@@ -958,11 +878,8 @@ export async function saveEvent(
   return result;
 }
 
-export async function deleteEvent(tokenOrId: string, maybeId?: string) {
-  const token = maybeId ? tokenOrId : undefined;
-  const id = maybeId ? maybeId : tokenOrId;
-
-  await requireRole(['ADMIN'], token);
+export async function deleteEvent(id: string) {
+  await requireRole(['ADMIN']);
   await prisma.event.delete({ where: { id } });
   revalidatePath('/');
   revalidatePath('/mapa');
@@ -984,13 +901,9 @@ export async function getAdminTourRoutes(): Promise<TourRoute[]> {
 }
 
 export async function saveTourRoute(
-  tokenOrData: string | Partial<TourRoute>,
-  maybeData?: Partial<TourRoute>
+  data: Partial<TourRoute>
 ) {
-  const token = typeof tokenOrData === 'string' ? tokenOrData : undefined;
-  const data = typeof tokenOrData === 'string' ? maybeData || {} : tokenOrData;
-
-  await assertAuthorized(token);
+  await assertAuthorized();
   const slug =
     data.slug ||
     data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
@@ -1042,11 +955,8 @@ export async function saveTourRoute(
   return result;
 }
 
-export async function deleteTourRoute(tokenOrId: string, maybeId?: string) {
-  const token = maybeId ? tokenOrId : undefined;
-  const id = maybeId ? maybeId : tokenOrId;
-
-  await requireRole(['ADMIN'], token);
+export async function deleteTourRoute(id: string) {
+  await requireRole(['ADMIN']);
   await prisma.tourRoute.delete({ where: { id } });
   revalidatePath('/');
   revalidatePath('/ruta');
@@ -1054,26 +964,8 @@ export async function deleteTourRoute(tokenOrId: string, maybeId?: string) {
   return true;
 }
 
-export async function updateTourRouteStops(
-  tokenOrRouteId: string,
-  routeIdOrPoiIds: string | string[],
-  maybePoiIds?: string[]
-) {
-  let token: string | undefined;
-  let routeId: string;
-  let poiIds: string[];
-
-  if (Array.isArray(routeIdOrPoiIds)) {
-    token = undefined;
-    routeId = tokenOrRouteId;
-    poiIds = routeIdOrPoiIds;
-  } else {
-    token = tokenOrRouteId;
-    routeId = routeIdOrPoiIds;
-    poiIds = maybePoiIds || [];
-  }
-
-  await assertAuthorized(token);
+export async function updateTourRouteStops(routeId: string, poiIds: string[]) {
+  await assertAuthorized();
   const result = await prisma.tourRoute.update({
     where: { id: routeId },
     data: { poiIds },
@@ -1234,13 +1126,6 @@ export async function changeOwnPassword(
   const session = await getAdminSession();
   if (!session || !session.id) {
     return { success: false, error: 'Debes iniciar sesión para cambiar tu contraseña' };
-  }
-
-  if (session.id === 'master-admin') {
-    return {
-      success: false,
-      error: 'La clave de rescate del servidor se gestiona directamente en el archivo .env',
-    };
   }
 
   if (!newPassword || newPassword.length < 6) {

@@ -1,10 +1,33 @@
 import crypto from 'crypto';
 import { AdminSessionUser } from './types';
 
+/**
+ * Largo mínimo de la clave de firma. 32 caracteres hexadecimales son 128 bits:
+ * el piso para que un HMAC no se pueda atacar por fuerza bruta fuera de línea.
+ */
+const LARGO_MINIMO_SECRETO = 32;
+
+/**
+ * Clave con la que se firman los tokens de sesión.
+ *
+ * Es a propósito una variable distinta de ADMIN_SECRET. Esa otra es una
+ * contraseña: se escribe en un formulario, se dicta por teléfono y se rota
+ * cuando cambia quien administra. Esta nunca sale del servidor. Si fueran la
+ * misma —como lo eran antes—, filtrar la contraseña del administrador no solo
+ * permitiría entrar: permitiría forjar tokens de sesión con cualquier id y
+ * cualquier rol, sin pasar nunca por el login ni por la base de datos.
+ */
 function getSecret(): string {
-  const secret = process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD;
+  const secret = process.env.SESSION_SECRET;
   if (!secret) {
-    throw new Error('Variable ADMIN_SECRET o ADMIN_PASSWORD no configurada en el archivo .env');
+    throw new Error(
+      'Variable SESSION_SECRET no configurada en el archivo .env. Genera una clave nueva con: openssl rand -hex 32'
+    );
+  }
+  if (secret.length < LARGO_MINIMO_SECRETO) {
+    throw new Error(
+      `SESSION_SECRET es demasiado corta (${secret.length} caracteres). Se requieren al menos ${LARGO_MINIMO_SECRETO}.`
+    );
   }
   return secret;
 }
