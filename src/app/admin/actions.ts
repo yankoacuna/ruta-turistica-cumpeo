@@ -161,72 +161,12 @@ export async function loginAdmin(
 ): Promise<{ success: boolean; error?: string; user?: AdminSessionUser }> {
   await ensureInitialAdmin();
 
-  const validMasterPassword = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET;
-
-  // Caso 1: Clave maestra de rescate ingresada directamente
   if (!passwordInput) {
-    if (validMasterPassword && (identifierOrPassword === validMasterPassword || identifierOrPassword === ADMIN_SECRET)) {
-      const masterUser = await getMasterAdminUser();
-      if (!masterUser) {
-        return {
-          success: false,
-          error: 'Credencial maestra válida, pero no existe usuario administrador en el sistema ni variables en .env.',
-        };
-      }
-      const token = createSessionToken(masterUser);
-      cookies().set(SESSION_COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7,
-      });
-      return { success: true, user: masterUser };
-    }
     return { success: false, error: 'Contraseña o credenciales inválidas' };
   }
 
-  // Caso 2: Email + Contraseña
   const email = identifierOrPassword.trim().toLowerCase();
   const password = passwordInput;
-
-  // Verificación con clave maestra de rescate
-  if (validMasterPassword && (password === validMasterPassword || password === ADMIN_SECRET)) {
-    let user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      user = await prisma.user.findFirst({ where: { role: 'ADMIN', activo: true } });
-    }
-
-    let sessionUser: AdminSessionUser | null = null;
-    if (user) {
-      sessionUser = {
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre,
-        role: user.role as UserRole,
-        mustChangePassword: user.mustChangePassword,
-      };
-    } else {
-      sessionUser = await getMasterAdminUser();
-    }
-
-    if (!sessionUser) {
-      return {
-        success: false,
-        error: 'No se encontró un usuario administrador registrado ni configurado en el archivo .env.',
-      };
-    }
-
-    const token = createSessionToken(sessionUser);
-    cookies().set(SESSION_COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-    return { success: true, user: sessionUser };
-  }
 
   // Verificación regular contra base de datos
   const user = await prisma.user.findUnique({ where: { email } });
