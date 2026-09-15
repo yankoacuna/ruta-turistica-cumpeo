@@ -4,116 +4,105 @@ const path = require('path');
 
 const prisma = new PrismaClient();
 
+/**
+ * Datos de arranque: un volcado real de la base de producción (ver
+ * prisma/seed-data/*.json), no un catálogo de ejemplo aparte. Reemplazar
+ * estos archivos exportando la base de nuevo es la forma de mantener el
+ * seeder al día con lo que el equipo va cargando desde el panel admin.
+ */
+function readSeedData(nombre) {
+  const ruta = path.join(__dirname, 'seed-data', `${nombre}.json`);
+  return JSON.parse(fs.readFileSync(ruta, 'utf-8'));
+}
+
 async function main() {
   console.log('🌱 Starting seed...');
 
-  // 1. Seed Config
+  // 1. Config
   try {
-    const configData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/config.json'), 'utf-8'));
-    await prisma.config.upsert({
-      where: { id: 'default' },
-      update: { categorias: configData.categorias || [] },
-      create: {
-        id: 'default',
-        categorias: configData.categorias || []
-      }
-    });
-    console.log('✅ Config seeded');
+    const rows = readSeedData('config');
+    for (const c of rows) {
+      await prisma.config.upsert({
+        where: { id: c.id },
+        update: { categorias: c.categorias || [] },
+        create: { id: c.id, categorias: c.categorias || [] },
+      });
+    }
+    console.log(`✅ ${rows.length} Config seeded`);
   } catch (err) {
     console.warn('⚠️ Could not seed config:', err.message);
   }
 
-  // 2. Seed Destinations
+  // 2. Destinations
   try {
-    const destData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/destinations.json'), 'utf-8'));
-    let destsCount = 0;
-    for (const d of destData.destinos || []) {
-      const slug = d.slug || d.nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      const id = d.id || slug;
-      await prisma.destination.upsert({
-        where: { id },
-        update: {},
-        create: {
-          id,
-          slug,
-          nombre: d.nombre,
-          categoria: d.categoria,
-          descripcionCorta: d.descripcionCorta,
-          descripcionLarga: d.descripcionLarga,
-          historia: d.historia,
-          coordenadas: d.coordenadas,
-          direccion: d.direccion,
-          horario: d.horario,
-          duracionVisita: d.duracionVisita,
-          comoLlegar: d.comoLlegar,
-          tags: d.tags || [],
-          imagenPrincipal: d.imagenPrincipal,
-          galeria: d.galeria || [],
-          rating: d.rating,
-          destacado: d.destacado || false
-        }
-      });
-      destsCount++;
+    const rows = readSeedData('destinations');
+    for (const d of rows) {
+      const { id, createdAt, updatedAt, ...data } = d;
+      await prisma.destination.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
-    console.log(`✅ ${destsCount} Destinations seeded`);
+    console.log(`✅ ${rows.length} Destinations seeded`);
   } catch (err) {
     console.warn('⚠️ Could not seed destinations:', err.message);
   }
 
-  // 3. Seed Restaurants
+  // 3. Restaurants
   try {
-    const restData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/restaurants.json'), 'utf-8'));
-    let restsCount = 0;
-    for (const r of restData.restaurantes || []) {
-      await prisma.restaurant.upsert({
-        where: { id: r.id },
-        update: {},
-        create: {
-          id: r.id,
-          nombre: r.nombre,
-          descripcion: r.descripcion,
-          coordenadas: r.coordenadas,
-          direccion: r.direccion,
-          horario: r.horario,
-          tags: r.tags || [],
-          imagenPrincipal: r.imagenPrincipal,
-          galeria: r.galeria || [],
-          menuUrl: r.menuUrl,
-          contacto: r.contacto
-        }
-      });
-      restsCount++;
+    const rows = readSeedData('restaurants');
+    for (const r of rows) {
+      const { id, createdAt, updatedAt, ...data } = r;
+      await prisma.restaurant.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
-    console.log(`✅ ${restsCount} Restaurants seeded`);
+    console.log(`✅ ${rows.length} Restaurants seeded`);
   } catch (err) {
     console.warn('⚠️ Could not seed restaurants:', err.message);
   }
 
-  // 4. Seed Accommodations
+  // 4. Accommodations
   try {
-    const accData = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/data/accommodations.json'), 'utf-8'));
-    let accsCount = 0;
-    for (const a of accData.alojamientos || []) {
-      await prisma.accommodation.upsert({
-        where: { id: a.id },
-        update: {},
-        create: {
-          id: a.id,
-          nombre: a.nombre,
-          descripcion: a.descripcion,
-          coordenadas: a.coordenadas,
-          direccion: a.direccion,
-          servicios: a.servicios || [],
-          imagenPrincipal: a.imagenPrincipal,
-          galeria: a.galeria || [],
-          contacto: a.contacto
-        }
-      });
-      accsCount++;
+    const rows = readSeedData('accommodations');
+    for (const a of rows) {
+      const { id, createdAt, updatedAt, ...data } = a;
+      await prisma.accommodation.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
-    console.log(`✅ ${accsCount} Accommodations seeded`);
+    console.log(`✅ ${rows.length} Accommodations seeded`);
   } catch (err) {
     console.warn('⚠️ Could not seed accommodations:', err.message);
+  }
+
+  // 5. Events
+  try {
+    const rows = readSeedData('events');
+    for (const e of rows) {
+      const { id, createdAt, updatedAt, ...data } = e;
+      await prisma.event.upsert({ where: { id }, update: data, create: { id, ...data } });
+    }
+    console.log(`✅ ${rows.length} Events seeded`);
+  } catch (err) {
+    console.warn('⚠️ Could not seed events:', err.message);
+  }
+
+  // 6. Emergency Contacts
+  try {
+    const rows = readSeedData('emergencyContacts');
+    for (const c of rows) {
+      const { id, ...data } = c;
+      await prisma.emergencyContact.upsert({ where: { id }, update: data, create: { id, ...data } });
+    }
+    console.log(`✅ ${rows.length} Emergency Contacts seeded`);
+  } catch (err) {
+    console.warn('⚠️ Could not seed emergency contacts:', err.message);
+  }
+
+  // 7. Tour Routes
+  try {
+    const rows = readSeedData('tourRoutes');
+    for (const t of rows) {
+      const { id, createdAt, updatedAt, ...data } = t;
+      await prisma.tourRoute.upsert({ where: { id }, update: data, create: { id, ...data } });
+    }
+    console.log(`✅ ${rows.length} Tour Routes seeded`);
+  } catch (err) {
+    console.warn('⚠️ Could not seed tour routes:', err.message);
   }
 
   console.log('✅ Seed complete!');

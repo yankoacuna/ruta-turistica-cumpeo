@@ -1,0 +1,71 @@
+[
+  {
+    "id": "monumento-letras-cumpeo",
+    "slug": "monumento-letras-cumpeo",
+    "nombre": "Monumento Letras CUMPEO",
+    "categoria": "cultural",
+    "descripcionCorta": "Letrero volumétrico monumental con esculturas a tamaño real de Coné y el perro Washington en la plaza de Cumpeo.",
+    "descripcionLarga": "En el centro de la Plaza de Cumpeo se erige el monumento oficial con las letras volumétricas del pueblo. Acompañando las letras se encuentran las esculturas a tamaño real de Coné, el travieso sobrino de Condorito, y Washington, el fiel perro que reposa plácidamente sobre el letrero. Es uno de los puntos fotográficos más queridos por niños y adultos.",
+    "historia": "Inaugurado para dar identidad al pueblo temático de Condorito, homenajeando a dos de los personajes más entrañables creados por Pepo.",
+    "coordenadas": {
+      "lat": -35.281494,
+      "lng": -71.259038
+    },
+    "direccion": "Plaza de Cumpeo - Casimiro Sepúlveda, Río Claro, Maule, Chile",
+    "horario": "Abierto todo el día",
+    "duracionVisita": "30 minutos",
+    "comoLlegar": "Plaza principal de Cumpeo, frente a la avenida Los Aromos.",
+    "tags": [
+      "letras",
+      "cone",
+      "washington",
+      "escultura",
+      "plaza",
+      "foto"
+    ],
+    "imagenPrincipal": "/assets/images/letras-cumpeo-cone.jpg",
+    "galeria": [
+      "/assets/images/letras-cumpeo-cone.jpg"
+    ],
+    "rating": null,
+    "destacado": true,
+    "activo": true,
+    "orden": 0,
+    "createdAt": "2026-09-06T22:41:10.266Z",
+    "updatedAt": "2026-09-11T04:26:46.917Z"
+  },
+  {
+    "id": "plaza-cumpeo-fuente-ugenio",
+    "slug": "plaza-cumpeo",
+    "nombre": "Plaza de Armas",
+    "categoria": "cultural",
+    "descripcionCorta": "Histórica plaza con frondosas palmeras, senderos adoquinados y fuente ornamental en el corazón cívico de Cumpeo.",
+    "descripcionLarga": "La Plaza de Armas de Cumpeo es el corazón social y de descanso de la comuna de Río Claro. Cuenta con añosas palmeras chilenas, senderos adoquinados y una clásica fuente de agua ornamental en el centro cívico.",
+    "historia": "La plaza es el punto fundacional de Cumpeo, rodeada por el comercio local, la iglesia y la sede municipal.",
+    "coordenadas": {
+      "lat": -35.281739,
+      "lng": -71.258714
+    },
+    "direccion": "Plaza de Cumpeo - Casimiro Sepúlveda, Río Claro, Maule, Chile",
+    "horario": "Abierto las 24 horas",
+    "duracionVisita": "45 minutos",
+    "comoLlegar": "Centro cívico de Cumpeo, entre Av. Los Aromos y calle Comercio.",
+    "tags": [
+      "plaza",
+      "cumpeo",
+      "fuente",
+      "parque",
+      "civico"
+    ],
+    "imagenPrincipal": "/assets/images/plaza-fuente-ugenio.jpg",
+    "galeria": [
+      "/assets/images/plaza-fuente-ugenio.jpg"
+    ],
+    "rating": null,
+    "destacado": true,
+    "activo": true,
+    "orden": 0,
+    "createdAt": "2026-09-06T22:41:10.556Z",
+    "updatedAt": "2026-09-11T04:27:05.536Z"
+  }
+]

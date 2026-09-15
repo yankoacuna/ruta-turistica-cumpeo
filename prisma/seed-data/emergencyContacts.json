@@ -1,0 +1,34 @@
+[
+  {
+    "id": "carabineros-cumpeo",
+    "institucion": "Carabineros (Retén Cumpeo)",
+    "telefono": "+56 71 257 1146",
+    "direccion": "Av. Ursicinio Opazo s/n, Cumpeo",
+    "orden": 1,
+    "activo": true
+  },
+  {
+    "id": "cesfam-cumpeo",
+    "institucion": "Urgencias CESFAM Cumpeo",
+    "telefono": "+56 71 257 1150",
+    "direccion": "Calle Los Maitenes s/n, Cumpeo",
+    "orden": 2,
+    "activo": true
+  },
+  {
+    "id": "bomberos-rio-claro",
+    "institucion": "Bomberos Río Claro / Cumpeo",
+    "telefono": "132",
+    "direccion": "Cumpeo, Río Claro",
+    "orden": 3,
+    "activo": true
+  },
+  {
+    "id": "seguridad-municipal",
+    "institucion": "Seguridad Ciudadana Municipal",
+    "telefono": "+56 9 6842 1739",
+    "direccion": "Municipalidad de Río Claro",
+    "orden": 4,
+    "activo": true
+  }
+]

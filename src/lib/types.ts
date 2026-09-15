@@ -150,7 +150,6 @@ export interface AppConfig {
   categorias?: Array<{
     id: string;
     nombre: string;
-    emoji: string;
     color: string;
     imagen?: string;
   }>;

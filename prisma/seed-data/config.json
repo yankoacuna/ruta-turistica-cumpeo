@@ -1,0 +1,36 @@
+[
+  {
+    "id": "default",
+    "categorias": [
+      {
+        "id": "cultural",
+        "color": "#E8A020",
+        "imagen": "/assets/images/placeholder.webp",
+        "nombre": "Cultural y Religioso",
+        "botonTexto": "DESCUBRE"
+      },
+      {
+        "id": "entretencion",
+        "color": "#9B59B6",
+        "imagen": "/assets/images/placeholder.webp",
+        "nombre": "Eventos y Ferias",
+        "botonTexto": "EXPLORA"
+      },
+      {
+        "id": "gastronomia",
+        "color": "#C0392B",
+        "imagen": "/assets/images/placeholder.webp",
+        "nombre": "Gastronomía",
+        "botonTexto": "SABOREA"
+      },
+      {
+        "id": "alojamiento",
+        "color": "#2C3E50",
+        "imagen": "/assets/images/placeholder.webp",
+        "nombre": "Alojamientos",
+        "botonTexto": "DESCANSA"
+      }
+    ],
+    "updatedAt": "2026-09-06T04:22:39.292Z"
+  }
+]

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "ruta-tradiciones-ferias",
+    "slug": "ruta-tradiciones-ferias",
+    "nombre": "Ruta de Tradiciones y Ferias",
+    "descripcion": "Recorrido por los puntos culturales más significativos de Cumpeo: la pérgola de artesanos, la iglesia y la alameda comunal.",
+    "color": "#E8A020",
+    "poiIds": [
+      "feria-artesanos-pergola",
+      "fiesta-san-sebastian",
+      "feria-emprendedores-alameda"
+    ],
+    "duracionEstimada": "1 h 25 min",
+    "distanciaKm": null,
+    "dificultad": "Muy fácil (Paseo peatonal)",
+    "hitos": [
+      {
+        "numero": 1,
+        "titulo": "Pérgola de Artesanos",
+        "descripcion": "Souvenirs y artesanía típica maulina hecha a mano por productores locales."
+      },
+      {
+        "numero": 2,
+        "titulo": "Santuario y Tradición",
+        "descripcion": "Espacio de fe y devoción campesina en torno a San Sebastián."
+      }
+    ],
+    "consejos": [
+      {
+        "texto": "Prefiere artesanía original comprando directamente a las familias creadoras en la feria.",
+        "titulo": "Comercio Justo"
+      }
+    ],
+    "tiemposParada": {
+      "fiesta-san-sebastian": 30,
+      "feria-artesanos-pergola": 30,
+      "feria-emprendedores-alameda": 25
+    },
+    "mapaImagen": null,
+    "destacada": true,
+    "activo": true,
+    "orden": 2,
+    "createdAt": "2026-09-06T22:44:06.032Z",
+    "updatedAt": "2026-09-11T04:47:41.768Z"
+  },
+  {
+    "id": "ruta-sabores-cumpeo",
+    "slug": "ruta-sabores-cumpeo",
+    "nombre": "Circuito Gastronómico y Comercial",
+    "descripcion": "Saborea la auténtica cocina maulina a lo largo del eje central de Cumpeo y la Ruta K-21.",
+    "color": "#C0392B",
+    "poiIds": [
+      "san-sebastian-restaurante",
+      "la-combi",
+      "el-pollo-farsante"
+    ],
+    "duracionEstimada": "2 h 18 min",
+    "distanciaKm": 13.5,
+    "dificultad": "Fácil",
+    "hitos": [
+      {
+        "numero": 1,
+        "titulo": "Empanadas y Cazuelas",
+        "descripcion": "Cocina a fuego lento con ingredientes del valle de Río Claro."
+      }
+    ],
+    "consejos": [
+      {
+        "texto": "La mayoría de los locales acepta transferencias y tarjetas, pero siempre es bueno llevar efectivo.",
+        "titulo": "Medios de Pago"
+      }
+    ],
+    "tiemposParada": {
+      "la-combi": 30,
+      "el-pollo-farsante": 60,
+      "san-sebastian-restaurante": 30
+    },
+    "mapaImagen": null,
+    "destacada": false,
+    "activo": true,
+    "orden": 3,
+    "createdAt": "2026-09-06T22:44:06.336Z",
+    "updatedAt": "2026-09-11T04:48:02.899Z"
+  },
+  {
+    "id": "la-ruta-de-condorito",
+    "slug": "la-ruta-de-condorito",
+    "nombre": "La Ruta Oficial de Condorito",
+    "descripcion": "El circuito temático y patrimonial de la historieta chilena en Cumpeo, desde el acceso carretero en Camarico hasta la plaza central y feria de artesanos.",
+    "color": "#E63946",
+    "poiIds": [
+      "el-pollo-farsante",
+      "residencial-cone",
+      "monumento-letras-cumpeo",
+      "plaza-cumpeo-fuente-ugenio",
+      "feria-artesanos-pergola"
+    ],
+    "duracionEstimada": "2 h 58 min",
+    "distanciaKm": 10.3,
+    "dificultad": "Fácil (Familiar / Vehicular y Peatonal)",
+    "hitos": [
+      {
+        "numero": 1,
+        "titulo": "Acceso por Camarico",
+        "descripcion": "En el Km 222 de la Ruta 5 Sur se toma el desvío señalizado hacia Cumpeo."
+      },
+      {
+        "numero": 2,
+        "titulo": "7.5 Kilómetros de Paisaje",
+        "descripcion": "Camino pavimentado rural entre viñas, frutales y gastronomía típica."
+      },
+      {
+        "numero": 3,
+        "titulo": "Corazón de Cumpeo",
+        "descripcion": "Plaza de Armas, esculturas, comercio local y hospedajes maulinos."
+      }
+    ],
+    "consejos": [
+      {
+        "texto": "Cumpeo está a 45 minutos de Talca y 2.5 horas de Santiago por la Ruta 5 Sur. Hay buses rurales frecuentes desde el Terminal de Talca.",
+        "titulo": "Transporte y Acceso"
+      },
+      {
+        "texto": "Se recomienda llegar antes de las 13:30 hrs los fines de semana para encontrar mesa con comodidad en los restaurantes locales.",
+        "titulo": "Almuerzos Criollos"
+      },
+      {
+        "texto": "Todas las esculturas en los espacios públicos son gratuitas para fotografías. ¡Cuida las figuras patrimoniales para todos los turistas!",
+        "titulo": "Fotografía y Respeto"
+      }
+    ],
+    "tiemposParada": {
+      "residencial-cone": 15,
+      "el-pollo-farsante": 60,
+      "feria-artesanos-pergola": 30,
+      "monumento-letras-cumpeo": 30,
+      "plaza-cumpeo-fuente-ugenio": 30
+    },
+    "mapaImagen": "/assets/images/mapa-ilustrado-ruta-condorito.png",
+    "destacada": true,
+    "activo": true,
+    "orden": 1,
+    "createdAt": "2026-09-06T22:44:05.718Z",
+    "updatedAt": "2026-09-15T03:16:50.120Z"
+  }
+]
