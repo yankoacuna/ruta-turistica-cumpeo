@@ -10,13 +10,13 @@ import {
   CumpeoEvent,
   TourRoute,
 } from '@/lib/types';
-import { useToast } from '@/components/Toast';
-import { Editable } from '@/components/site-text';
-import { useNearbyDestinations } from '@/hooks/useNearbyDestinations';
+import { useToast } from '../components/Toast';
+import { Editable } from '../components/site-text';
+import { useNearbyDestinations } from '../hooks/useNearbyDestinations';
 
 // Componentes modulares de la portada
-import { HeroSection } from '@/components/home/HeroSection';
-import { QuickActions } from '@/components/home/QuickActions';
+import { HeroSection } from '../components/home/HeroSection';
+import { QuickActions } from '../components/home/QuickActions';
 import { NearbySection } from '@/components/home/NearbySection';
 import { RutaShowcase } from '@/components/home/RutaShowcase';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
