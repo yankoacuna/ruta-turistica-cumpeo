@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { VisitStats, VisitRangoPreset } from '@/lib/types';
+import { VisitStats, VisitRangoPreset, VisitasDetalle } from '@/lib/types';
 
 /** Todo el panel razona en hora de Chile, no en UTC: "hoy" es hoy en Cumpeo. */
 const TZ = 'America/Santiago';
@@ -282,6 +282,7 @@ function statsVacias(preset: VisitRangoPreset, rango: RangoResuelto): VisitStats
     secciones: [],
     dispositivos: [],
     origenes: [],
+    ubicaciones: [],
   };
 }
 
@@ -315,7 +316,7 @@ export async function getVisitStats(
   const sepLiteral = Prisma.raw(`'${String.fromCharCode(1)}'`);
 
   try {
-    const [totales, serieRaw, paginasRaw, seccionesRaw, dispositivosRaw, origenesRaw] =
+    const [totales, serieRaw, paginasRaw, seccionesRaw, dispositivosRaw, origenesRaw, ubicacionesRaw] =
       await Promise.all([
         prisma.$queryRaw<Array<Record<string, unknown>>>`
           SELECT
@@ -388,6 +389,18 @@ export async function getVisitStats(
           ORDER BY visitantes DESC, visitas DESC
           LIMIT 5
         `,
+
+        prisma.$queryRaw<Array<Record<string, unknown>>>`
+          SELECT \`pais\`,
+                 \`region\`,
+                 COUNT(*)                    AS visitas,
+                 COUNT(DISTINCT \`visitorId\`) AS visitantes
+          FROM \`PageView\`
+          WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta} AND \`pais\` IS NOT NULL
+          GROUP BY \`pais\`, \`region\`
+          ORDER BY visitantes DESC, visitas DESC
+          LIMIT 8
+        `,
       ]);
 
     const t = totales[0] ?? {};
@@ -448,9 +461,82 @@ export async function getVisitStats(
         visitas: num(fila.visitas),
         visitantes: num(fila.visitantes),
       })),
+      ubicaciones: ubicacionesRaw.map((fila) => ({
+        pais: fila.pais ? String(fila.pais) : null,
+        region: fila.region ? String(fila.region) : null,
+        visitas: num(fila.visitas),
+        visitantes: num(fila.visitantes),
+      })),
     };
   } catch (error) {
     console.error('Error obteniendo estadísticas de visitas:', error);
     return statsVacias(presetSeguro, rango);
+  }
+}
+
+const PAGINA_POR_DEFECTO = 1;
+const FILAS_POR_PAGINA = 25;
+const MAX_FILAS_POR_PAGINA = 100;
+
+/**
+ * Listado paginado de visitas individuales (no agregadas), para la tabla del
+ * panel. Usa el mismo rango que `getVisitStats`, ordenado de la más reciente a
+ * la más antigua.
+ */
+export async function getVisitasDetalle(
+  preset: VisitRangoPreset = '30d',
+  desdeYmd?: string,
+  hastaYmd?: string,
+  pagina: number = PAGINA_POR_DEFECTO,
+  porPagina: number = FILAS_POR_PAGINA
+): Promise<VisitasDetalle> {
+  const presetSeguro = PRESETS_VALIDOS.includes(preset) ? preset : '30d';
+  const { desde, hasta } = resolverRango(presetSeguro, desdeYmd, hastaYmd);
+
+  const paginaSegura = Number.isFinite(pagina) && pagina > 0 ? Math.floor(pagina) : PAGINA_POR_DEFECTO;
+  const porPaginaSegura =
+    Number.isFinite(porPagina) && porPagina > 0
+      ? Math.min(Math.floor(porPagina), MAX_FILAS_POR_PAGINA)
+      : FILAS_POR_PAGINA;
+  const offset = (paginaSegura - 1) * porPaginaSegura;
+
+  try {
+    const [filasRaw, totalRaw] = await Promise.all([
+      prisma.$queryRaw<Array<Record<string, unknown>>>`
+        SELECT \`id\`, \`createdAt\`, \`path\`, \`titulo\`, \`seccion\`, \`device\`, \`referrer\`,
+               \`pais\`, \`region\`, \`ciudad\`
+        FROM \`PageView\`
+        WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta}
+        ORDER BY \`createdAt\` DESC
+        LIMIT ${porPaginaSegura} OFFSET ${offset}
+      `,
+      prisma.$queryRaw<Array<Record<string, unknown>>>`
+        SELECT COUNT(*) AS total
+        FROM \`PageView\`
+        WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta}
+      `,
+    ]);
+
+    return {
+      disponible: true,
+      filas: filasRaw.map((fila) => ({
+        id: String(fila.id),
+        createdAt: new Date(fila.createdAt as string).toISOString(),
+        path: String(fila.path),
+        titulo: fila.titulo ? String(fila.titulo) : null,
+        seccion: String(fila.seccion),
+        device: fila.device ? String(fila.device) : null,
+        referrer: fila.referrer ? String(fila.referrer) : null,
+        pais: fila.pais ? String(fila.pais) : null,
+        region: fila.region ? String(fila.region) : null,
+        ciudad: fila.ciudad ? String(fila.ciudad) : null,
+      })),
+      total: num(totalRaw[0]?.total),
+      pagina: paginaSegura,
+      porPagina: porPaginaSegura,
+    };
+  } catch (error) {
+    console.error('Error obteniendo el detalle de visitas:', error);
+    return { disponible: false, filas: [], total: 0, pagina: paginaSegura, porPagina: porPaginaSegura };
   }
 }

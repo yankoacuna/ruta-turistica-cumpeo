@@ -219,6 +219,9 @@ model NotificacionesConfig {
 /// No guarda IP ni datos personales: solo un id aleatorio de dispositivo
 /// (visitorId, vive en localStorage) y uno de sesión (sessionId), para poder
 /// distinguir "visitas" de "visitantes" sin identificar a nadie.
+/// pais/region/ciudad tampoco guardan la IP: se resuelven en el momento con
+/// geoip-lite (base de datos offline, sin servicios de terceros) a partir de
+/// la IP de la petición, y esa IP se descarta ahí mismo sin llegar a esta tabla.
 model PageView {
   id        String   @id @default(cuid())
   path      String // ruta visitada, ej. "/destino/plaza-de-cumpeo"
@@ -228,12 +231,16 @@ model PageView {
   sessionId String // id anónimo por sesión del navegador
   referrer  String? // dominio de origen (google.com, qr, etc.), sin querystring
   device    String? // movil | tablet | escritorio
+  pais      String? // código ISO de país (ej. "CL"), resuelto con geoip-lite
+  region    String? // código de región/estado (ej. "ML"), resuelto con geoip-lite
+  ciudad    String? // ciudad, resuelta con geoip-lite
   createdAt DateTime @default(now())
 
   @@index([createdAt])
   @@index([seccion, createdAt])
   @@index([path, createdAt])
   @@index([visitorId, createdAt])
+  @@index([pais, region, createdAt])
 }
 
 enum SolicitudTipo {

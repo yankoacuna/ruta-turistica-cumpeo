@@ -28,8 +28,9 @@ import {
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser, UserRole } from '@/lib/types';
 import { formatHorario } from '@/lib/openingHours';
 import { StatCard } from './StatCard';
-import { VisitasPanel } from './VisitasPanel';
+import { VisitasPanel, VisitasVista } from './VisitasPanel';
 import { useVisitStats } from '../_hooks/useVisitStats';
+import { useVisitasDetalle } from '../_hooks/useVisitasDetalle';
 import { contarSolicitudesPendientes } from '../solicitudActions';
 
 const ROLE_LABEL: Record<UserRole, string> = {
@@ -78,6 +79,15 @@ export function AdminDashboard({
 
   // Una sola consulta de visitas para la tarjeta del grid y el panel detallado.
   const visitas = useVisitStats('30d');
+  // El panel alterna entre el gráfico y la tabla de visitas individuales; la
+  // tabla comparte el período del gráfico pero solo se consulta si está a la vista.
+  const [vistaVisitas, setVistaVisitas] = useState<VisitasVista>('grafico');
+  const visitasDetalle = useVisitasDetalle(
+    visitas.preset,
+    visitas.desde,
+    visitas.hasta,
+    vistaVisitas === 'tabla'
+  );
 
   // Solicitudes sin revisar. Se consulta aparte de las listas del panel porque
   // no es contenido publicado, sino trabajo pendiente que llego desde el sitio.
@@ -360,7 +370,17 @@ export function AdminDashboard({
         error={visitas.error}
         onPresetChange={visitas.setPreset}
         onRangoPersonalizado={visitas.setRangoPersonalizado}
-        onRecargar={visitas.recargar}
+        onRecargar={() => {
+          visitas.recargar();
+          if (vistaVisitas === 'tabla') visitasDetalle.recargar();
+        }}
+        vista={vistaVisitas}
+        onVistaChange={setVistaVisitas}
+        detalle={visitasDetalle.datos}
+        detalleCargando={visitasDetalle.cargando}
+        detalleError={visitasDetalle.error}
+        detallePagina={visitasDetalle.pagina}
+        onDetallePaginaChange={visitasDetalle.irAPagina}
       />
 
       {/* Analytics & Health: Calidad y Cobertura Visual */}

@@ -29,7 +29,7 @@ function superaLimite(ip: string): boolean {
   return registro.cuenta > MAX_POR_VENTANA;
 }
 
-/** IP del visitante detrás del proxy de Vercel; en local no hay cabecera. */
+/** IP del visitante detrás del proxy del hosting (cPanel/Passenger); en local no hay cabecera. */
 function ipDe(req: NextRequest): string {
   const reenviada = req.headers.get('x-forwarded-for');
   if (reenviada) return reenviada.split(',')[0].trim();

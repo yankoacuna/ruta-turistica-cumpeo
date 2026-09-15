@@ -54,7 +54,7 @@ Este documento detalla el estado actual de los requerimientos técnicos establec
 *La oferta debe contemplar dominio web mínimo por 18 meses, hosting, correos corporativos y mantención.*
 **Estado: 40% Completado** 🟡
 
-- `[x]` Despliegue en la nube automatizado a través de Vercel (Hosting asegurado).
+- `[x]` Despliegue en hosting cPanel (V2Networks), autocontenido: base de datos, almacenamiento de archivos y correo saliente viven en la misma cuenta (Hosting asegurado).
 - `[ ]` **Pendiente:** Compra y vinculación del dominio oficial (ej. `cumpeoturismo.cl`).
 - `[ ]` **Pendiente:** Configuración del servicio de correos corporativos (ej. Google Workspace o Zoho).
 - `[ ]` **Pendiente:** Firma del acta de entrega y cronograma de mantención.

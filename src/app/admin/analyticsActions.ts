@@ -8,8 +8,8 @@
  * ninguna capacidad de edición asociada.
  */
 
-import { getVisitStats } from '@/lib/analytics';
-import type { VisitStats, VisitRangoPreset } from '@/lib/types';
+import { getVisitStats, getVisitasDetalle } from '@/lib/analytics';
+import type { VisitStats, VisitRangoPreset, VisitasDetalle } from '@/lib/types';
 import { getAdminSession } from './actions';
 
 export async function getVisitStatsAdmin(
@@ -20,4 +20,15 @@ export async function getVisitStatsAdmin(
   const session = await getAdminSession();
   if (!session) return null;
   return getVisitStats(preset, desde, hasta);
+}
+
+export async function getVisitasDetalleAdmin(
+  preset: VisitRangoPreset = '30d',
+  desde?: string,
+  hasta?: string,
+  pagina: number = 1
+): Promise<VisitasDetalle | null> {
+  const session = await getAdminSession();
+  if (!session) return null;
+  return getVisitasDetalle(preset, desde, hasta, pagina);
 }

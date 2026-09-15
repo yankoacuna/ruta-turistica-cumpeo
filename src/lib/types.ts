@@ -360,6 +360,31 @@ export interface VisitStats {
   secciones: Array<{ seccion: string; visitas: number; visitantes: number }>;
   dispositivos: Array<{ device: string; visitas: number; visitantes: number }>;
   origenes: Array<{ referrer: string; visitas: number; visitantes: number }>;
+  /** De dónde llegan los visitantes, resuelto con geoip-lite a partir de la IP (que nunca se guarda). */
+  ubicaciones: Array<{ pais: string | null; region: string | null; visitas: number; visitantes: number }>;
+}
+
+/** Una fila cruda de PageView, para la tabla de visitas individuales del panel. */
+export interface VisitaDetalle {
+  id: string;
+  createdAt: string;
+  path: string;
+  titulo: string | null;
+  seccion: string;
+  device: string | null;
+  referrer: string | null;
+  pais: string | null;
+  region: string | null;
+  ciudad: string | null;
+}
+
+/** Página del listado paginado de visitas individuales. */
+export interface VisitasDetalle {
+  disponible: boolean;
+  filas: VisitaDetalle[];
+  total: number;
+  pagina: number;
+  porPagina: number;
 }
 
 // ─── SOLICITUDES DEL SITIO PÚBLICO ────────────────────────────────────────────

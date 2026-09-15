@@ -14,8 +14,11 @@ import {
   AlertTriangle,
   CalendarRange,
 } from 'lucide-react';
-import { VisitStats, VisitRangoPreset } from '@/lib/types';
+import { VisitStats, VisitRangoPreset, VisitasDetalle } from '@/lib/types';
 import { VisitasGrafico } from './VisitasGrafico';
+import { VisitasTabla } from './VisitasTabla';
+import { nombrePais, nombreRegion } from '@/lib/geoLabels';
+import { MapPin, List } from 'lucide-react';
 
 const RANGOS: Array<{ preset: VisitRangoPreset; label: string }> = [
   { preset: 'hoy', label: 'Hoy' },
@@ -51,7 +54,6 @@ const DEVICE_ICON: Record<string, React.ReactNode> = {
 };
 
 const nf = new Intl.NumberFormat('es-CL');
-const nf1 = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 });
 
 /** Páginas fijas del sitio: su nombre no depende del contenido cargado. */
 const NOMBRE_POR_RUTA: Record<string, string> = {
@@ -101,6 +103,8 @@ function nombreDesdeTitulo(titulo: string | null): string {
   return /^turismo cumpeo$/i.test(limpio) ? '' : limpio;
 }
 
+export type VisitasVista = 'grafico' | 'tabla';
+
 interface VisitasPanelProps {
   stats: VisitStats | null;
   preset: VisitRangoPreset;
@@ -111,6 +115,14 @@ interface VisitasPanelProps {
   onPresetChange: (preset: VisitRangoPreset) => void;
   onRangoPersonalizado: (desde: string, hasta: string) => void;
   onRecargar: () => void;
+  /** Alterna entre el gráfico de barras y el detalle de visitas individuales. */
+  vista: VisitasVista;
+  onVistaChange: (vista: VisitasVista) => void;
+  detalle: VisitasDetalle | null;
+  detalleCargando: boolean;
+  detalleError: boolean;
+  detallePagina: number;
+  onDetallePaginaChange: (pagina: number) => void;
 }
 
 /** Fecha de hoy en Chile como "YYYY-MM-DD": el tope de los selectores de fecha. */
@@ -146,6 +158,13 @@ export function VisitasPanel({
   onPresetChange,
   onRangoPersonalizado,
   onRecargar,
+  vista,
+  onVistaChange,
+  detalle,
+  detalleCargando,
+  detalleError,
+  detallePagina,
+  onDetallePaginaChange,
 }: VisitasPanelProps) {
   const esPersonalizado = preset === 'personalizado';
   const tope = hoyEnChile();
@@ -197,7 +216,7 @@ export function VisitasPanel({
         },
         {
           label: 'Páginas por persona',
-          value: nf1.format(paginasPorVisitante),
+          value: nf.format(Math.round(paginasPorVisitante)),
           sub: 'Cuánto explora cada visitante',
         },
         {
@@ -355,15 +374,59 @@ export function VisitasPanel({
           ) : (
             <>
               <div className="pt-4 border-t border-border/60">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-text-secondary mb-3">
-                  <BarChart3 size={13} className="text-cielo" />
-                  <span>
-                    Visitantes por {stats.granularidad === 'hora' ? 'hora' : 'día'} ·{' '}
-                    <span className="text-text-muted font-semibold">{stats.rangoLabel}</span>
-                  </span>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-text-secondary min-w-0">
+                    {vista === 'grafico' ? (
+                      <BarChart3 size={13} className="text-cielo shrink-0" />
+                    ) : (
+                      <List size={13} className="text-cielo shrink-0" />
+                    )}
+                    <span className="truncate">
+                      {vista === 'grafico'
+                        ? `Visitantes por ${stats.granularidad === 'hora' ? 'hora' : 'día'}`
+                        : 'Detalle de visitas'}{' '}
+                      ·{' '}
+                      <span className="text-text-muted font-semibold">{stats.rangoLabel}</span>
+                    </span>
+                  </div>
+
+                  <div className="flex rounded-lg border border-border overflow-hidden shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => onVistaChange('grafico')}
+                      className={`px-2.5 py-1 text-xs font-bold transition-colors ${
+                        vista === 'grafico'
+                          ? 'bg-cielo text-white'
+                          : 'bg-white text-text-secondary hover:bg-surface-soft'
+                      }`}
+                    >
+                      Gráfico
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onVistaChange('tabla')}
+                      className={`px-2.5 py-1 text-xs font-bold transition-colors ${
+                        vista === 'tabla'
+                          ? 'bg-cielo text-white'
+                          : 'bg-white text-text-secondary hover:bg-surface-soft'
+                      }`}
+                    >
+                      Tabla
+                    </button>
+                  </div>
                 </div>
 
-                <VisitasGrafico serie={stats.serie} granularidad={stats.granularidad} />
+                {vista === 'grafico' ? (
+                  <VisitasGrafico serie={stats.serie} granularidad={stats.granularidad} />
+                ) : (
+                  <VisitasTabla
+                    datos={detalle}
+                    cargando={detalleCargando}
+                    error={detalleError}
+                    pagina={detallePagina}
+                    onPaginaChange={onDetallePaginaChange}
+                  />
+                )}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-4 border-t border-border/60">
@@ -503,6 +566,40 @@ export function VisitasPanel({
                       <p className="text-xs text-text-muted leading-relaxed">
                         Nadie llegó desde otros sitios en este período. Las visitas entran directo:
                         por el enlace, por los códigos QR de los tótems o navegando dentro del sitio.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-bold text-text-secondary mb-2.5">
+                      Desde dónde llegan
+                    </div>
+                    {stats.ubicaciones.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {stats.ubicaciones.map((u) => {
+                          const region = nombreRegion(u.pais, u.region);
+                          return (
+                            <div
+                              key={`${u.pais}-${u.region}`}
+                              className="flex items-center gap-2 text-xs text-text-secondary"
+                            >
+                              <MapPin size={14} className="text-cielo shrink-0" />
+                              <span className="flex-1 truncate">
+                                {region ? `${region}, ${nombrePais(u.pais)}` : nombrePais(u.pais)}
+                              </span>
+                              <span
+                                className="font-bold text-text-primary tabular-nums"
+                                title={`${nf.format(u.visitas)} páginas abiertas`}
+                              >
+                                {nf.format(u.visitantes)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        Sin ubicación disponible para este período.
                       </p>
                     )}
                   </div>
