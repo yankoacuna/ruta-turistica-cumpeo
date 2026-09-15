@@ -1,7 +1,11 @@
 {
-  "name": "condorito-turismo",
+  "name": "ruta-turistica-cumpeo",
   "version": "1.0.0",
   "private": true,
+  "contributors": [
+    "Yanko Acuña",
+    "Fernando Valenzuela"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

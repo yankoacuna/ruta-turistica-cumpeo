@@ -64,8 +64,6 @@ export function CatalogSection({
   const hidden = filtered.length - visible.length;
 
   // Chips monocromos: el activo se marca con tinta plena, no con otro color.
-  // Antes el chip activo era rojo y "Todos" era negro, dos acentos para una
-  // misma funcion.
   const CHIP =
     'min-h-[40px] px-4 rounded-full text-sm font-bold transition-colors shrink-0 border-[1.5px] cursor-pointer capitalize';
 

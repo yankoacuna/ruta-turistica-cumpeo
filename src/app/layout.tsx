@@ -53,6 +53,7 @@ export default async function RootLayout({
   return (
     <html lang="es-CL" className="overflow-x-hidden">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
         <link rel="apple-touch-icon" href="/assets/icons/icon-180.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

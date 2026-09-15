@@ -28,17 +28,13 @@ const nextConfig = {
   // dependencia; como geoip-lite arma la ruta a sus .dat en runtime (no con
   // un require/import estático), el tracer no los ve solo. Se fuerza acá.
   //
-  // Se incluyen TODOS los .dat (país + región + ciudad, ~111MB): geoip-lite
+  // Se incluyen todos los .dat (país + región + ciudad, ~111MB): geoip-lite
   // los carga enteros a memoria de forma permanente apenas arranca el proceso
-  // (preload() síncrono al hacer require, no al hacer un lookup), lo que suma
-  // ~106MB de RAM fija. Es una decisión consciente: la alternativa liviana
-  // (solo país, ~8MB de RAM) deja "región" —el dato que más le importa a un
-  // sitio turístico local, más que país— demasiado genérico para ser útil.
-  // Medido con process.memoryUsage() antes/después del require, en dev y
-  // dentro de .next/standalone ya buildeado. Si este hosting compartido
-  // resulta no tener margen de RAM para esto, la salida es sacar los .dat de
-  // ciudad de este glob (geoip-lite cae solo a país automáticamente, sin
-  // tocar código: ver geoip-lite/lib/geoip.js), no cambiar de librería.
+  // (preload() síncrono al hacer require, no en cada lookup) — costo fijo por
+  // proceso, no por visita, de ~106MB de RAM. Si hiciera falta reducirlo, con
+  // sacar geoip-city*.dat y geoip-city-names.dat de este glob alcanza:
+  // geoip-lite cae solo a país automáticamente (ver geoip-lite/lib/geoip.js),
+  // sin tocar código.
   outputFileTracingIncludes: {
     '/api/track': ['./node_modules/geoip-lite/data/**/*'],
   },

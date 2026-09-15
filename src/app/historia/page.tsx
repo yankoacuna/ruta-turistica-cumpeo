@@ -74,7 +74,7 @@ export default function HistoriaPage() {
             />
           </div>
           <div className="rounded-2xl overflow-hidden min-h-[350px] bg-surface-soft relative flex items-center justify-center p-6 border border-border">
-            <img src="/assets/images/condorito-oficial.png" alt="Pepo y Condorito" className="max-w-[80%] max-h-[80%] object-contain" />
+            <img src="/assets/icons/condorito-oficial.png" alt="Pepo y Condorito" className="w-full h-full max-w-[80%] max-h-[80%] object-contain" />
             <Editable
               k="historia.origen.pieFoto"
               as="div"
