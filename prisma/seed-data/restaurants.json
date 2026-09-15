@@ -3,7 +3,7 @@
     "id": "el-pollo-farsante",
     "nombre": "El Pollo Farsante",
     "tipo": "restaurante-tematico",
-    "descripcion": "El restaurante más famoso de Cumpeo, temático e inspirado en Condorito. Cocina chilena tradicional del Maule en la Ruta K-21. Residencial incluida para viajeros que quieran quedarse a vivir la experiencia completa.",
+    "descripcion": "El restaurante más famoso de Cumpeo, temático e inspirado en Condorito. Cocina chilena tradicional del Maule en la Ruta K-21. Residencial incluida para viajeros que quieran quedarse a vivir l",
     "especialidad": "Cocina chilena tradicional del Maule",
     "propietario": "Andrés Silva",
     "coordenadas": {
@@ -28,7 +28,7 @@
       "condorito",
       "ruta-k21"
     ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789097481101-portapapeles-1789097478567.png",
+    "imagenPrincipal": "/uploads/1789097481101-portapapeles-1789097478567.png",
     "galeria": [],
     "menuUrl": null,
     "contacto": {
@@ -37,8 +37,249 @@
     },
     "activo": true,
     "orden": 1,
-    "createdAt": "2026-08-04T04:18:04.294Z",
-    "updatedAt": "2026-09-11T04:43:28.161Z"
+    "createdAt": "2026-08-04T08:18:04.294Z",
+    "updatedAt": "2026-09-15T06:30:05.645Z"
+  },
+  {
+    "id": "la-combi",
+    "nombre": "La Combi",
+    "tipo": "restaurante",
+    "descripcion": "Restaurante casero en Casimiro Sepúlveda, en el corazón de Cumpeo. Abierto todos los días durante todo el día, es uno de los locales más accesibles y queridos del pueblo.",
+    "especialidad": "Cocina casera",
+    "propietario": "Diego Olivares",
+    "coordenadas": {
+      "lat": -35.281844,
+      "lng": -71.257573
+    },
+    "direccion": "Casimiro Sepúlveda, Río Claro, Maule, Chile",
+    "telefono": "+56 9 3177 9951",
+    "whatsapp": "56931779951",
+    "horario": {
+      "cierre": "00:00",
+      "apertura": "10:00",
+      "diasCierre": [],
+      "descripcion": ""
+    },
+    "mediosPago": [
+      "Efectivo",
+      "Débito"
+    ],
+    "tags": [
+      "cocina-casera",
+      "todo-el-dia"
+    ],
+    "imagenPrincipal": "/uploads/1789095717100-images.jpg",
+    "galeria": [],
+    "menuUrl": null,
+    "contacto": {
+      "telefono": "+56 9 3177 9951",
+      "instagram": "lacombi_cerrillo"
+    },
+    "activo": true,
+    "orden": 2,
+    "createdAt": "2026-09-06T06:21:29.122Z",
+    "updatedAt": "2026-09-15T06:30:06.318Z"
+  },
+  {
+    "id": "la-oveja-negra",
+    "nombre": "La Oveja Negra",
+    "tipo": "restaurante-bar",
+    "descripcion": "Bar y restaurante de Cumpeo con ambiente relajado. Abierto todos los días, ideal para terminar el recorrido del pueblo con buena comida y buena conversación.",
+    "especialidad": "Cocina y bebidas",
+    "propietario": "Cristian Fritz",
+    "coordenadas": {
+      "lat": -35.28178,
+      "lng": -71.259406
+    },
+    "direccion": "Ursisinio Opazo/Esquina Plaza de, Cumpeo, Río Claro, Maule, Chile",
+    "telefono": "+56 9 8902 6642",
+    "whatsapp": "56989026642",
+    "horario": {
+      "cierre": "23:00",
+      "apertura": "12:00",
+      "diasCierre": [],
+      "descripcion": ""
+    },
+    "mediosPago": [
+      "Efectivo",
+      "Débito"
+    ],
+    "tags": [
+      "bar",
+      "restaurante"
+    ],
+    "imagenPrincipal": "/uploads/1789095852210-images.jpg",
+    "galeria": [],
+    "menuUrl": null,
+    "contacto": {
+      "facebook": "Oveja Negra Restaurante",
+      "telefono": "+56 9 8902 6642"
+    },
+    "activo": true,
+    "orden": 3,
+    "createdAt": "2026-09-06T06:21:30.698Z",
+    "updatedAt": "2026-09-15T06:30:06.992Z"
+  },
+  {
+    "id": "la-pica-del-tuna",
+    "nombre": "La Pica del Tuna",
+    "tipo": "picada",
+    "descripcion": "Picada popular del pueblo, abierta todos los días. El lugar favorito de los locales para una comida rápida y económica al estilo maulino.",
+    "especialidad": "Comida rápida criolla",
+    "propietario": null,
+    "coordenadas": {
+      "lat": -35.279698,
+      "lng": -71.256538
+    },
+    "direccion": "Pantaleón lavin #17, Cumpeo Río Claro, 3510000 Maule, Río Claro, Maule, Chile",
+    "telefono": "+56 9 9437 7921",
+    "whatsapp": "56994377921",
+    "horario": {
+      "cierre": "21:00",
+      "apertura": "10:00",
+      "diasCierre": [],
+      "descripcion": ""
+    },
+    "mediosPago": [
+      "Efectivo",
+      "Débito"
+    ],
+    "tags": [
+      "picada",
+      "economico"
+    ],
+    "imagenPrincipal": "/uploads/1789096207990-images.jpg",
+    "galeria": [],
+    "menuUrl": null,
+    "contacto": {
+      "facebook": "La Pica Del Tuna",
+      "telefono": "+56 9 9437 7921"
+    },
+    "activo": true,
+    "orden": 4,
+    "createdAt": "2026-09-06T06:21:31.763Z",
+    "updatedAt": "2026-09-15T06:30:08.022Z"
+  },
+  {
+    "id": "la-terraza",
+    "nombre": "La Terraza",
+    "tipo": "restaurante",
+    "descripcion": "Restaurante con terraza en el Camino El Cerrillo, abierto todos los días desde la tarde hasta medianoche. Ideal para disfrutar de la gastronomía local en un entorno tranquilo y con vista al c",
+    "especialidad": "Gastronomía maulina",
+    "propietario": "Franco Olivares",
+    "coordenadas": {
+      "lat": -35.291157,
+      "lng": -71.23287
+    },
+    "direccion": "El cerrillo, 3480084 Cumpeo, Río Claro, Maule, Chile",
+    "telefono": "+56 9 7522 0922",
+    "whatsapp": "56975220922",
+    "horario": {
+      "cierre": "00:00",
+      "apertura": "15:00",
+      "diasCierre": [],
+      "descripcion": ""
+    },
+    "mediosPago": [
+      "Efectivo",
+      "Débito"
+    ],
+    "tags": [
+      "terraza",
+      "nocturno"
+    ],
+    "imagenPrincipal": "/uploads/1789094773791-images.jpg",
+    "galeria": [],
+    "menuUrl": null,
+    "contacto": {
+      "telefono": "+56 9 7522 0922",
+      "instagram": "laterrazacl"
+    },
+    "activo": true,
+    "orden": 5,
+    "createdAt": "2026-09-06T06:21:28.588Z",
+    "updatedAt": "2026-09-15T06:30:07.332Z"
+  },
+  {
+    "id": "platillo-volador",
+    "nombre": "Platillo Volador",
+    "tipo": "restaurante",
+    "descripcion": "Restaurante familiar en la ruta de Cumpeo-Camarico. Cocina casera del Maule con atención de lunes a sábado. Un clásico del camino para los visitantes que llegan por la Ruta K-21.",
+    "especialidad": "Cocina casera maulina",
+    "propietario": "Flor Ponce",
+    "coordenadas": {
+      "lat": -35.225662,
+      "lng": -71.417896
+    },
+    "direccion": "Platillo Volador",
+    "telefono": "+56 9 6507 5887",
+    "whatsapp": "56965075887",
+    "horario": {
+      "cierre": "18:00",
+      "apertura": "10:00",
+      "diasCierre": [
+        "dom"
+      ],
+      "descripcion": ""
+    },
+    "mediosPago": [
+      "Efectivo",
+      "Débito"
+    ],
+    "tags": [
+      "cocina-casera",
+      "ruta-camarico"
+    ],
+    "imagenPrincipal": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmPtIP7o3ytkzd5XV0tmSh5RVMA3mZyC7JZchKeMcaADuPKKnxueMJRGDxTm_6QjWcJlXef-3SzpZUHpseyCFtBw3Obm5w5JD7MkkZn_HSkgOITMrGvg3bJDvRilRb_R5rXEIIJ=s1360-w",
+    "galeria": [],
+    "menuUrl": null,
+    "contacto": {
+      "telefono": "+56 9 6507 5887"
+    },
+    "activo": true,
+    "orden": 6,
+    "createdAt": "2026-09-06T06:21:27.531Z",
+    "updatedAt": "2026-09-15T06:30:07.667Z"
+  },
+  {
+    "id": "sabor-oriental",
+    "nombre": "Sabor Oriental",
+    "tipo": "restaurante",
+    "descripcion": "Un sabor diferente en el corazón de Cumpeo. Cocina oriental disponible todos los días, aportando diversidad gastronómica a la oferta turística del pueblo.",
+    "especialidad": "Cocina oriental",
+    "propietario": "Nicolás Molina",
+    "coordenadas": {
+      "lat": -35.28426,
+      "lng": -71.253777
+    },
+    "direccion": "Casimiro Sepúlveda 15, Río Claro, Maule, Chile",
+    "telefono": "+56 9 7136 3316",
+    "whatsapp": "56971363316",
+    "horario": {
+      "cierre": "22:00",
+      "apertura": "11:00",
+      "diasCierre": [],
+      "descripcion": ""
+    },
+    "mediosPago": [
+      "Efectivo",
+      "Débito"
+    ],
+    "tags": [
+      "oriental",
+      "diversidad"
+    ],
+    "imagenPrincipal": "/uploads/1789096880909-portapapeles-1789096879540.png",
+    "galeria": [],
+    "menuUrl": null,
+    "contacto": {
+      "telefono": "+56 9 7136 3316",
+      "instagram": "sabororientalcumpeo"
+    },
+    "activo": true,
+    "orden": 7,
+    "createdAt": "2026-09-06T06:21:31.233Z",
+    "updatedAt": "2026-09-15T06:30:06.652Z"
   },
   {
     "id": "san-sebastian-restaurante",
@@ -76,249 +317,8 @@
     },
     "activo": true,
     "orden": 8,
-    "createdAt": "2026-09-06T03:21:28.058Z",
-    "updatedAt": "2026-09-11T03:18:00.611Z"
-  },
-  {
-    "id": "la-combi",
-    "nombre": "La Combi",
-    "tipo": "restaurante",
-    "descripcion": "Restaurante casero en Casimiro Sepúlveda, en el corazón de Cumpeo. Abierto todos los días durante todo el día, es uno de los locales más accesibles y queridos del pueblo.",
-    "especialidad": "Cocina casera",
-    "propietario": "Diego Olivares",
-    "coordenadas": {
-      "lat": -35.281844,
-      "lng": -71.257573
-    },
-    "direccion": "Casimiro Sepúlveda, Río Claro, Maule, Chile",
-    "telefono": "+56 9 3177 9951",
-    "whatsapp": "56931779951",
-    "horario": {
-      "cierre": "00:00",
-      "apertura": "10:00",
-      "diasCierre": [],
-      "descripcion": ""
-    },
-    "mediosPago": [
-      "Efectivo",
-      "Débito"
-    ],
-    "tags": [
-      "cocina-casera",
-      "todo-el-dia"
-    ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789095717100-images.jpg",
-    "galeria": [],
-    "menuUrl": null,
-    "contacto": {
-      "telefono": "+56 9 3177 9951",
-      "instagram": "lacombi_cerrillo"
-    },
-    "activo": true,
-    "orden": 2,
-    "createdAt": "2026-09-06T03:21:29.122Z",
-    "updatedAt": "2026-09-11T04:43:27.117Z"
-  },
-  {
-    "id": "sabor-oriental",
-    "nombre": "Sabor Oriental",
-    "tipo": "restaurante",
-    "descripcion": "Un sabor diferente en el corazón de Cumpeo. Cocina oriental disponible todos los días, aportando diversidad gastronómica a la oferta turística del pueblo.",
-    "especialidad": "Cocina oriental",
-    "propietario": "Nicolás Molina",
-    "coordenadas": {
-      "lat": -35.28426,
-      "lng": -71.253777
-    },
-    "direccion": "Casimiro Sepúlveda 15, Río Claro, Maule, Chile",
-    "telefono": "+56 9 7136 3316",
-    "whatsapp": "56971363316",
-    "horario": {
-      "cierre": "22:00",
-      "apertura": "11:00",
-      "diasCierre": [],
-      "descripcion": ""
-    },
-    "mediosPago": [
-      "Efectivo",
-      "Débito"
-    ],
-    "tags": [
-      "oriental",
-      "diversidad"
-    ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789096880909-portapapeles-1789096879540.png",
-    "galeria": [],
-    "menuUrl": null,
-    "contacto": {
-      "telefono": "+56 9 7136 3316",
-      "instagram": "sabororientalcumpeo"
-    },
-    "activo": true,
-    "orden": 7,
-    "createdAt": "2026-09-06T03:21:31.233Z",
-    "updatedAt": "2026-09-11T04:43:27.481Z"
-  },
-  {
-    "id": "la-oveja-negra",
-    "nombre": "La Oveja Negra",
-    "tipo": "restaurante-bar",
-    "descripcion": "Bar y restaurante de Cumpeo con ambiente relajado. Abierto todos los días, ideal para terminar el recorrido del pueblo con buena comida y buena conversación.",
-    "especialidad": "Cocina y bebidas",
-    "propietario": "Cristian Fritz",
-    "coordenadas": {
-      "lat": -35.28178,
-      "lng": -71.259406
-    },
-    "direccion": "Ursisinio Opazo/Esquina Plaza de, Cumpeo, Río Claro, Maule, Chile",
-    "telefono": "+56 9 8902 6642",
-    "whatsapp": "56989026642",
-    "horario": {
-      "cierre": "23:00",
-      "apertura": "12:00",
-      "diasCierre": [],
-      "descripcion": ""
-    },
-    "mediosPago": [
-      "Efectivo",
-      "Débito"
-    ],
-    "tags": [
-      "bar",
-      "restaurante"
-    ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789095852210-images.jpg",
-    "galeria": [],
-    "menuUrl": null,
-    "contacto": {
-      "facebook": "Oveja Negra Restaurante",
-      "telefono": "+56 9 8902 6642"
-    },
-    "activo": true,
-    "orden": 3,
-    "createdAt": "2026-09-06T03:21:30.698Z",
-    "updatedAt": "2026-09-11T04:43:27.821Z"
-  },
-  {
-    "id": "la-terraza",
-    "nombre": "La Terraza",
-    "tipo": "restaurante",
-    "descripcion": "Restaurante con terraza en el Camino El Cerrillo, abierto todos los días desde la tarde hasta medianoche. Ideal para disfrutar de la gastronomía local en un entorno tranquilo y con vista al campo maulino.",
-    "especialidad": "Gastronomía maulina",
-    "propietario": "Franco Olivares",
-    "coordenadas": {
-      "lat": -35.291157,
-      "lng": -71.23287
-    },
-    "direccion": "El cerrillo, 3480084 Cumpeo, Río Claro, Maule, Chile",
-    "telefono": "+56 9 7522 0922",
-    "whatsapp": "56975220922",
-    "horario": {
-      "cierre": "00:00",
-      "apertura": "15:00",
-      "diasCierre": [],
-      "descripcion": ""
-    },
-    "mediosPago": [
-      "Efectivo",
-      "Débito"
-    ],
-    "tags": [
-      "terraza",
-      "nocturno"
-    ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789094773791-images.jpg",
-    "galeria": [],
-    "menuUrl": null,
-    "contacto": {
-      "telefono": "+56 9 7522 0922",
-      "instagram": "laterrazacl"
-    },
-    "activo": true,
-    "orden": 5,
-    "createdAt": "2026-09-06T03:21:28.588Z",
-    "updatedAt": "2026-09-11T04:43:28.501Z"
-  },
-  {
-    "id": "platillo-volador",
-    "nombre": "Platillo Volador",
-    "tipo": "restaurante",
-    "descripcion": "Restaurante familiar en la ruta de Cumpeo-Camarico. Cocina casera del Maule con atención de lunes a sábado. Un clásico del camino para los visitantes que llegan por la Ruta K-21.",
-    "especialidad": "Cocina casera maulina",
-    "propietario": "Flor Ponce",
-    "coordenadas": {
-      "lat": -35.225662,
-      "lng": -71.417896
-    },
-    "direccion": "Platillo Volador",
-    "telefono": "+56 9 6507 5887",
-    "whatsapp": "56965075887",
-    "horario": {
-      "cierre": "18:00",
-      "apertura": "10:00",
-      "diasCierre": [
-        "dom"
-      ],
-      "descripcion": ""
-    },
-    "mediosPago": [
-      "Efectivo",
-      "Débito"
-    ],
-    "tags": [
-      "cocina-casera",
-      "ruta-camarico"
-    ],
-    "imagenPrincipal": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmPtIP7o3ytkzd5XV0tmSh5RVMA3mZyC7JZchKeMcaADuPKKnxueMJRGDxTm_6QjWcJlXef-3SzpZUHpseyCFtBw3Obm5w5JD7MkkZn_HSkgOITMrGvg3bJDvRilRb_R5rXEIIJ=s1360-w1360-h1020-rw",
-    "galeria": [],
-    "menuUrl": null,
-    "contacto": {
-      "telefono": "+56 9 6507 5887"
-    },
-    "activo": true,
-    "orden": 6,
-    "createdAt": "2026-09-06T03:21:27.531Z",
-    "updatedAt": "2026-09-11T03:11:58.707Z"
-  },
-  {
-    "id": "la-pica-del-tuna",
-    "nombre": "La Pica del Tuna",
-    "tipo": "picada",
-    "descripcion": "Picada popular del pueblo, abierta todos los días. El lugar favorito de los locales para una comida rápida y económica al estilo maulino.",
-    "especialidad": "Comida rápida criolla",
-    "propietario": null,
-    "coordenadas": {
-      "lat": -35.279698,
-      "lng": -71.256538
-    },
-    "direccion": "Pantaleón lavin #17, Cumpeo Río Claro, 3510000 Maule, Río Claro, Maule, Chile",
-    "telefono": "+56 9 9437 7921",
-    "whatsapp": "56994377921",
-    "horario": {
-      "cierre": "21:00",
-      "apertura": "10:00",
-      "diasCierre": [],
-      "descripcion": ""
-    },
-    "mediosPago": [
-      "Efectivo",
-      "Débito"
-    ],
-    "tags": [
-      "picada",
-      "economico"
-    ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789096207990-images.jpg",
-    "galeria": [],
-    "menuUrl": null,
-    "contacto": {
-      "facebook": "La Pica Del Tuna",
-      "telefono": "+56 9 9437 7921"
-    },
-    "activo": true,
-    "orden": 4,
-    "createdAt": "2026-09-06T03:21:31.763Z",
-    "updatedAt": "2026-09-11T04:43:28.851Z"
+    "createdAt": "2026-09-06T06:21:28.058Z",
+    "updatedAt": "2026-09-15T06:30:05.983Z"
   },
   {
     "id": "tito-el-pacho",
@@ -348,7 +348,7 @@
       "cocina-chilena",
       "local"
     ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789094646211-images.jpg",
+    "imagenPrincipal": "/uploads/1789094646211-images.jpg",
     "galeria": [],
     "menuUrl": null,
     "contacto": {
@@ -356,7 +356,7 @@
     },
     "activo": true,
     "orden": 0,
-    "createdAt": "2026-09-06T03:21:30.169Z",
-    "updatedAt": "2026-09-15T03:10:46.430Z"
+    "createdAt": "2026-09-06T06:21:30.169Z",
+    "updatedAt": "2026-09-15T06:30:08.358Z"
   }
 ]

@@ -1,10 +1,63 @@
 [
   {
+    "id": "alojamiento-y-pensin-manikomio",
+    "nombre": "Alojamiento y Pensión Manikomio",
+    "tipo": "Residencial",
+    "propietario": "Juana Zúñiga",
+    "descripcion": "[Completar] Alojamiento y pensión en Cumpeo. Descripción pendiente de redactar por el administrador.",
+    "coordenadas": {
+      "lat": -35.28443,
+      "lng": -71.254897
+    },
+    "direccion": "Maximiliano Gatica, Lote 6, Cumpeo, 3510000 Río Claro, Maule, Chile",
+    "telefono": "984187062",
+    "whatsapp": "984187062",
+    "servicios": [],
+    "imagenPrincipal": null,
+    "galeria": [],
+    "contacto": {
+      "telefono": "984187062",
+      "whatsapp": "984187062"
+    },
+    "activo": true,
+    "orden": 1,
+    "createdAt": "2026-09-11T06:29:07.863Z",
+    "updatedAt": "2026-09-15T06:30:10.153Z"
+  },
+  {
+    "id": "hostal-pension-la-cuadra",
+    "nombre": "Hostal-Pensión de la Cuadra",
+    "tipo": "hostal",
+    "propietario": "María de la Cuadra Peña",
+    "descripcion": "Hostal y pensión familiar en Avenida Ursicinio Opazo, administrado con la calidez y atención de la familia De la Cuadra. Perfecto para peregrinos y turistas que recorren la ruta temática de C",
+    "coordenadas": {
+      "lat": -35.283169,
+      "lng": -71.260377
+    },
+    "direccion": "3510000 Río Claro, Maule, Chile",
+    "telefono": "+56 9 9737 3759",
+    "whatsapp": "56997373759",
+    "servicios": [
+      "Pensión",
+      "Desayuno",
+      "Agua caliente"
+    ],
+    "imagenPrincipal": null,
+    "galeria": [],
+    "contacto": {
+      "telefono": "+56 9 9737 3759"
+    },
+    "activo": true,
+    "orden": 0,
+    "createdAt": "2026-09-06T06:21:32.814Z",
+    "updatedAt": "2026-09-15T06:30:09.812Z"
+  },
+  {
     "id": "hostal-residencial-la-central",
     "nombre": "Hostal y Residencial La Central",
     "tipo": "hostal",
     "propietario": "Patricia Navarro Troncoso",
-    "descripcion": "Hostal y residencial ubicado en la Avenida Ursicinio Opazo, el corazón de Cumpeo. Alojamiento familiar con atención personalizada, ideal para turistas y visitantes que deseen explorar el pueblo de Condorito.",
+    "descripcion": "Hostal y residencial ubicado en la Avenida Ursicinio Opazo, el corazón de Cumpeo. Alojamiento familiar con atención personalizada, ideal para turistas y visitantes que deseen explorar el pueb",
     "coordenadas": {
       "lat": -35.283957,
       "lng": -71.260577
@@ -20,8 +73,8 @@
     },
     "activo": true,
     "orden": 0,
-    "createdAt": "2026-09-06T03:21:32.291Z",
-    "updatedAt": "2026-09-11T03:26:08.686Z"
+    "createdAt": "2026-09-06T06:21:32.291Z",
+    "updatedAt": "2026-09-15T06:30:08.728Z"
   },
   {
     "id": "progreso",
@@ -47,15 +100,42 @@
     },
     "activo": true,
     "orden": 0,
-    "createdAt": "2026-09-06T03:21:34.935Z",
-    "updatedAt": "2026-09-11T03:50:12.994Z"
+    "createdAt": "2026-09-06T06:21:34.935Z",
+    "updatedAt": "2026-09-15T06:30:09.086Z"
+  },
+  {
+    "id": "residencial-cone",
+    "nombre": "Residencial Coné",
+    "tipo": "residencial",
+    "propietario": "Nelly Mancilla Mancilla",
+    "descripcion": "Residencial ubicada en la Ruta K-31 de Río Claro. Alojamiento tranquilo en el camino hacia Cumpeo, rodeado de naturaleza maulina. Ideal para quienes llegan en vehículo propio por la ruta prin",
+    "coordenadas": {
+      "lat": -35.280777,
+      "lng": -71.264876
+    },
+    "direccion": "K-31, Río Claro, Maule, Chile",
+    "telefono": "+56 9 9199 0171",
+    "whatsapp": "56991990171",
+    "servicios": [
+      "Estacionamiento",
+      "Agua caliente"
+    ],
+    "imagenPrincipal": "/uploads/1789097365057-download.jpg",
+    "galeria": [],
+    "contacto": {
+      "telefono": "+56 9 9199 0171"
+    },
+    "activo": true,
+    "orden": 0,
+    "createdAt": "2026-09-06T06:21:33.339Z",
+    "updatedAt": "2026-09-15T06:30:10.491Z"
   },
   {
     "id": "residencial-restaurante-pollo-farsante",
     "nombre": "Residencial y Restaurante El Pollo Farsante",
     "tipo": "residencial",
     "propietario": "Andrés Silva",
-    "descripcion": "Residencial y restaurante temático inspirado en Condorito, ubicado en la Ruta K-21 Km 7,5. Combina alojamiento con la experiencia gastronómica más famosa de Cumpeo. Perfecto para hacer noche y disfrutar del ambiente local.",
+    "descripcion": "Residencial y restaurante temático inspirado en Condorito, ubicado en la Ruta K-21 Km 7,5. Combina alojamiento con la experiencia gastronómica más famosa de Cumpeo. Perfecto para hacer noche ",
     "coordenadas": {
       "lat": -35.249464,
       "lng": -71.355292
@@ -68,7 +148,7 @@
       "Estacionamiento",
       "Agua caliente"
     ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789097453992-portapapeles-1789097452631.png",
+    "imagenPrincipal": "/uploads/1789097453992-portapapeles-1789097452631.png",
     "galeria": [],
     "contacto": {
       "telefono": "+56 9 9795 7024",
@@ -76,87 +156,7 @@
     },
     "activo": true,
     "orden": 0,
-    "createdAt": "2026-09-06T03:21:33.863Z",
-    "updatedAt": "2026-09-11T04:43:29.860Z"
-  },
-  {
-    "id": "hostal-pension-la-cuadra",
-    "nombre": "Hostal-Pensión de la Cuadra",
-    "tipo": "hostal",
-    "propietario": "María de la Cuadra Peña",
-    "descripcion": "Hostal y pensión familiar en Avenida Ursicinio Opazo, administrado con la calidez y atención de la familia De la Cuadra. Perfecto para peregrinos y turistas que recorren la ruta temática de Cumpeo.",
-    "coordenadas": {
-      "lat": -35.283169,
-      "lng": -71.260377
-    },
-    "direccion": "3510000 Río Claro, Maule, Chile",
-    "telefono": "+56 9 9737 3759",
-    "whatsapp": "56997373759",
-    "servicios": [
-      "Pensión",
-      "Desayuno",
-      "Agua caliente"
-    ],
-    "imagenPrincipal": null,
-    "galeria": [],
-    "contacto": {
-      "telefono": "+56 9 9737 3759"
-    },
-    "activo": true,
-    "orden": 0,
-    "createdAt": "2026-09-06T03:21:32.814Z",
-    "updatedAt": "2026-09-11T03:27:35.349Z"
-  },
-  {
-    "id": "alojamiento-y-pensin-manikomio",
-    "nombre": "Alojamiento y Pensión Manikomio",
-    "tipo": "Residencial",
-    "propietario": "Juana Zúñiga",
-    "descripcion": "[Completar] Alojamiento y pensión en Cumpeo. Descripción pendiente de redactar por el administrador.",
-    "coordenadas": {
-      "lat": -35.28443,
-      "lng": -71.254897
-    },
-    "direccion": "Maximiliano Gatica, Lote 6, Cumpeo, 3510000 Río Claro, Maule, Chile",
-    "telefono": "984187062",
-    "whatsapp": "984187062",
-    "servicios": [],
-    "imagenPrincipal": null,
-    "galeria": [],
-    "contacto": {
-      "telefono": "984187062",
-      "whatsapp": "984187062"
-    },
-    "activo": true,
-    "orden": 1,
-    "createdAt": "2026-09-11T03:29:07.863Z",
-    "updatedAt": "2026-09-11T03:34:47.050Z"
-  },
-  {
-    "id": "residencial-cone",
-    "nombre": "Residencial Coné",
-    "tipo": "residencial",
-    "propietario": "Nelly Mancilla Mancilla",
-    "descripcion": "Residencial ubicada en la Ruta K-31 de Río Claro. Alojamiento tranquilo en el camino hacia Cumpeo, rodeado de naturaleza maulina. Ideal para quienes llegan en vehículo propio por la ruta principal.",
-    "coordenadas": {
-      "lat": -35.280777,
-      "lng": -71.264876
-    },
-    "direccion": "K-31, Río Claro, Maule, Chile",
-    "telefono": "+56 9 9199 0171",
-    "whatsapp": "56991990171",
-    "servicios": [
-      "Estacionamiento",
-      "Agua caliente"
-    ],
-    "imagenPrincipal": "https://cveiqqebkildrgulswwp.supabase.co/storage/v1/object/public/uploads/1789097365057-download.jpg",
-    "galeria": [],
-    "contacto": {
-      "telefono": "+56 9 9199 0171"
-    },
-    "activo": true,
-    "orden": 0,
-    "createdAt": "2026-09-06T03:21:33.339Z",
-    "updatedAt": "2026-09-11T04:43:30.200Z"
+    "createdAt": "2026-09-06T06:21:33.863Z",
+    "updatedAt": "2026-09-15T06:30:09.429Z"
   }
 ]

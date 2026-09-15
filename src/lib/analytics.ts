@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { VisitStats, VisitRangoPreset } from '@/lib/types';
 
@@ -36,6 +37,23 @@ function offsetChileMs(instante: Date): number {
   const enChile = new Date(instante.toLocaleString('en-US', { timeZone: TZ }));
   const enUtc = new Date(instante.toLocaleString('en-US', { timeZone: 'UTC' }));
   return enChile.getTime() - enUtc.getTime();
+}
+
+/**
+ * Offset de Chile respecto de UTC como string "+HH:MM"/"-HH:MM", para pasarlo
+ * a CONVERT_TZ de MySQL. No se usa el nombre de zona ("America/Santiago")
+ * porque este hosting no tiene cargadas las tablas de zonas horarias de MySQL
+ * (mysql_tzinfo_to_sql) y CONVERT_TZ con un nombre de zona ahí devuelve NULL
+ * en silencio. Un offset fijo no reproduce cada cambio de horario de verano
+ * dentro del rango consultado, pero es exacto para el uso real del panel.
+ */
+function offsetChileStr(instante: Date = new Date()): string {
+  const totalMin = Math.round(offsetChileMs(instante) / 60000);
+  const signo = totalMin >= 0 ? '+' : '-';
+  const abs = Math.abs(totalMin);
+  const hh = String(Math.floor(abs / 60)).padStart(2, '0');
+  const mm = String(abs % 60).padStart(2, '0');
+  return `${signo}${hh}:${mm}`;
 }
 
 /** Fecha de calendario en Chile (año, mes 1-12, día) del instante dado. */
@@ -288,79 +306,85 @@ export async function getVisitStats(
   const desde7 = inicioDiaChile(anio, mes, dia - 6);
 
   // En el gráfico por hora la clave incluye la hora local; por día, solo la fecha.
-  const formatoClave = rango.granularidad === 'hora' ? 'YYYY-MM-DD"T"HH24' : 'YYYY-MM-DD';
+  const formatoClave = rango.granularidad === 'hora' ? '%Y-%m-%dT%H' : '%Y-%m-%d';
+  const tzOffset = offsetChileStr();
+  // Separador que jamás va a aparecer en un título de página, para poder
+  // sacar "el título más reciente" de un GROUP_CONCAT (MySQL/MariaDB no
+  // tienen array_agg). Va como literal SQL (Prisma.raw), no como parámetro
+  // bindeado: GROUP_CONCAT ... SEPARATOR de MariaDB no acepta un placeholder ahí.
+  const sepLiteral = Prisma.raw(`'${String.fromCharCode(1)}'`);
 
   try {
     const [totales, serieRaw, paginasRaw, seccionesRaw, dispositivosRaw, origenesRaw] =
       await Promise.all([
         prisma.$queryRaw<Array<Record<string, unknown>>>`
           SELECT
-            COUNT(*) FILTER (WHERE "createdAt" >= ${desdeHoy})::int                      AS visitas_hoy,
-            COUNT(DISTINCT "visitorId") FILTER (WHERE "createdAt" >= ${desdeHoy})::int   AS visitantes_hoy,
-            COUNT(*) FILTER (WHERE "createdAt" >= ${desde7})::int                        AS visitas_7,
-            COUNT(DISTINCT "visitorId") FILTER (WHERE "createdAt" >= ${desde7})::int     AS visitantes_7,
-            COUNT(*) FILTER (WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta})::int                    AS visitas_rango,
-            COUNT(DISTINCT "visitorId") FILTER (WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta})::int AS visitantes_rango,
-            COUNT(DISTINCT "sessionId") FILTER (WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta})::int AS sesiones_rango,
-            COUNT(*)::int                                                                AS visitas_total,
-            COUNT(DISTINCT "visitorId")::int                                             AS visitantes_total,
-            MIN("createdAt")                                                             AS primera_visita
-          FROM "PageView"
+            COUNT(CASE WHEN \`createdAt\` >= ${desdeHoy} THEN 1 END)                              AS visitas_hoy,
+            COUNT(DISTINCT CASE WHEN \`createdAt\` >= ${desdeHoy} THEN \`visitorId\` END)           AS visitantes_hoy,
+            COUNT(CASE WHEN \`createdAt\` >= ${desde7} THEN 1 END)                               AS visitas_7,
+            COUNT(DISTINCT CASE WHEN \`createdAt\` >= ${desde7} THEN \`visitorId\` END)             AS visitantes_7,
+            COUNT(CASE WHEN \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta} THEN 1 END)      AS visitas_rango,
+            COUNT(DISTINCT CASE WHEN \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta} THEN \`visitorId\` END) AS visitantes_rango,
+            COUNT(DISTINCT CASE WHEN \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta} THEN \`sessionId\` END) AS sesiones_rango,
+            COUNT(*)                                                                          AS visitas_total,
+            COUNT(DISTINCT \`visitorId\`)                                                       AS visitantes_total,
+            MIN(\`createdAt\`)                                                                  AS primera_visita
+          FROM \`PageView\`
         `,
 
         prisma.$queryRaw<Array<Record<string, unknown>>>`
           SELECT
-            -- createdAt es un timestamp sin zona que guarda UTC: primero se le
-            -- declara esa zona y recién después se convierte a hora de Chile.
-            to_char(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${TZ}, ${formatoClave}) AS clave,
-            COUNT(*)::int                    AS visitas,
-            COUNT(DISTINCT "visitorId")::int AS visitantes
-          FROM "PageView"
-          WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta}
+            -- createdAt se guarda en UTC sin zona: se reinterpreta como UTC y
+            -- se desplaza al offset actual de Chile (ver offsetChileStr).
+            DATE_FORMAT(CONVERT_TZ(\`createdAt\`, '+00:00', ${tzOffset}), ${formatoClave}) AS clave,
+            COUNT(*)                    AS visitas,
+            COUNT(DISTINCT \`visitorId\`) AS visitantes
+          FROM \`PageView\`
+          WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta}
           GROUP BY 1
           ORDER BY 1
         `,
 
         prisma.$queryRaw<Array<Record<string, unknown>>>`
           SELECT
-            path,
-            (array_agg("titulo" ORDER BY "createdAt" DESC) FILTER (WHERE "titulo" IS NOT NULL))[1] AS titulo,
-            COUNT(*)::int                    AS visitas,
-            COUNT(DISTINCT "visitorId")::int AS visitantes
-          FROM "PageView"
-          WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta}
-          GROUP BY path
+            \`path\`,
+            SUBSTRING_INDEX(GROUP_CONCAT(\`titulo\` ORDER BY \`createdAt\` DESC SEPARATOR ${sepLiteral}), ${sepLiteral}, 1) AS titulo,
+            COUNT(*)                    AS visitas,
+            COUNT(DISTINCT \`visitorId\`) AS visitantes
+          FROM \`PageView\`
+          WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta}
+          GROUP BY \`path\`
           ORDER BY visitantes DESC, visitas DESC
           LIMIT 10
         `,
 
         prisma.$queryRaw<Array<Record<string, unknown>>>`
-          SELECT seccion,
-                 COUNT(*)::int                    AS visitas,
-                 COUNT(DISTINCT "visitorId")::int AS visitantes
-          FROM "PageView"
-          WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta}
-          GROUP BY seccion
+          SELECT \`seccion\`,
+                 COUNT(*)                    AS visitas,
+                 COUNT(DISTINCT \`visitorId\`) AS visitantes
+          FROM \`PageView\`
+          WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta}
+          GROUP BY \`seccion\`
           ORDER BY visitantes DESC, visitas DESC
         `,
 
         prisma.$queryRaw<Array<Record<string, unknown>>>`
-          SELECT COALESCE(device, 'desconocido') AS device,
-                 COUNT(*)::int                    AS visitas,
-                 COUNT(DISTINCT "visitorId")::int AS visitantes
-          FROM "PageView"
-          WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta}
+          SELECT COALESCE(\`device\`, 'desconocido') AS device,
+                 COUNT(*)                    AS visitas,
+                 COUNT(DISTINCT \`visitorId\`) AS visitantes
+          FROM \`PageView\`
+          WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta}
           GROUP BY 1
           ORDER BY visitantes DESC, visitas DESC
         `,
 
         prisma.$queryRaw<Array<Record<string, unknown>>>`
-          SELECT referrer,
-                 COUNT(*)::int                    AS visitas,
-                 COUNT(DISTINCT "visitorId")::int AS visitantes
-          FROM "PageView"
-          WHERE "createdAt" >= ${desde} AND "createdAt" < ${hasta} AND referrer IS NOT NULL
-          GROUP BY referrer
+          SELECT \`referrer\`,
+                 COUNT(*)                    AS visitas,
+                 COUNT(DISTINCT \`visitorId\`) AS visitantes
+          FROM \`PageView\`
+          WHERE \`createdAt\` >= ${desde} AND \`createdAt\` < ${hasta} AND \`referrer\` IS NOT NULL
+          GROUP BY \`referrer\`
           ORDER BY visitantes DESC, visitas DESC
           LIMIT 5
         `,

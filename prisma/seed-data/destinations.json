@@ -5,7 +5,7 @@
     "nombre": "Monumento Letras CUMPEO",
     "categoria": "cultural",
     "descripcionCorta": "Letrero volumétrico monumental con esculturas a tamaño real de Coné y el perro Washington en la plaza de Cumpeo.",
-    "descripcionLarga": "En el centro de la Plaza de Cumpeo se erige el monumento oficial con las letras volumétricas del pueblo. Acompañando las letras se encuentran las esculturas a tamaño real de Coné, el travieso sobrino de Condorito, y Washington, el fiel perro que reposa plácidamente sobre el letrero. Es uno de los puntos fotográficos más queridos por niños y adultos.",
+    "descripcionLarga": "En el centro de la Plaza de Cumpeo se erige el monumento oficial con las letras volumétricas del pueblo. Acompañando las letras se encuentran las esculturas a tamaño real de Coné, el travieso",
     "historia": "Inaugurado para dar identidad al pueblo temático de Condorito, homenajeando a dos de los personajes más entrañables creados por Pepo.",
     "coordenadas": {
       "lat": -35.281494,
@@ -31,8 +31,8 @@
     "destacado": true,
     "activo": true,
     "orden": 0,
-    "createdAt": "2026-09-06T22:41:10.266Z",
-    "updatedAt": "2026-09-11T04:26:46.917Z"
+    "createdAt": "2026-09-07T01:41:10.266Z",
+    "updatedAt": "2026-09-15T06:30:04.963Z"
   },
   {
     "id": "plaza-cumpeo-fuente-ugenio",
@@ -40,7 +40,7 @@
     "nombre": "Plaza de Armas",
     "categoria": "cultural",
     "descripcionCorta": "Histórica plaza con frondosas palmeras, senderos adoquinados y fuente ornamental en el corazón cívico de Cumpeo.",
-    "descripcionLarga": "La Plaza de Armas de Cumpeo es el corazón social y de descanso de la comuna de Río Claro. Cuenta con añosas palmeras chilenas, senderos adoquinados y una clásica fuente de agua ornamental en el centro cívico.",
+    "descripcionLarga": "La Plaza de Armas de Cumpeo es el corazón social y de descanso de la comuna de Río Claro. Cuenta con añosas palmeras chilenas, senderos adoquinados y una clásica fuente de agua ornamental en ",
     "historia": "La plaza es el punto fundacional de Cumpeo, rodeada por el comercio local, la iglesia y la sede municipal.",
     "coordenadas": {
       "lat": -35.281739,
@@ -65,7 +65,7 @@
     "destacado": true,
     "activo": true,
     "orden": 0,
-    "createdAt": "2026-09-06T22:41:10.556Z",
-    "updatedAt": "2026-09-11T04:27:05.536Z"
+    "createdAt": "2026-09-07T01:41:10.556Z",
+    "updatedAt": "2026-09-15T06:30:05.304Z"
   }
 ]

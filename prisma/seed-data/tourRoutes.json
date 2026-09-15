@@ -1,88 +1,5 @@
 [
   {
-    "id": "ruta-tradiciones-ferias",
-    "slug": "ruta-tradiciones-ferias",
-    "nombre": "Ruta de Tradiciones y Ferias",
-    "descripcion": "Recorrido por los puntos culturales más significativos de Cumpeo: la pérgola de artesanos, la iglesia y la alameda comunal.",
-    "color": "#E8A020",
-    "poiIds": [
-      "feria-artesanos-pergola",
-      "fiesta-san-sebastian",
-      "feria-emprendedores-alameda"
-    ],
-    "duracionEstimada": "1 h 25 min",
-    "distanciaKm": null,
-    "dificultad": "Muy fácil (Paseo peatonal)",
-    "hitos": [
-      {
-        "numero": 1,
-        "titulo": "Pérgola de Artesanos",
-        "descripcion": "Souvenirs y artesanía típica maulina hecha a mano por productores locales."
-      },
-      {
-        "numero": 2,
-        "titulo": "Santuario y Tradición",
-        "descripcion": "Espacio de fe y devoción campesina en torno a San Sebastián."
-      }
-    ],
-    "consejos": [
-      {
-        "texto": "Prefiere artesanía original comprando directamente a las familias creadoras en la feria.",
-        "titulo": "Comercio Justo"
-      }
-    ],
-    "tiemposParada": {
-      "fiesta-san-sebastian": 30,
-      "feria-artesanos-pergola": 30,
-      "feria-emprendedores-alameda": 25
-    },
-    "mapaImagen": null,
-    "destacada": true,
-    "activo": true,
-    "orden": 2,
-    "createdAt": "2026-09-06T22:44:06.032Z",
-    "updatedAt": "2026-09-11T04:47:41.768Z"
-  },
-  {
-    "id": "ruta-sabores-cumpeo",
-    "slug": "ruta-sabores-cumpeo",
-    "nombre": "Circuito Gastronómico y Comercial",
-    "descripcion": "Saborea la auténtica cocina maulina a lo largo del eje central de Cumpeo y la Ruta K-21.",
-    "color": "#C0392B",
-    "poiIds": [
-      "san-sebastian-restaurante",
-      "la-combi",
-      "el-pollo-farsante"
-    ],
-    "duracionEstimada": "2 h 18 min",
-    "distanciaKm": 13.5,
-    "dificultad": "Fácil",
-    "hitos": [
-      {
-        "numero": 1,
-        "titulo": "Empanadas y Cazuelas",
-        "descripcion": "Cocina a fuego lento con ingredientes del valle de Río Claro."
-      }
-    ],
-    "consejos": [
-      {
-        "texto": "La mayoría de los locales acepta transferencias y tarjetas, pero siempre es bueno llevar efectivo.",
-        "titulo": "Medios de Pago"
-      }
-    ],
-    "tiemposParada": {
-      "la-combi": 30,
-      "el-pollo-farsante": 60,
-      "san-sebastian-restaurante": 30
-    },
-    "mapaImagen": null,
-    "destacada": false,
-    "activo": true,
-    "orden": 3,
-    "createdAt": "2026-09-06T22:44:06.336Z",
-    "updatedAt": "2026-09-11T04:48:02.899Z"
-  },
-  {
     "id": "la-ruta-de-condorito",
     "slug": "la-ruta-de-condorito",
     "nombre": "La Ruta Oficial de Condorito",
@@ -140,7 +57,90 @@
     "destacada": true,
     "activo": true,
     "orden": 1,
-    "createdAt": "2026-09-06T22:44:05.718Z",
-    "updatedAt": "2026-09-15T03:16:50.120Z"
+    "createdAt": "2026-09-07T01:44:05.718Z",
+    "updatedAt": "2026-09-15T06:30:15.624Z"
+  },
+  {
+    "id": "ruta-sabores-cumpeo",
+    "slug": "ruta-sabores-cumpeo",
+    "nombre": "Circuito Gastronómico y Comercial",
+    "descripcion": "Saborea la auténtica cocina maulina a lo largo del eje central de Cumpeo y la Ruta K-21.",
+    "color": "#C0392B",
+    "poiIds": [
+      "san-sebastian-restaurante",
+      "la-combi",
+      "el-pollo-farsante"
+    ],
+    "duracionEstimada": "2 h 18 min",
+    "distanciaKm": 13.5,
+    "dificultad": "Fácil",
+    "hitos": [
+      {
+        "numero": 1,
+        "titulo": "Empanadas y Cazuelas",
+        "descripcion": "Cocina a fuego lento con ingredientes del valle de Río Claro."
+      }
+    ],
+    "consejos": [
+      {
+        "texto": "La mayoría de los locales acepta transferencias y tarjetas, pero siempre es bueno llevar efectivo.",
+        "titulo": "Medios de Pago"
+      }
+    ],
+    "tiemposParada": {
+      "la-combi": 30,
+      "el-pollo-farsante": 60,
+      "san-sebastian-restaurante": 30
+    },
+    "mapaImagen": null,
+    "destacada": false,
+    "activo": true,
+    "orden": 3,
+    "createdAt": "2026-09-07T01:44:06.336Z",
+    "updatedAt": "2026-09-15T06:30:15.294Z"
+  },
+  {
+    "id": "ruta-tradiciones-ferias",
+    "slug": "ruta-tradiciones-ferias",
+    "nombre": "Ruta de Tradiciones y Ferias",
+    "descripcion": "Recorrido por los puntos culturales más significativos de Cumpeo: la pérgola de artesanos, la iglesia y la alameda comunal.",
+    "color": "#E8A020",
+    "poiIds": [
+      "feria-artesanos-pergola",
+      "fiesta-san-sebastian",
+      "feria-emprendedores-alameda"
+    ],
+    "duracionEstimada": "1 h 25 min",
+    "distanciaKm": null,
+    "dificultad": "Muy fácil (Paseo peatonal)",
+    "hitos": [
+      {
+        "numero": 1,
+        "titulo": "Pérgola de Artesanos",
+        "descripcion": "Souvenirs y artesanía típica maulina hecha a mano por productores locales."
+      },
+      {
+        "numero": 2,
+        "titulo": "Santuario y Tradición",
+        "descripcion": "Espacio de fe y devoción campesina en torno a San Sebastián."
+      }
+    ],
+    "consejos": [
+      {
+        "texto": "Prefiere artesanía original comprando directamente a las familias creadoras en la feria.",
+        "titulo": "Comercio Justo"
+      }
+    ],
+    "tiemposParada": {
+      "fiesta-san-sebastian": 30,
+      "feria-artesanos-pergola": 30,
+      "feria-emprendedores-alameda": 25
+    },
+    "mapaImagen": null,
+    "destacada": true,
+    "activo": true,
+    "orden": 2,
+    "createdAt": "2026-09-07T01:44:06.032Z",
+    "updatedAt": "2026-09-15T06:30:14.958Z"
   }
 ]

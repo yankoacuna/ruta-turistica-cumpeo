@@ -1,5 +1,13 @@
 [
   {
+    "id": "bomberos-rio-claro",
+    "institucion": "Bomberos Río Claro / Cumpeo",
+    "telefono": "132",
+    "direccion": "Cumpeo, Río Claro",
+    "orden": 3,
+    "activo": true
+  },
+  {
     "id": "carabineros-cumpeo",
     "institucion": "Carabineros (Retén Cumpeo)",
     "telefono": "+56 71 257 1146",
@@ -13,14 +21,6 @@
     "telefono": "+56 71 257 1150",
     "direccion": "Calle Los Maitenes s/n, Cumpeo",
     "orden": 2,
-    "activo": true
-  },
-  {
-    "id": "bomberos-rio-claro",
-    "institucion": "Bomberos Río Claro / Cumpeo",
-    "telefono": "132",
-    "direccion": "Cumpeo, Río Claro",
-    "orden": 3,
     "activo": true
   },
   {
