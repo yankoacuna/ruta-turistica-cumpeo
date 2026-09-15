@@ -52,7 +52,7 @@ export function RutaShowcase({ route, stops = [] }: RutaShowcaseProps) {
           parezca un bloque oscuro genérico. */}
       <div className="absolute inset-0 bg-halftone-sol opacity-70 pointer-events-none" aria-hidden="true" />
 
-      <div className="relative max-w-shell mx-auto px-4 grid lg:grid-cols-12 lg:gap-12 lg:items-center">
+      <div className="relative max-w-shell mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 lg:gap-12 lg:items-center">
         {/* Plano ilustrado. En mobile va después del título (se lee primero
             qué ruta es), separado con margen superior para no pegarse al
             texto; en escritorio pasa a la derecha y ocupa más ancho. */}

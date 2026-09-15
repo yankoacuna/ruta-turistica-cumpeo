@@ -242,13 +242,13 @@ export function ThemeManager({ initial, role, showToast, confirmAction, onAuthEr
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Colores */}
         <div className="bg-white rounded-2xl border border-border p-5 shadow-2xs space-y-3">
           <h3 className="text-xs font-extrabold uppercase tracking-wider text-text-muted">
             Paleta de colores
           </h3>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {THEME_COLOR_DEFS.map((def) => {
               const draftKey = DRAFT_COLOR_KEY[def.key];
               return (

@@ -35,7 +35,7 @@ export function FeaturedSection({ featured }: FeaturedSectionProps) {
         action={{ href: '/mapa', label: <Editable k="home.destacados.accion" /> }}
       />
 
-      <div className="px-4 grid lg:grid-cols-12 gap-4 lg:gap-5">
+      <div className="px-4 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
         {/* Viñeta principal */}
         <Link
           href={`/destino/${principal.slug}`}

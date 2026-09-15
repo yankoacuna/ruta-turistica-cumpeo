@@ -51,7 +51,7 @@ export default async function RootLayout({
   const theme = await getResolvedTheme();
 
   return (
-    <html lang="es-CL">
+    <html lang="es-CL" className="overflow-x-hidden">
       <head>
         <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
         <link rel="apple-touch-icon" href="/assets/icons/icon-180.png" />
