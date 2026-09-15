@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, MapPin, ChevronRight, X, Compass, QrCode } from 'lucide-react';
 import { Destination } from '@/lib/types';
-import { Editable, useSiteText } from '@/components/site-text';
+import { Editable, EditableImage, useSiteText } from '@/components/site-text';
 
 interface HeroSectionProps {
   destinations: Destination[];
@@ -65,16 +65,12 @@ export function HeroSection({ destinations }: HeroSectionProps) {
         {/* Foto real del pueblo. El degradado es mucho mas liviano que antes:
             la foto es el activo de marca, no un fondo que hay que tapar. */}
         <div className="absolute inset-0 pointer-events-none">
-          <img
+          {/* Es el elemento LCP de la portada: se pide con prioridad alta. */}
+          <EditableImage
+            k="home.hero.imagenFondo"
             className="w-full h-full object-cover object-[center_38%]"
-            src="/assets/images/letras-cumpeo-cone.jpg"
             alt="Letras de Cumpeo, el pueblo temático de Condorito"
-            /* Es el elemento LCP de la portada: se pide con prioridad alta. */
             fetchPriority="high"
-            decoding="async"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/assets/images/placeholder.webp';
-            }}
           />
           {/* Solo el degradado, sin trama: la foto del hero se deja limpia. */}
           <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/5 md:bg-gradient-to-r md:from-ink md:via-ink/60 md:to-transparent" />

@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Compass, ArrowRight, Footprints, Clock, Route, MapPin } from 'lucide-react';
 import { TourRoute } from '@/lib/types';
-import { Editable, useSiteText } from '@/components/site-text';
+import { Editable, EditableImage, useSiteText } from '@/components/site-text';
 
 interface RutaShowcaseProps {
   /** Ruta destacada del catastro. Si no hay, el bloque usa el texto base. */
@@ -34,7 +34,6 @@ export function RutaShowcase({ route, stops = [] }: RutaShowcaseProps) {
   // tiene sentido editar en el sitio un dato que se administra en /admin.
   const titulo = route?.nombre || get('home.ruta.tituloFallback');
   const descripcion = route?.descripcion || get('home.ruta.descripcionFallback');
-  const mapa = route?.mapaImagen || '/assets/images/mapa-ilustrado-ruta-condorito.png';
 
   // El conteo sale de poiIds, que es el dato autoritativo: `stops` puede ser
   // mas corto si alguna parada todavia no esta cargada en el catastro.
@@ -58,15 +57,14 @@ export function RutaShowcase({ route, stops = [] }: RutaShowcaseProps) {
             qué ruta es), separado con margen superior para no pegarse al
             texto; en escritorio pasa a la derecha y ocupa más ancho. */}
         <div className="order-2 lg:col-span-7 lg:order-2 mt-8 lg:mt-0">
-          <div className="rounded-xl overflow-hidden border-2 border-sol bg-paper shadow-comic-sol">
-            <img
-              src={mapa}
+          <div className="relative rounded-xl overflow-hidden border-2 border-sol bg-paper shadow-comic-sol">
+            <EditableImage
+              k="home.ruta.mapaImagenFallback"
+              override={route?.mapaImagen}
               alt={`Plano ilustrado de ${titulo}`}
               loading="lazy"
               className="w-full h-auto object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/assets/images/mapa-ilustrado-ruta-condorito.png';
-              }}
+              onErrorSrc="/assets/images/mapa-ilustrado-ruta-condorito.png"
             />
           </div>
         </div>

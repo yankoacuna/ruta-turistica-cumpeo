@@ -642,8 +642,8 @@ export function startUsuariosTour({
 }
 
 /**
- * 8. TOUR: CÓMO EDITAR LOS TEXTOS DEL SITIO
- * Guía interactiva por la sección de Textos del Sitio.
+ * 8. TOUR: CÓMO EDITAR LOS CONTENIDOS DEL SITIO
+ * Guía interactiva por la sección de Contenidos del Sitio (textos e imágenes).
  */
 export function startTextosTour({ activeSection, onNavigate }: TourHandlers) {
   if (activeSection !== 'textos') {
@@ -656,7 +656,7 @@ export function startTextosTour({ activeSection, onNavigate }: TourHandlers) {
       popover: {
         title: tourTitle(TOUR_ICONS.fileText, '1. Edición en Vivo o Desde Aquí'),
         description:
-          'Puedes abrir el sitio en modo edición con "Editar textos en el sitio" y cambiarlos directamente sobre la página, o modificarlos en esta lista y presionar "Guardar cambios".',
+          'Puedes abrir el sitio en modo edición con "Editar textos en el sitio" y cambiarlos directamente sobre la página (incluidas las fotos fijas de la portada), o modificarlos en esta lista y presionar "Guardar cambios".',
         side: 'bottom',
         align: 'start',
       },
@@ -675,7 +675,7 @@ export function startTextosTour({ activeSection, onNavigate }: TourHandlers) {
       popover: {
         title: tourTitle(TOUR_ICONS.checkCircle, '3. Editar, Revertir e Historial'),
         description:
-          'Los textos están agrupados por página. Cada uno se puede editar directamente, volver a su versión original, o revisar el historial de cambios anteriores con quién y cuándo los hizo.',
+          'Las imágenes tienen su propia sección arriba; el resto de los textos están agrupados por página. Cada campo se puede editar directamente, volver a su versión original, o revisar el historial de cambios anteriores con quién y cuándo los hizo.',
         side: 'top',
         align: 'start',
       },

@@ -1,12 +1,13 @@
 'use client';
 
 /**
- * Sección "Textos del Sitio" del CMS.
+ * Sección "Textos e Imágenes del Sitio" del CMS.
  *
  * Es la vista de respaldo de la edición en vivo: lista todos los textos
  * editables agrupados por página y bloque, marca los que fueron modificados,
- * muestra quién los cambió y cuándo, y permite volver al texto original o a
- * cualquier versión anterior.
+ * muestra quién los cambió y cuándo, y permite volver al valor original o a
+ * cualquier versión anterior. Las imágenes van en su propia sección al
+ * principio (son pocas y se buscan por foto, no por página).
  */
 
 import React, { useMemo, useState } from 'react';
@@ -16,6 +17,7 @@ import {
   ChevronRight,
   ExternalLink,
   History,
+  Image as ImageIcon,
   Loader2,
   Pencil,
   RotateCcw,
@@ -27,6 +29,7 @@ import type { SiteTextRecord, SiteTextRevisionRecord, UserRole } from '@/lib/typ
 import {
   SITE_TEXT_DEFAULTS,
   SITE_TEXT_GROUPS,
+  SITE_TEXT_LIST,
   SITE_TEXT_MAX_LENGTH,
   siteTextGroupsByPage,
   type SiteTextDef,
@@ -38,6 +41,9 @@ import {
   saveSiteTexts,
 } from '../siteTextActions';
 import type { ToastFn, ConfirmFn } from '../_types';
+import { ImageUploadField } from './ImageUploadField';
+
+const FALLBACK_IMG = '/assets/images/placeholder.webp';
 
 interface SiteTextsManagerProps {
   /** Textos modificados que llegaron del servidor. */
@@ -226,6 +232,165 @@ export function SiteTextsManager({
 
   const modificados = Object.keys(guardados).length;
 
+  const imagenes = useMemo(() => SITE_TEXT_LIST.filter((d) => d.type === 'image'), []);
+
+  /** Fila de edición de un campo: se usa tanto en la sección de imágenes como en los grupos por página. */
+  const renderCampo = (def: SiteTextDef) => {
+    const guardado = guardados[def.key];
+    const enPantalla = valorEnPantalla(def);
+    const tieneBorrador =
+      borradores[def.key] !== undefined && borradores[def.key].trim() !== valorVigente(def).trim();
+    const esHistorialAbierto = historial?.key === def.key;
+
+    return (
+      <div key={def.key} className="p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-text-primary">{def.label}</span>
+            {guardado && (
+              <span className="ml-2 text-[10px] font-bold text-rojo bg-red-50 border border-red-200 rounded-full px-1.5 py-0.5">
+                modificado
+              </span>
+            )}
+            {tieneBorrador && (
+              <span className="ml-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5">
+                sin guardar
+              </span>
+            )}
+            {role === 'ADMIN' && (
+              <code
+                className="block text-[10px] text-text-muted mt-0.5 break-all"
+                title="Clave técnica interna (solo visible para administradores)"
+              >
+                {def.key}
+              </code>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => verHistorial(def.key)}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-text-muted hover:text-text-primary hover:bg-surface-soft transition-colors"
+              title="Ver el historial de cambios"
+            >
+              {cargandoHistorial && esHistorialAbierto ? (
+                <Loader2 size={11} className="animate-spin" />
+              ) : (
+                <History size={11} />
+              )}
+              Historial
+            </button>
+            {canEdit && guardado && (
+              <button
+                type="button"
+                onClick={() => restaurarOriginal(def)}
+                disabled={guardando}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-text-muted hover:text-rojo hover:bg-red-50 transition-colors disabled:opacity-40"
+                title={`Volver ${def.type === 'image' ? 'a la imagen original' : 'al texto original'} del sitio`}
+              >
+                <RotateCcw size={11} /> Original
+              </button>
+            )}
+          </div>
+        </div>
+
+        {def.hint && <p className="text-[11px] text-text-secondary mb-2">{def.hint}</p>}
+
+        {def.type === 'image' ? (
+          canEdit ? (
+            <ImageUploadField
+              label=""
+              value={enPantalla}
+              onChange={(url) => setBorradores((prev) => ({ ...prev, [def.key]: url }))}
+            />
+          ) : (
+            <img
+              src={enPantalla}
+              alt={def.label}
+              className="w-full h-40 object-cover rounded-xl border border-border bg-surface-soft"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = FALLBACK_IMG;
+              }}
+            />
+          )
+        ) : (
+          <textarea
+            rows={def.multiline ? 4 : 2}
+            value={enPantalla}
+            maxLength={SITE_TEXT_MAX_LENGTH}
+            readOnly={!canEdit}
+            onChange={(e) => setBorradores((prev) => ({ ...prev, [def.key]: e.target.value }))}
+            className={`w-full px-3 py-2.5 rounded-xl border text-sm text-text-primary outline-none transition-all resize-y leading-relaxed ${
+              canEdit
+                ? 'border-border bg-white focus:border-rojo focus:ring-2 focus:ring-rojo/10'
+                : 'border-border bg-surface-soft cursor-default'
+            } ${tieneBorrador ? 'border-amber-300 bg-amber-50/40' : ''}`}
+          />
+        )}
+
+        {guardado && (
+          <p className="text-[10px] text-text-muted mt-1.5">
+            Última edición: {guardado.updatedByNombre || 'desconocido'}
+            {guardado.updatedByEmail ? ` (${guardado.updatedByEmail})` : ''} ·{' '}
+            {formatearFecha(guardado.updatedAt)}
+          </p>
+        )}
+
+        {esHistorialAbierto && historial.items.length > 0 && (
+          <div className="mt-3 rounded-xl border border-border bg-[#FAF8F5] overflow-hidden">
+            <div className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-text-muted border-b border-border">
+              Historial de cambios
+            </div>
+            <ul className="divide-y divide-border">
+              {historial.items.map((rev) => (
+                <li key={rev.id} className="px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-bold text-text-primary">
+                        {rev.autorNombre || 'Desconocido'}
+                        <span className="ml-1.5 font-semibold text-text-muted">
+                          {formatearFecha(rev.createdAt)}
+                        </span>
+                        <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-text-muted bg-white border border-border rounded px-1 py-0.5">
+                          {formatearAccion(rev.accion)}
+                        </span>
+                      </div>
+                      {def.type === 'image' ? (
+                        <img
+                          src={rev.valorNuevo}
+                          alt="Version anterior"
+                          className="mt-1.5 w-24 h-16 object-cover rounded-lg border border-border bg-surface-soft"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = FALLBACK_IMG;
+                          }}
+                        />
+                      ) : (
+                        <p className="text-[11px] text-text-secondary mt-1 whitespace-pre-line line-clamp-3">
+                          {rev.valorNuevo}
+                        </p>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => restaurarVersion(rev)}
+                        disabled={guardando}
+                        className="text-[10px] font-bold text-rojo hover:underline shrink-0 disabled:opacity-40"
+                      >
+                        Restaurar
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-5">
       {/* Encabezado */}
@@ -233,17 +398,18 @@ export function SiteTextsManager({
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="min-w-0">
             <h2 className="font-display font-extrabold text-xl text-text-primary flex items-center gap-2">
-              <Type size={20} className="text-rojo" /> Textos del Sitio
+              <Type size={20} className="text-rojo" /> Textos e Imágenes del Sitio
             </h2>
             <p className="text-xs text-text-secondary mt-1 max-w-2xl leading-relaxed">
-              Los títulos, bajadas y avisos de las páginas públicas. Puedes cambiarlos aquí o
-              directamente sobre el sitio con el botón de abajo, que abre la portada en modo
+              Los títulos, bajadas, avisos y fotos fijas de las páginas públicas. Puedes cambiarlos
+              aquí o directamente sobre el sitio con el botón de abajo, que abre la portada en modo
               edición. Cada cambio queda registrado con tu nombre y se puede revertir.
             </p>
             <div className="flex items-center gap-3 mt-2.5 text-[11px] font-semibold">
               <span className="text-text-muted">
-                {Object.keys(SITE_TEXT_DEFAULTS).length} textos editables
+                {Object.keys(SITE_TEXT_DEFAULTS).length - imagenes.length} textos editables
               </span>
+              <span className="text-text-muted">{imagenes.length} imágenes editables</span>
               <span className="text-rojo">{modificados} modificados</span>
             </div>
           </div>
@@ -295,10 +461,27 @@ export function SiteTextsManager({
         </div>
       </div>
 
+      {/* Imágenes del sitio: aparte de los textos, porque son pocas y se
+          buscan distinto (por foto, no por grupo de página). */}
+      {imagenes.filter(coincide).length > 0 && (
+        <div id="tour-imagenes-grupo" className="bg-white rounded-2xl border border-border overflow-hidden shadow-2xs">
+          <div className="w-full flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-[#FAF8F5]">
+            <ImageIcon size={16} className="text-rojo shrink-0" />
+            <span className="font-bold text-sm text-text-primary">Imágenes del sitio</span>
+            <span className="text-[10px] font-bold text-text-muted bg-white border border-border rounded-full px-2 py-0.5 shrink-0">
+              {imagenes.length}
+            </span>
+          </div>
+          <div className="divide-y divide-border">
+            {imagenes.filter(coincide).map((def) => renderCampo(def))}
+          </div>
+        </div>
+      )}
+
       {/* Grupos por página */}
       <div id="tour-textos-groups" className="space-y-5">
       {paginas.map(({ pagina, grupos }) => {
-        const gruposVisibles = grupos.filter((g) => g.items.some(coincide));
+        const gruposVisibles = grupos.filter((g) => g.items.some((i) => i.type !== 'image' && coincide(i)));
         if (gruposVisibles.length === 0) return null;
 
         return (
@@ -309,7 +492,7 @@ export function SiteTextsManager({
 
             {gruposVisibles.map((grupo) => {
               const abierto = abiertos.includes(grupo.id) || busqueda.trim().length > 0;
-              const items = grupo.items.filter(coincide);
+              const items = grupo.items.filter((i) => i.type !== 'image').filter(coincide);
               const cambiadosEnGrupo = items.filter((i) => guardados[i.key]).length;
 
               return (
@@ -360,138 +543,7 @@ export function SiteTextsManager({
 
                   {abierto && (
                     <div className="border-t border-border divide-y divide-border">
-                      {items.map((def) => {
-                        const guardado = guardados[def.key];
-                        const enPantalla = valorEnPantalla(def);
-                        const tieneBorrador =
-                          borradores[def.key] !== undefined &&
-                          borradores[def.key].trim() !== valorVigente(def).trim();
-                        const esHistorialAbierto = historial?.key === def.key;
-
-                        return (
-                          <div key={def.key} className="p-4 sm:p-5">
-                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                              <div className="min-w-0">
-                                <span className="text-xs font-bold text-text-primary">
-                                  {def.label}
-                                </span>
-                                {guardado && (
-                                  <span className="ml-2 text-[10px] font-bold text-rojo bg-red-50 border border-red-200 rounded-full px-1.5 py-0.5">
-                                    modificado
-                                  </span>
-                                )}
-                                {tieneBorrador && (
-                                  <span className="ml-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5">
-                                    sin guardar
-                                  </span>
-                                )}
-                                {role === 'ADMIN' && (
-                                  <code
-                                    className="block text-[10px] text-text-muted mt-0.5 break-all"
-                                    title="Clave técnica interna (solo visible para administradores)"
-                                  >
-                                    {def.key}
-                                  </code>
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => verHistorial(def.key)}
-                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-text-muted hover:text-text-primary hover:bg-surface-soft transition-colors"
-                                  title="Ver el historial de cambios"
-                                >
-                                  {cargandoHistorial && esHistorialAbierto ? (
-                                    <Loader2 size={11} className="animate-spin" />
-                                  ) : (
-                                    <History size={11} />
-                                  )}
-                                  Historial
-                                </button>
-                                {canEdit && guardado && (
-                                  <button
-                                    type="button"
-                                    onClick={() => restaurarOriginal(def)}
-                                    disabled={guardando}
-                                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-text-muted hover:text-rojo hover:bg-red-50 transition-colors disabled:opacity-40"
-                                    title="Volver al texto original del sitio"
-                                  >
-                                    <RotateCcw size={11} /> Original
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-
-                            {def.hint && (
-                              <p className="text-[11px] text-text-secondary mb-2">{def.hint}</p>
-                            )}
-
-                            <textarea
-                              rows={def.multiline ? 4 : 2}
-                              value={enPantalla}
-                              maxLength={SITE_TEXT_MAX_LENGTH}
-                              readOnly={!canEdit}
-                              onChange={(e) =>
-                                setBorradores((prev) => ({ ...prev, [def.key]: e.target.value }))
-                              }
-                              className={`w-full px-3 py-2.5 rounded-xl border text-sm text-text-primary outline-none transition-all resize-y leading-relaxed ${
-                                canEdit
-                                  ? 'border-border bg-white focus:border-rojo focus:ring-2 focus:ring-rojo/10'
-                                  : 'border-border bg-surface-soft cursor-default'
-                              } ${tieneBorrador ? 'border-amber-300 bg-amber-50/40' : ''}`}
-                            />
-
-                            {guardado && (
-                              <p className="text-[10px] text-text-muted mt-1.5">
-                                Última edición: {guardado.updatedByNombre || 'desconocido'}
-                                {guardado.updatedByEmail ? ` (${guardado.updatedByEmail})` : ''} ·{' '}
-                                {formatearFecha(guardado.updatedAt)}
-                              </p>
-                            )}
-
-                            {esHistorialAbierto && historial.items.length > 0 && (
-                              <div className="mt-3 rounded-xl border border-border bg-[#FAF8F5] overflow-hidden">
-                                <div className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-text-muted border-b border-border">
-                                  Historial de cambios
-                                </div>
-                                <ul className="divide-y divide-border">
-                                  {historial.items.map((rev) => (
-                                    <li key={rev.id} className="px-3 py-2.5">
-                                      <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                          <div className="text-[11px] font-bold text-text-primary">
-                                            {rev.autorNombre || 'Desconocido'}
-                                            <span className="ml-1.5 font-semibold text-text-muted">
-                                              {formatearFecha(rev.createdAt)}
-                                            </span>
-                                            <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-text-muted bg-white border border-border rounded px-1 py-0.5">
-                                              {formatearAccion(rev.accion)}
-                                            </span>
-                                          </div>
-                                          <p className="text-[11px] text-text-secondary mt-1 whitespace-pre-line line-clamp-3">
-                                            {rev.valorNuevo}
-                                          </p>
-                                        </div>
-                                        {canEdit && (
-                                          <button
-                                            type="button"
-                                            onClick={() => restaurarVersion(rev)}
-                                            disabled={guardando}
-                                            className="text-[10px] font-bold text-rojo hover:underline shrink-0 disabled:opacity-40"
-                                          >
-                                            Restaurar
-                                          </button>
-                                        )}
-                                      </div>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {items.map((def) => renderCampo(def))}
                     </div>
                   )}
                 </div>

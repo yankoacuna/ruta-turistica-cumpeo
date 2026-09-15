@@ -186,7 +186,7 @@ export function AdminSidebar({
         },
         {
           id: 'textos' as AdminSection,
-          label: 'Textos del Sitio',
+          label: 'Contenidos del Sitio',
           icon: Type,
           count: counts.textos,
           color: 'text-sky-500',

@@ -28,6 +28,11 @@ export interface SiteTextDef {
   multiline?: boolean;
   /** Pista opcional para el editor. */
   hint?: string;
+  /**
+   * 'image' para una ruta/URL de foto en vez de texto: el editor muestra un
+   * subidor de imagenes en lugar de un campo de texto. Por defecto 'text'.
+   */
+  type?: 'text' | 'image';
 }
 
 export interface SiteTextGroup {
@@ -161,6 +166,13 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
       },
       { key: 'home.hero.region', label: 'Región', value: 'Región del Maule' },
       { key: 'home.hero.portalBadge', label: 'Sello de portal', value: 'Portal Oficial' },
+      {
+        key: 'home.hero.imagenFondo',
+        label: 'Foto de fondo',
+        value: '/assets/images/letras-cumpeo-cone.jpg',
+        type: 'image',
+        hint: 'La foto grande detrás del titular de la portada.',
+      },
       { key: 'home.hero.titulo', label: 'Titular', value: 'Cumpeo' },
       { key: 'home.hero.subtitulo', label: 'Subtitular', value: 'el pueblo de Condorito' },
       {
@@ -239,6 +251,13 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
         multiline: true,
       },
       { key: 'home.ruta.cta', label: 'Botón', value: 'Ver el itinerario completo' },
+      {
+        key: 'home.ruta.mapaImagenFallback',
+        label: 'Plano ilustrado (si la ruta no tiene uno propio)',
+        value: '/assets/images/mapa-ilustrado-ruta-condorito.png',
+        type: 'image',
+        hint: 'Solo se usa cuando la ruta destacada del catastro no tiene su propio plano cargado.',
+      },
     ],
   },
   {

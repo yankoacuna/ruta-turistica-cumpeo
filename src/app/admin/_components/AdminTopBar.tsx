@@ -58,7 +58,7 @@ export function AdminTopBar({
     alojamientos: { category: 'Contenido Editable', label: 'Alojamientos y Cabañas' },
     eventos: { category: 'Contenido Editable', label: 'Eventos y Festividades' },
     rutas: { category: 'Contenido Editable', label: 'Circuitos y Rutas' },
-    textos: { category: 'Contenido Editable', label: 'Textos del Sitio' },
+    textos: { category: 'Contenido Editable', label: 'Contenidos del Sitio' },
     apariencia: { category: 'Contenido Editable', label: 'Apariencia del Sitio' },
     orden: { category: 'Contenido Editable', label: 'Orden de la Portada' },
     qrcodes: { category: 'Herramientas', label: 'Generador de Códigos QR' },
@@ -250,8 +250,8 @@ export function AdminTopBar({
                       <Type size={14} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold">Cómo Editar los Textos del Sitio</div>
-                      <div className="text-[10px] text-text-muted">Títulos y bajadas, en vivo o desde el listado</div>
+                      <div className="text-xs font-bold">Cómo Editar los Contenidos del Sitio</div>
+                      <div className="text-[10px] text-text-muted">Títulos, bajadas y fotos, en vivo o desde el listado</div>
                     </div>
                   </button>
 
