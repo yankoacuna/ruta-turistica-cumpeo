@@ -52,3 +52,6 @@ public/data/backup_original/
 # Fotos subidas dinámicamente desde el CMS
 public/uploads/*
 !public/uploads/.gitkeep
+
+# Documentación de entrega: se maneja fuera del repo
+docs/

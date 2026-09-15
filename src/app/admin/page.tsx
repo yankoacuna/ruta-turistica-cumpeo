@@ -12,36 +12,63 @@ import { getSiteTextsAdmin } from './siteTextActions';
 import { getThemeConfigAdmin } from './themeActions';
 import { getNotificacionesAdmin } from './notificacionesActions';
 import AdminClient from './AdminClient';
-import { AdminUser, SiteTextRecord, ThemeConfigRecord, NotificacionesConfigRecord } from '@/lib/types';
+import {
+  AdminUser,
+  SiteTextRecord,
+  ThemeConfigRecord,
+  NotificacionesConfigRecord,
+  Destination,
+  Restaurant,
+  Accommodation,
+  CumpeoEvent,
+  TourRoute,
+} from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const [destinos, restaurantes, alojamientos, eventos, rutas, allPois, session] = await Promise.all([
-    getAdminDestinations(),
-    getAdminRestaurants(),
-    getAdminAccommodations(),
-    getEvents(),
-    getAdminTourRoutes(),
+  const [allPois, session] = await Promise.all([
     getAllPOIs(),
     getAdminSession(),
   ]);
 
+  // Todo lo que sigue son datos del catastro completo (incluidos registros
+  // inactivos/no publicados) y configuración del panel: solo se piden con
+  // sesión. AdminClient es un Client Component, así que cualquier prop que se
+  // le pase acá viaja en la respuesta al navegador aunque luego decida mostrar
+  // solo la pantalla de login — pedir esto sin sesión filtraría el catastro
+  // completo a cualquier visitante anónimo que abra /admin.
+  let destinos: Destination[] = [];
+  let restaurantes: Restaurant[] = [];
+  let alojamientos: Accommodation[] = [];
+  let eventos: CumpeoEvent[] = [];
+  let rutas: TourRoute[] = [];
   let initialUsers: AdminUser[] = [];
-  if (session && session.role === 'ADMIN') {
-    try {
-      initialUsers = await getAdminUsers();
-    } catch (e) {
-      console.error('Error fetching initial users:', e);
-    }
-  }
-
-  // Textos del sitio ya modificados. Solo se piden con sesion: sin ella el
-  // panel muestra el login y no hay nada que listar.
   let initialSiteTexts: SiteTextRecord[] = [];
   let initialTheme: ThemeConfigRecord | null = null;
   let initialNotificaciones: NotificacionesConfigRecord | null = null;
+
   if (session) {
+    try {
+      [destinos, restaurantes, alojamientos, eventos, rutas] = await Promise.all([
+        getAdminDestinations(),
+        getAdminRestaurants(),
+        getAdminAccommodations(),
+        getEvents(),
+        getAdminTourRoutes(),
+      ]);
+    } catch (e) {
+      console.error('Error fetching admin catalog data:', e);
+    }
+
+    if (session.role === 'ADMIN') {
+      try {
+        initialUsers = await getAdminUsers();
+      } catch (e) {
+        console.error('Error fetching initial users:', e);
+      }
+    }
+
     try {
       initialSiteTexts = await getSiteTextsAdmin();
     } catch (e) {

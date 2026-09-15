@@ -11,7 +11,57 @@ import {
   SESSION_COOKIE_NAME,
 } from '@/lib/auth';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+
+// Freno de fuerza bruta al login: mismo patrón que ya usan los formularios
+// públicos (/api/solicitudes, /api/solicitudes/foto) contra su propio abuso,
+// aplicado acá porque el login era la única puerta del panel sin ningún
+// límite de intentos.
+//
+// x-forwarded-for lo puede mandar el propio cliente y este hosting no tiene
+// (todavía) un proxy que lo reescriba con el IP real, así que no es
+// confiable: alguien podría rotarlo en cada intento y resetear el freno por
+// IP. Por eso el límite real es el de CUENTA (solo el email, sin IP) — ese no
+// se puede eludir cambiando encabezados. El límite por IP+email queda como
+// capa extra para cuando el encabezado sí es honesto.
+const VENTANA_INTENTOS_MS = 15 * 60 * 1000;
+const MAX_INTENTOS_FALLIDOS_IP = 8;
+const MAX_INTENTOS_FALLIDOS_CUENTA = 20;
+const intentosFallidos = new Map<string, { cuenta: number; expira: number }>();
+
+async function ipDelPedido(): Promise<string> {
+  const headersList = await headers();
+  const reenviada = headersList.get('x-forwarded-for');
+  if (reenviada) return reenviada.split(',')[0].trim();
+  return headersList.get('x-real-ip') || 'desconocida';
+}
+
+function superaLimiteIntentos(clave: string, max: number): boolean {
+  const ahora = Date.now();
+  const registro = intentosFallidos.get(clave);
+  return !!registro && registro.expira > ahora && registro.cuenta >= max;
+}
+
+function registrarIntentoFallido(clave: string): void {
+  const ahora = Date.now();
+
+  if (intentosFallidos.size > 500) {
+    for (const [k, r] of intentosFallidos) {
+      if (r.expira <= ahora) intentosFallidos.delete(k);
+    }
+  }
+
+  const registro = intentosFallidos.get(clave);
+  if (!registro || registro.expira <= ahora) {
+    intentosFallidos.set(clave, { cuenta: 1, expira: ahora + VENTANA_INTENTOS_MS });
+  } else {
+    registro.cuenta += 1;
+  }
+}
+
+function limpiarIntentosFallidos(clave: string): void {
+  intentosFallidos.delete(clave);
+}
 
 export async function ensureInitialAdmin(): Promise<void> {
   try {
@@ -114,10 +164,24 @@ export async function loginAdmin(
 
   const email = identifierOrPassword.trim().toLowerCase();
   const password = passwordInput;
+  const claveIp = `${await ipDelPedido()}|${email}`;
+  const claveCuenta = email;
+
+  if (
+    superaLimiteIntentos(claveIp, MAX_INTENTOS_FALLIDOS_IP) ||
+    superaLimiteIntentos(claveCuenta, MAX_INTENTOS_FALLIDOS_CUENTA)
+  ) {
+    return {
+      success: false,
+      error: 'Demasiados intentos fallidos. Espera unos minutos antes de volver a intentar.',
+    };
+  }
 
   // Verificación regular contra base de datos
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    registrarIntentoFallido(claveIp);
+    registrarIntentoFallido(claveCuenta);
     return { success: false, error: 'Usuario no encontrado o credenciales incorrectas' };
   }
 
@@ -127,8 +191,13 @@ export async function loginAdmin(
 
   const isValid = verifyPassword(password, user.password);
   if (!isValid) {
+    registrarIntentoFallido(claveIp);
+    registrarIntentoFallido(claveCuenta);
     return { success: false, error: 'Contraseña incorrecta' };
   }
+
+  limpiarIntentosFallidos(claveIp);
+  limpiarIntentosFallidos(claveCuenta);
 
   const sessionUser: AdminSessionUser = {
     id: user.id,
