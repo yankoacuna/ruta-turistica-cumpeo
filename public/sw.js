@@ -1,5 +1,6 @@
-const CACHE_NAME = 'cumpeo-turismo-v2';
+const CACHE_NAME = 'cumpeo-turismo-v3';
 const PRECACHE_ASSETS = [
+  '/',
   '/assets/icons/favicon.svg',
   '/assets/icons/icon-192.png',
   '/assets/icons/icon-512.png',
@@ -70,7 +71,16 @@ self.addEventListener('fetch', (event) => {
           const cache = await caches.open(CACHE_NAME);
           const cachedResponse = await cache.match(event.request);
           if (cachedResponse) return cachedResponse;
-          return cache.match('/');
+          const cachedRoot = await cache.match('/');
+          if (cachedRoot) return cachedRoot;
+          // respondWith() exige una Response real: sin esto, si tampoco hay
+          // nada cacheado para "/", el navegador tira
+          // "Failed to convert value to 'Response'" al recibir undefined.
+          return new Response('Sin conexión a internet.', {
+            status: 503,
+            statusText: 'Offline',
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          });
         })
     );
     return;
@@ -88,7 +98,11 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => cachedResponse);
+        .catch(
+          () =>
+            cachedResponse ||
+            new Response('', { status: 504, statusText: 'Offline' })
+        );
 
       return cachedResponse || fetchPromise;
     })
