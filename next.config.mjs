@@ -17,7 +17,6 @@ const nextConfig = {
   },
   experimental: {
     cpus: 1,
-    workerThreads: true,
   },
   webpack: (config) => {
     config.resolve.alias = {
