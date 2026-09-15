@@ -10,8 +10,9 @@ import {
 } from './actions';
 import { getSiteTextsAdmin } from './siteTextActions';
 import { getThemeConfigAdmin } from './themeActions';
+import { getNotificacionesAdmin } from './notificacionesActions';
 import AdminClient from './AdminClient';
-import { AdminUser, SiteTextRecord, ThemeConfigRecord } from '@/lib/types';
+import { AdminUser, SiteTextRecord, ThemeConfigRecord, NotificacionesConfigRecord } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,7 @@ export default async function AdminPage() {
   // panel muestra el login y no hay nada que listar.
   let initialSiteTexts: SiteTextRecord[] = [];
   let initialTheme: ThemeConfigRecord | null = null;
+  let initialNotificaciones: NotificacionesConfigRecord | null = null;
   if (session) {
     try {
       initialSiteTexts = await getSiteTextsAdmin();
@@ -49,6 +51,13 @@ export default async function AdminPage() {
       initialTheme = await getThemeConfigAdmin();
     } catch (e) {
       console.error('Error fetching theme config:', e);
+    }
+    if (session.role === 'ADMIN') {
+      try {
+        initialNotificaciones = await getNotificacionesAdmin();
+      } catch (e) {
+        console.error('Error fetching notificaciones config:', e);
+      }
     }
   }
 
@@ -64,6 +73,7 @@ export default async function AdminPage() {
       initialUsers={initialUsers}
       initialSiteTexts={initialSiteTexts}
       initialTheme={initialTheme}
+      initialNotificaciones={initialNotificaciones}
     />
   );
 }

@@ -11,7 +11,8 @@ export type AdminSection =
   | 'orden'
   | 'qrcodes'
   | 'backups'
-  | 'usuarios';
+  | 'usuarios'
+  | 'notificaciones';
 
 export type { UserRole, AdminUser, AdminSessionUser } from '@/lib/types';
 

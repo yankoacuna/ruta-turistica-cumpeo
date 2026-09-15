@@ -24,6 +24,7 @@ import {
   Users,
   Type,
   ListOrdered,
+  Mail,
 } from 'lucide-react';
 import { AdminSection, AdminSessionUser } from '../_types';
 import { TourId } from './adminTour';
@@ -63,6 +64,7 @@ export function AdminTopBar({
     qrcodes: { category: 'Herramientas', label: 'Generador de Códigos QR' },
     backups: { category: 'Sistema', label: 'Copias de Seguridad (Backup)' },
     usuarios: { category: 'Sistema', label: 'Usuarios y Permisos' },
+    notificaciones: { category: 'Sistema', label: 'Notificaciones por Correo' },
   };
 
   const current = sectionMeta[activeSection] || {
@@ -285,6 +287,25 @@ export function AdminTopBar({
                       <div>
                         <div className="text-xs font-bold">Cómo Crear un Usuario</div>
                         <div className="text-[10px] text-text-muted">Roles y contraseña temporal automática</div>
+                      </div>
+                    </button>
+                  )}
+
+                  {currentUser?.role === 'ADMIN' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTourMenuOpen(false);
+                        onStartTour('notificaciones');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl hover:bg-surface-soft text-text-primary transition-colors cursor-pointer group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-100">
+                        <Mail size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Cómo Configurar Avisos por Correo</div>
+                        <div className="text-[10px] text-text-muted">Quién recibe el aviso de solicitudes nuevas</div>
                       </div>
                     </button>
                   )}

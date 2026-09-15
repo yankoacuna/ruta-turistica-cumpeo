@@ -304,6 +304,15 @@ export interface ThemeSaveInput {
   fontDisplay?: string | null;
 }
 
+/** Destinatarios del aviso por correo de Solicitudes nuevas. */
+export interface NotificacionesConfigRecord {
+  emails: string[];
+  /** ISO string: las fechas viajan serializadas al cliente. */
+  updatedAt: string;
+  updatedByEmail?: string | null;
+  updatedByNombre?: string | null;
+}
+
 // ─── VISITAS DEL SITIO PÚBLICO ────────────────────────────────────────────────
 
 /** Períodos que ofrece el selector del panel de visitantes. */

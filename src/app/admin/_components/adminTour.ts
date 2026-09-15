@@ -14,7 +14,8 @@ export type TourId =
   | 'bulk-import'
   | 'usuarios'
   | 'textos'
-  | 'orden';
+  | 'orden'
+  | 'notificaciones';
 
 export interface TourHandlers {
   activeSection: AdminSection;
@@ -60,6 +61,7 @@ const TOUR_ICONS = {
   key: makeIconSvg('<path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>'),
   search: makeIconSvg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
   listOrdered: makeIconSvg('<line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/><line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>'),
+  mail: makeIconSvg('<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>'),
 };
 
 function tourTitle(icon: string, text: string): string {
@@ -744,7 +746,50 @@ export function startOrdenTour({ activeSection, onNavigate }: TourHandlers) {
 }
 
 /**
- * 10. TOUR: CÓMO USAR LA CARGA MASIVA (EXCEL / JSON)
+ * 10. TOUR: CÓMO CONFIGURAR LOS AVISOS POR CORREO
+ * Guía interactiva por la sección de Notificaciones.
+ */
+export function startNotificacionesTour({ activeSection, onNavigate }: TourHandlers) {
+  if (activeSection !== 'notificaciones') {
+    onNavigate('notificaciones');
+  }
+
+  const steps: DriveStep[] = [
+    {
+      element: '#tour-notif-header',
+      popover: {
+        title: tourTitle(TOUR_ICONS.mail, '1. Para Qué Sirve Esto'),
+        description:
+          'Cada vez que alguien manda el formulario de contacto o postula un negocio desde "Súmate", se guarda en Solicitudes y además se manda un correo de aviso a los destinatarios que definas acá.',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+    {
+      element: '#tour-notif-lista',
+      popover: {
+        title: tourTitle(TOUR_ICONS.tag, '2. Agregar o Quitar Destinatarios'),
+        description:
+          'Agrega los correos que deben enterarse (pueden ser varios) y quita los que ya no correspondan. Recuerda presionar "Guardar cambios" al terminar.',
+        side: 'top',
+        align: 'start',
+      },
+    },
+  ];
+
+  const instance = driver({
+    ...baseDriverConfig,
+    doneBtnText: `<span style="display:inline-flex;align-items:center;gap:4px;">${TOUR_ICONS.check} Entendido</span>`,
+    steps,
+  });
+
+  setTimeout(() => {
+    instance.drive();
+  }, 250);
+}
+
+/**
+ * 11. TOUR: CÓMO USAR LA CARGA MASIVA (EXCEL / JSON)
  * Guía interactiva por la pestaña de importación y exportación masiva.
  */
 export function startBulkImportTour({ activeSection, onNavigate }: TourHandlers) {
@@ -824,6 +869,9 @@ export function runTour(tourId: TourId, handlers: TourHandlers) {
       break;
     case 'orden':
       startOrdenTour(handlers);
+      break;
+    case 'notificaciones':
+      startNotificacionesTour(handlers);
       break;
     case 'bulk-import':
       startBulkImportTour(handlers);

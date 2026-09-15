@@ -204,6 +204,18 @@ model ThemeConfig {
   updatedByNombre String?
 }
 
+/// Destinatarios del aviso por correo cuando llega una Solicitud nueva
+/// (consulta de /contacto o postulación de /sumate). Fila única (id fijo
+/// "default"). Si esta tabla está vacía, se usa SOLICITUDES_EMAIL_TO del
+/// .env como respaldo.
+model NotificacionesConfig {
+  id              String   @id @default("default")
+  emails          String[]
+  updatedAt       DateTime @updatedAt
+  updatedByEmail  String?
+  updatedByNombre String?
+}
+
 /// Registro anónimo de visitas al sitio público (no al panel /admin).
 /// No guarda IP ni datos personales: solo un id aleatorio de dispositivo
 /// (visitorId, vive en localStorage) y uno de sesión (sessionId), para poder

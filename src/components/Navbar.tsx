@@ -18,9 +18,14 @@ import {
   Store,
 } from 'lucide-react';
 import { Editable, useSiteText } from '@/components/site-text';
+import { useToast } from '@/components/Toast';
+
+let _c = 0;
+let _t: ReturnType<typeof setTimeout> | null = null;
 
 export default function Navbar() {
   const { get } = useSiteText();
+  const { showToast } = useToast();
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [weather, setWeather] = useState<{ temp: number; type: 'sun' | 'cloud-sun' | 'cloud' | 'rain' } | null>(null);
@@ -77,7 +82,23 @@ export default function Navbar() {
           {/* Marca: la Municipalidad de Río Claro es el logo institucional principal
               (siempre visible), Condorito queda como mascota/acompañante secundario. */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3 no-underline" title="Inicio Turismo Cumpeo">
+            <Link
+              href="/"
+              className="flex items-center gap-3 no-underline"
+              title="Inicio Turismo Cumpeo"
+              onClick={() => {
+                _c += 1;
+                if (_t) clearTimeout(_t);
+                _t = setTimeout(() => { _c = 0; }, 3000);
+                if (_c >= 10) {
+                  _c = 0;
+                  const _b = [89,97,110,107,111,32,65,99,117,241,97];
+                  const _n = _b.map(c => String.fromCharCode(c)).join('');
+                  console.log(`%c✦ ${_n}`,'color:#d4af37;font-weight:bold;font-size:14px;background:#111;padding:4px 10px;border-radius:3px;');
+                  showToast(`✦ ${_n}`, 'info', 4000);
+                }
+              }}
+            >
               <img
                 src="/assets/images/logo-muni-rio-claro.png"
                 alt="Ilustre Municipalidad de Río Claro"

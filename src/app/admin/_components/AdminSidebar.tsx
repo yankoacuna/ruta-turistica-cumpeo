@@ -25,6 +25,7 @@ import {
   Users,
   Inbox,
   KeyRound,
+  Mail,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -113,6 +114,13 @@ export function AdminSidebar({
             icon: Users,
             count: counts.usuarios,
             color: 'text-rojo',
+          },
+          {
+            id: 'notificaciones' as AdminSection,
+            label: 'Notificaciones',
+            icon: Mail,
+            count: undefined,
+            color: 'text-purple-500',
           },
         ]
       : []),

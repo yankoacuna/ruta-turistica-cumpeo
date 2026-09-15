@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { normalizarSolicitud, avisarSolicitud } from '@/lib/solicitudes';
+import { normalizarSolicitud } from '@/lib/solicitudes';
+import { avisarSolicitud } from '@/lib/notificarSolicitud';
 
 export const dynamic = 'force-dynamic';
 

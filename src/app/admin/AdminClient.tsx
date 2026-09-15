@@ -14,6 +14,7 @@ import {
   UserRole,
   SiteTextRecord,
   ThemeConfigRecord,
+  NotificacionesConfigRecord,
   OrderableEntity,
 } from '@/lib/types';
 import { useToast } from '@/components/Toast';
@@ -38,6 +39,7 @@ import { BackupManager } from './_components/BackupManager';
 import { UserManager } from './_components/UserManager';
 import { SiteTextsManager } from './_components/SiteTextsManager';
 import { ThemeManager } from './_components/ThemeManager';
+import { NotificacionesManager } from './_components/NotificacionesManager';
 import { OrdenPortadaManager } from './_components/OrdenPortadaManager';
 import { DestinoModal } from './_components/modals/DestinoModal';
 import { RestauranteModal } from './_components/modals/RestauranteModal';
@@ -77,6 +79,8 @@ interface Props {
   initialSiteTexts?: SiteTextRecord[];
   /** Apariencia (paleta y tipografías) guardada desde el CMS, si la hay. */
   initialTheme?: ThemeConfigRecord | null;
+  /** Destinatarios del aviso por correo de Solicitudes nuevas, si hay. */
+  initialNotificaciones?: NotificacionesConfigRecord | null;
 }
 
 export default function AdminClient({
@@ -91,6 +95,7 @@ export default function AdminClient({
   initialAuthenticated = false,
   initialSiteTexts = [],
   initialTheme = null,
+  initialNotificaciones = null,
 }: Props) {
   const { showToast } = useToast();
   const { confirm: confirmAction } = useConfirm();
@@ -557,7 +562,8 @@ export default function AdminClient({
             activeSection !== 'orden' &&
             activeSection !== 'qrcodes' &&
             activeSection !== 'backups' &&
-            activeSection !== 'usuarios' && (
+            activeSection !== 'usuarios' &&
+            activeSection !== 'notificaciones' && (
               <AdminTable
                 activeSection={activeSection}
                 destinos={destinos.destinos}
@@ -609,6 +615,16 @@ export default function AdminClient({
               role={role}
               showToast={showToast}
               confirmAction={confirmAction}
+              onAuthError={handleAuthError}
+            />
+          )}
+
+          {/* Notificaciones: destinatarios del aviso de Solicitudes nuevas */}
+          {activeSection === 'notificaciones' && (
+            <NotificacionesManager
+              initial={initialNotificaciones}
+              role={role}
+              showToast={showToast}
               onAuthError={handleAuthError}
             />
           )}
