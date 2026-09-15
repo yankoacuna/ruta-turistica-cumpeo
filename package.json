@@ -26,12 +26,11 @@
     "tailwindcss": "^3.4.10",
     "typescript": "^5.3.3",
     "ws": "^8.21.3",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
+    "xlsx": "^0.18.5",
     "@types/node": "^20.11.24",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0"
-  }
+  },
+  "devDependencies": {}
 }
