@@ -22,17 +22,18 @@ export default function HistoriaPage() {
   return (
     <div className="bg-bg min-h-screen pb-20">
       {/* ── HERO ─────── */}
-      <section className="relative w-full h-[45vh] min-h-[360px] flex items-center justify-center text-center overflow-hidden" aria-label="Historia de Cumpeo">
+      <section className="relative w-full min-h-[460px] md:min-h-[520px] flex items-center justify-center text-center overflow-hidden bg-ink" aria-label="Historia de Cumpeo">
         <img
-          className="absolute inset-0 w-full h-full object-cover opacity-40"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-85"
           src="/assets/images/ruta-condorito.webp"
           alt="Historia Cumpeo"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[rgba(30,30,36,0.75)] to-bg" />
+        {/* Degradado oscuro limpio sin velo blanco para que la ilustración se vea nítida y el texto legible */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/60" />
 
-        <div className="relative z-[2] flex flex-col items-center px-4">
+        <div className="relative z-[2] flex flex-col items-center px-4 max-w-4xl mx-auto py-16">
           <h1
-            className="font-display font-black text-sol leading-tight max-w-[800px] mx-auto [text-shadow:2px_2px_8px_rgba(0,0,0,0.5)]"
+            className="font-display font-black text-sol leading-tight max-w-[800px] mx-auto [text-shadow:0_2px_12px_rgba(0,0,0,0.8)]"
             style={{ fontSize: 'clamp(2.2rem, 5vw, 4rem)' }}
           >
             <Editable k="historia.hero.titulo" />
@@ -40,7 +41,7 @@ export default function HistoriaPage() {
           <Editable
             k="historia.hero.bajada"
             as="p"
-            className="max-w-[600px] mx-auto mt-4 text-[1.1rem] text-[#f8f9fa] [text-shadow:1px_1px_4px_rgba(0,0,0,0.8)]"
+            className="max-w-[650px] mx-auto mt-4 text-[1.15rem] text-white font-medium [text-shadow:0_2px_8px_rgba(0,0,0,0.9)]"
             multiline
           />
         </div>

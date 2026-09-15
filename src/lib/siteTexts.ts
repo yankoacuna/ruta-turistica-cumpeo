@@ -220,6 +220,27 @@ export const SITE_TEXT_GROUPS: SiteTextGroup[] = [
     ],
   },
   {
+    id: 'home.historiaTeaser',
+    pagina: 'Portada',
+    path: '/',
+    label: 'Invitación a la historia',
+    items: [
+      { key: 'home.historiaTeaser.kicker', label: 'Texto sobre el título', value: 'Patrimonio & Tradición' },
+      {
+        key: 'home.historiaTeaser.titulo',
+        label: 'Título',
+        value: '¿Por qué Cumpeo es el pueblo de Condorito?',
+      },
+      {
+        key: 'home.historiaTeaser.bajada',
+        label: 'Texto descriptivo',
+        value:
+          'Pelotillehue solo existe en el papel, pero Cumpeo es real. Conoce cómo las viñetas de Pepo cobraron vida en el corazón del Valle del Maule.',
+        multiline: true,
+      },
+    ],
+  },
+  {
     id: 'home.cerca',
     pagina: 'Portada',
     path: '/',

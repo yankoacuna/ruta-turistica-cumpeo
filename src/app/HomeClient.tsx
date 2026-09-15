@@ -25,6 +25,7 @@ import { CatalogSection } from '../components/home/CatalogSection';
 import { EventsSection } from '../components/home/EventsSection';
 import { MunicipalBanner } from '../components/home/MunicipalBanner';
 import { EmergencyModal } from '../components/home/EmergencyModal';
+import { HistoriaTeaser } from '../components/home/HistoriaTeaser';
 import {
   destinationToCard,
   restaurantToCard,
@@ -127,6 +128,9 @@ export default function HomeClient({
 
       {/* 5. Destacados en composicion editorial (1 grande + filas). */}
       <FeaturedSection featured={initialFeatured} />
+
+      {/* 5.5. Viñeta patrimonial pequeña: Invitación a conocer la historia de Cumpeo */}
+      <HistoriaTeaser />
 
       {/* 6. Servicios: comer y dormir unificados en pestañas y filas compactas.
              Antes eran dos secciones de tarjetas-foto casi identicas. */}

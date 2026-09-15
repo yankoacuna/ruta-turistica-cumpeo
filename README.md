@@ -1,26 +1,30 @@
 # Turismo Cumpeo — Guía Turística Interactiva 🦅🇨🇱
 
-Plataforma web turística oficial para la localidad de Cumpeo (Río Claro, Región del Maule), conocida como el pueblo temático de Condorito. La aplicación permite a los turistas explorar destinos, rutas, restaurantes y alojamientos utilizando geolocalización en tiempo real.
+Plataforma web turística oficial para la localidad de Cumpeo (Río Claro, Región del Maule), el pueblo temático de Condorito. Incluye el sitio público (mapa interactivo, rutas, destinos, restaurantes, alojamientos, eventos) y un panel de administración (CMS) para que el municipio gestione todo el contenido sin tocar código.
 
-## 🚀 Tecnologías Utilizadas
+## 🚀 Stack técnico
 
-- **Framework:** Next.js 14 (App Router)
-- **Librería UI:** React 18
-- **Lenguaje:** TypeScript
-- **Estilos:** CSS Nativo (Variables de diseño personalizadas)
-- **Mapas y Geolocalización:** Google Maps API (`@vis.gl/react-google-maps`)
-- **Iconografía:** Lucide React
-- **Despliegue Recomendado:** Vercel
+- **Framework:** Next.js 15 (App Router), React 19, TypeScript
+- **Base de datos:** MySQL, vía Prisma ORM
+- **Estilos:** Tailwind CSS
+- **Mapas:** Google Maps JavaScript API (`@vis.gl/react-google-maps`)
+- **Autenticación:** sesiones propias por cookie firmada (sin proveedor externo), contraseñas con scrypt
+- **Almacenamiento de archivos:** disco local del servidor (`src/lib/fileStorage.ts`), servido vía `src/app/uploads/[...path]/route.ts`
+- **Correo saliente:** SMTP de la casilla de correo del propio hosting
+- **Hosting:** cPanel (V2Networks), Node.js Selector (Passenger), despliegue manual vía Git
 
-## ✨ Características Principales
+Ver **`docs/documento-tecnico.tex`** para el detalle completo de arquitectura, modelo de datos y guía de despliegue/mantención.
 
-1. **Mapa Interactivo con GPS:** Uso de Google Maps para mostrar puntos de interés (POIs) con marcadores personalizados (emojis) y rastreo de la ubicación del usuario en tiempo real.
-2. **Rutas Dinámicas (`/destino/[slug]`):** Páginas generadas dinámicamente para cada destino turístico con galería de imágenes, reseñas históricas, horarios y tarifas.
-3. **Responsive Design:** Interfaz diseñada bajo la filosofía *Mobile-First*, optimizada para el uso en teléfonos móviles durante los recorridos de los turistas.
-4. **Panel de Administración (`/admin`):** Interfaz gráfica para que la Municipalidad pueda gestionar (Crear, Editar, Eliminar) la base de datos JSON de los destinos, alojamientos y restaurantes.
-5. **Cálculo de Distancias:** Implementación de la fórmula de Haversine para ordenar los lugares turísticos desde el más cercano al más lejano respecto a la posición actual del usuario.
+## ✨ Características principales
 
-## 🛠️ Instalación y Configuración Local
+1. **Mapa interactivo con GPS** — puntos de interés con marcadores propios y ordenamiento por cercanía al usuario (fórmula de Haversine).
+2. **Rutas turísticas** (`/ruta`, `/mapa`) — paradas configurables desde el admin, con hitos, consejos y cálculo automático de distancia/tiempo.
+3. **Fichas de destino, restaurante, alojamiento y evento**, con galería de imágenes, horarios y datos de contacto.
+4. **Formularios públicos** — `/contacto` (consultas) y `/sumate` (postulación de emprendedores), con subida de fotos y aviso automático por correo.
+5. **Panel de administración** (`/admin`) con roles (Administrador / Editor / Lector): gestión de contenido, apariencia del sitio (colores y tipografías en vivo), textos editables con historial, orden de portada, generador de códigos QR, notificaciones por correo, usuarios, carga masiva (Excel/JSON) y copias de seguridad.
+6. **Diseño mobile-first**, pensado para usarse en terreno escaneando un código QR en la señalética.
+
+## 🛠️ Instalación y desarrollo local
 
 1. **Clonar el repositorio:**
    ```bash
@@ -33,22 +37,31 @@ Plataforma web turística oficial para la localidad de Cumpeo (Río Claro, Regi�
    npm install
    ```
 
-3. **Configurar Variables de Entorno:**
-   Crea un archivo `.env.local` en la raíz del proyecto y agrega tu clave de Google Maps:
-   ```env
-   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="TU_API_KEY_DE_GOOGLE"
+3. **Configurar variables de entorno:** copia `.env.example` (o pide las variables reales a quien administre el proyecto) a `.env` en la raíz. Las variables usadas están documentadas en `docs/documento-tecnico.tex`.
+
+4. **Base de datos:** con `DATABASE_URL` apuntando a un MySQL accesible, aplica el schema:
+   ```bash
+   npx prisma db push
+   node prisma/seed.js   # opcional: carga datos de ejemplo/reales
    ```
 
-4. **Iniciar el servidor de desarrollo:**
+5. **Iniciar el servidor de desarrollo:**
    ```bash
    npm run dev
    ```
-   Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación.
+   Abre [http://localhost:3000](http://localhost:3000).
 
-## 📂 Estructura del Proyecto
+## 📂 Estructura del proyecto
 
-- `/public/data`: Archivos JSON que actúan como base de datos (`destinations.json`, `config.json`, etc.).
-- `/public/assets`: Imágenes, iconos y recursos estáticos.
-- `/src/app`: Rutas de la aplicación (Next.js App Router).
-- `/src/components`: Componentes reutilizables de React (Navbar, Footer, MapComponent, etc.).
-- `/src/lib`: Utilidades, tipos de TypeScript y funciones de carga de datos.
+- `prisma/schema.prisma` — modelo de datos (MySQL).
+- `prisma/seed.js` + `prisma/seed-data/*.json` — datos de arranque para una instalación nueva.
+- `src/app/` — rutas de la aplicación (App Router), incluida `src/app/admin/` (panel CMS) y `src/app/api/` (endpoints).
+- `src/app/uploads/[...path]/route.ts` — sirve los archivos subidos desde `UPLOADS_DIR`.
+- `src/components/` — componentes de React del sitio público.
+- `src/lib/` — acceso a datos, autenticación, almacenamiento de archivos, utilidades.
+- `docs/` — manual de usuario y documento técnico (LaTeX) para la entrega del proyecto.
+
+## 📚 Documentación de entrega
+
+- `docs/manual-usuario.tex` — manual para el personal municipal que usa el panel `/admin`.
+- `docs/documento-tecnico.tex` — arquitectura, modelo de datos, variables de entorno y guía de despliegue/mantención para quien administre el sistema.

@@ -57,9 +57,9 @@
       "parque",
       "civico"
     ],
-    "imagenPrincipal": "/assets/images/plaza-fuente-ugenio.jpg",
+    "imagenPrincipal": "/assets/images/plaza-fuente.jpg",
     "galeria": [
-      "/assets/images/plaza-fuente-ugenio.jpg"
+      "/assets/images/plaza-fuente.jpg"
     ],
     "rating": null,
     "destacado": true,
