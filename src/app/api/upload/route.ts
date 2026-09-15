@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { basename } from "path";
 import sharp from "sharp";
 import { getAdminSession } from "@/app/admin/actions";
-import { supabaseAdmin, UPLOADS_BUCKET } from "@/lib/supabase-admin";
+import { saveUpload, deleteUpload } from "@/lib/fileStorage";
 
 const MAX_SIZE_MB = 5;
 const MAX_DIMENSION = 1920;
@@ -75,19 +75,9 @@ export async function POST(req: NextRequest) {
       outputBuffer = await pipeline.toBuffer();
     }
 
-    const contentType = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from(UPLOADS_BUCKET)
-      .upload(filename, outputBuffer, { contentType, upsert: false });
+    const url = await saveUpload(outputBuffer, filename);
 
-    if (uploadError) {
-      console.error("Supabase upload error:", uploadError);
-      return NextResponse.json({ error: "Error al subir la imagen al storage" }, { status: 500 });
-    }
-
-    const { data } = supabaseAdmin.storage.from(UPLOADS_BUCKET).getPublicUrl(filename);
-
-    return NextResponse.json({ url: data.publicUrl, filename });
+    return NextResponse.json({ url, filename });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Error interno al subir la imagen" }, { status: 500 });
@@ -112,17 +102,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Sanitizar: solo nos quedamos con el nombre de archivo, sin importar si
-    // llega como "/uploads/x.jpg" (legado) o la URL pública completa de Supabase.
+    // llega como "/uploads/x.jpg" o una URL completa.
     const safeFilename = basename(targetUrl.split("?")[0]);
 
-    const { error: removeError } = await supabaseAdmin.storage
-      .from(UPLOADS_BUCKET)
-      .remove([safeFilename]);
-
-    if (removeError) {
-      console.error("Supabase remove error:", removeError);
-      return NextResponse.json({ error: "Error al eliminar el archivo del storage" }, { status: 500 });
-    }
+    await deleteUpload(safeFilename);
 
     return NextResponse.json({ success: true, message: "Archivo eliminado correctamente", filename: safeFilename });
   } catch (error) {

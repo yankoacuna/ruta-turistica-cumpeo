@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
-import { supabaseAdmin, UPLOADS_BUCKET } from '@/lib/supabase-admin';
+import { saveUpload } from '@/lib/fileStorage';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,18 +114,9 @@ export async function POST(req: NextRequest) {
     }
 
     const nombre = `solicitudes/${Date.now()}-${crypto.randomUUID()}.webp`;
+    const url = await saveUpload(salida, nombre);
 
-    const { error: errorSubida } = await supabaseAdmin.storage
-      .from(UPLOADS_BUCKET)
-      .upload(nombre, salida, { contentType: 'image/webp', upsert: false });
-
-    if (errorSubida) {
-      console.error('Error subiendo foto de solicitud:', errorSubida);
-      return NextResponse.json({ error: 'No pudimos guardar la foto' }, { status: 500 });
-    }
-
-    const { data } = supabaseAdmin.storage.from(UPLOADS_BUCKET).getPublicUrl(nombre);
-    return NextResponse.json({ url: data.publicUrl });
+    return NextResponse.json({ url });
   } catch (error) {
     console.error('Error en la subida de foto de solicitud:', error);
     return NextResponse.json({ error: 'Error al procesar la foto' }, { status: 500 });

@@ -19,13 +19,13 @@ function emailValido(valor: string): boolean {
 }
 
 function toRecord(row: {
-  emails: string[];
+  emails: unknown;
   updatedAt: Date;
   updatedByEmail: string | null;
   updatedByNombre: string | null;
 }): NotificacionesConfigRecord {
   return {
-    emails: row.emails,
+    emails: Array.isArray(row.emails) ? (row.emails as string[]) : [],
     updatedAt: row.updatedAt.toISOString(),
     updatedByEmail: row.updatedByEmail,
     updatedByNombre: row.updatedByNombre,

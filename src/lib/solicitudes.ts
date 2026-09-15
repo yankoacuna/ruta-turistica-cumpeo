@@ -120,11 +120,10 @@ function horario(valor: unknown): Horario | null {
  */
 function fotos(valor: unknown): string[] {
   if (!Array.isArray(valor)) return [];
-  const base = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   return valor
     .filter((url): url is string => typeof url === 'string')
     .map((url) => url.trim())
-    .filter((url) => base && url.startsWith(`${base}/storage/v1/object/public/`))
+    .filter((url) => url.startsWith('/uploads/solicitudes/'))
     .slice(0, MAX_FOTOS);
 }
 

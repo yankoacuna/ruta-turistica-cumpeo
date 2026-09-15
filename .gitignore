@@ -36,6 +36,15 @@ next-env.d.ts
 .vscode/
 .idea/
 
+# Llaves SSH: nunca deben subirse al repo
+id_rsa
+id_rsa.pub
+*.ppk
+
+# Volcado de la migracion a MySQL: datos reales de produccion, temporal
+prisma/migration-export/
+migration-images/
+
 # Archivos de trabajo y respaldos locales
 *.xlsx
 public/data/backup_original/

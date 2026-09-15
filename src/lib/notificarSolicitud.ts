@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma';
 async function destinatarios(): Promise<string[]> {
   try {
     const row = await prisma.notificacionesConfig.findUnique({ where: { id: 'default' } });
-    if (row?.emails?.length) return row.emails;
+    if (Array.isArray(row?.emails) && row.emails.length) return row.emails as string[];
   } catch (error) {
     console.warn('No se pudo leer NotificacionesConfig, usando SOLICITUDES_EMAIL_TO:', error);
   }
