@@ -29,12 +29,7 @@ const BADGE_STYLES: Record<string, string> = {
 };
 const getBadgeStyle = (colorClass: string) => BADGE_STYLES[colorClass] || BADGE_STYLES.gray;
 
-export async function generateStaticParams() {
-  const dests = await getDestinations();
-  return dests.map((d) => ({
-    slug: d.slug || d.id,
-  }));
-}
+export const dynamic = 'force-dynamic';
 
 export default async function DestinoDetailPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;

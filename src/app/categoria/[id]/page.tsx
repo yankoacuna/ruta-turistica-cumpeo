@@ -25,6 +25,8 @@ const BADGE_STYLES: Record<string, string> = {
 };
 const getBadgeStyle = (colorClass: string) => BADGE_STYLES[colorClass] || BADGE_STYLES.gray;
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params;
   const config = await getConfig();

@@ -23,6 +23,8 @@ export const metadata: Metadata = {
     'Recorre los circuitos turísticos y la Ruta de Condorito en Cumpeo, Región del Maule. Hitos temáticos, estatuas, gastronomía típica y coordenadas GPS guiadas.',
 };
 
+export const dynamic = 'force-dynamic';
+
 interface RutaPageProps {
   searchParams?: Promise<{
     ruta?: string;

@@ -19,23 +19,33 @@ export async function getDestinations(): Promise<Destination[]> {
 }
 
 export async function getDestinationByIdOrSlug(idOrSlug: string): Promise<Destination | null> {
-  const d = await prisma.destination.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] }
-  });
-  if (!d) return null;
-  return {
-    ...d,
-    coordenadas: d.coordenadas as unknown as Coordinates,
-  } as Destination;
+  try {
+    const d = await prisma.destination.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] }
+    });
+    if (!d) return null;
+    return {
+      ...d,
+      coordenadas: d.coordenadas as unknown as Coordinates,
+    } as Destination;
+  } catch (error) {
+    console.warn('Error fetching destination by id or slug:', error);
+    return null;
+  }
 }
 
 export async function getDestinationsByCategory(categoria: string): Promise<Destination[]> {
-  if (!categoria || categoria === 'todos') return getDestinations();
-  const data = await prisma.destination.findMany({ where: { categoria, activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
-  return data.map((d) => ({
-    ...d,
-    coordenadas: d.coordenadas as unknown as Coordinates,
-  })) as Destination[];
+  try {
+    if (!categoria || categoria === 'todos') return getDestinations();
+    const data = await prisma.destination.findMany({ where: { categoria, activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+    return data.map((d) => ({
+      ...d,
+      coordenadas: d.coordenadas as unknown as Coordinates,
+    })) as Destination[];
+  } catch (error) {
+    console.warn('Error fetching destinations by category:', error);
+    return [];
+  }
 }
 
 export async function getFeaturedDestinations(): Promise<Destination[]> {
