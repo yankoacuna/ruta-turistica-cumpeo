@@ -196,8 +196,8 @@ export interface TourRoute {
   duracionEstimada?: string | null;
   distanciaKm?: number | null;
   dificultad?: string | null;
-  hitos?: RouteMilestone[] | any | null;
-  consejos?: RouteTip[] | any | null;
+  hitos?: RouteMilestone[] | null;
+  consejos?: RouteTip[] | null;
   /** Minutos extra a sumar por parada (aparte del tiempo de manejo), por id de POI. */
   tiemposParada?: Record<string, number> | null;
   mapaImagen?: string | null;
