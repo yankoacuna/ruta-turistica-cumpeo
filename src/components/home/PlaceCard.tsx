@@ -16,6 +16,8 @@ export interface PlaceCardItem {
   direccion?: string | null;
   propietario?: string | null;
   tags?: string[];
+  /** Fotos adicionales (aparte de `imagen`), para la galeria del detalle. */
+  galeria?: string[];
   /** Ficha interna. Si existe, la portada de la tarjeta es un enlace. */
   href?: string;
   telefono?: string | null;

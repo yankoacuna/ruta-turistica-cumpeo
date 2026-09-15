@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Section, SectionHeader } from './Section';
 import { ServiceRow } from './ServiceRow';
+import { PlaceDetailModal } from './PlaceDetailModal';
 import type { CatalogItem } from './CatalogSection';
+import type { PlaceCardItem } from './PlaceCard';
 import { Editable } from '@/components/site-text';
 
 interface ServicesSectionProps {
@@ -26,6 +28,7 @@ const INITIAL = 4;
 export function ServicesSection({ restaurants, lodging }: ServicesSectionProps) {
   const [tab, setTab] = useState<'comer' | 'dormir'>('comer');
   const [expanded, setExpanded] = useState(false);
+  const [selected, setSelected] = useState<PlaceCardItem | null>(null);
 
   // Los accesos rápidos de la portada ("Dónde comer" / "Dónde dormir") enlazan
   // a #section-comer / #section-dormir: al llegar por ese enlace, la pestaña
@@ -105,7 +108,7 @@ export function ServicesSection({ restaurants, lodging }: ServicesSectionProps) 
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {visible.map((item) => (
-            <ServiceRow key={item.id} item={item} />
+            <ServiceRow key={item.id} item={item} onOpen={setSelected} />
           ))}
         </div>
 
@@ -129,6 +132,8 @@ export function ServicesSection({ restaurants, lodging }: ServicesSectionProps) 
           </div>
         )}
       </div>
+
+      <PlaceDetailModal item={selected} onClose={() => setSelected(null)} />
     </Section>
   );
 }

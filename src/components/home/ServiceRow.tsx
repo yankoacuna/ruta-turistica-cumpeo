@@ -15,14 +15,18 @@ const FALLBACK_IMG = '/assets/images/placeholder.webp';
  * de telefono por local y obligaba a hacer scroll por seis tarjetas casi
  * identicas. Aca la foto es una miniatura y las acciones estan siempre a mano.
  */
-export function ServiceRow({ item }: { item: PlaceCardItem }) {
+export function ServiceRow({ item, onOpen }: { item: PlaceCardItem; onOpen?: (item: PlaceCardItem) => void }) {
   const phoneClean = item.telefono?.replace(/\D/g, '');
   const whatsappClean = item.whatsapp?.replace(/\D/g, '') || phoneClean;
   const status = useOpeningStatus(item.horario ?? null);
 
   return (
     <article className="bg-white border-[1.5px] border-border rounded-xl p-3.5 flex flex-col gap-3 hover:border-ink transition-colors">
-      <div className="flex items-start gap-3.5">
+      <button
+        type="button"
+        onClick={() => onOpen?.(item)}
+        className="flex items-start gap-3.5 text-left cursor-pointer"
+      >
         <img
           src={formatImgUrl(item.imagen)}
           alt={item.nombre}
@@ -82,7 +86,7 @@ export function ServiceRow({ item }: { item: PlaceCardItem }) {
             </div>
           )}
         </div>
-      </div>
+      </button>
 
       {(phoneClean || whatsappClean || item.instagram || item.facebook || item.coords) && (
         <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border">
