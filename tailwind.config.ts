@@ -22,25 +22,30 @@ const config: Config = {
         // (src/lib/theme.ts) reteñir todo el sitio en tiempo real sin tocar
         // ninguna clase de Tailwind. Los valores por defecto de esas
         // variables son los mismos hex que había acá antes. ──
+        // Formato rgb(var(--x) / <alpha-value>): es lo que le permite a
+        // Tailwind generar clases con opacidad (ej. "bg-paper-warm/95")
+        // para un color que en realidad vive en una variable CSS editable
+        // desde el CMS (ver globals.css y src/lib/theme.ts). Un simple
+        // var(--x) con hex fijo no admite el modificador de opacidad.
         rojo: {
-          DEFAULT: 'var(--color-rojo)',
-          light: 'var(--color-rojo-light)',
-          dark: 'var(--color-rojo-dark)',
+          DEFAULT: 'rgb(var(--color-rojo) / <alpha-value>)',
+          light: 'rgb(var(--color-rojo-light) / <alpha-value>)',
+          dark: 'rgb(var(--color-rojo-dark) / <alpha-value>)',
         },
         sol: {
-          DEFAULT: 'var(--color-sol)',
-          light: 'var(--color-sol-light)',
-          dark: 'var(--color-sol-dark)',
+          DEFAULT: 'rgb(var(--color-sol) / <alpha-value>)',
+          light: 'rgb(var(--color-sol-light) / <alpha-value>)',
+          dark: 'rgb(var(--color-sol-dark) / <alpha-value>)',
         },
         ink: {
-          DEFAULT: 'var(--color-ink)',
-          soft: 'var(--color-ink-soft)',
-          line: 'var(--color-ink-line)',
+          DEFAULT: 'rgb(var(--color-ink) / <alpha-value>)',
+          soft: 'rgb(var(--color-ink-soft) / <alpha-value>)',
+          line: 'rgb(var(--color-ink-line) / <alpha-value>)',
         },
         paper: {
-          DEFAULT: 'var(--color-paper)',
-          warm: 'var(--color-paper-warm)',
-          deep: 'var(--color-paper-deep)',
+          DEFAULT: 'rgb(var(--color-paper) / <alpha-value>)',
+          warm: 'rgb(var(--color-paper-warm) / <alpha-value>)',
+          deep: 'rgb(var(--color-paper-deep) / <alpha-value>)',
         },
 
         // ── Semanticos de datos (mapa / categorias). No usar como decoracion.
@@ -50,21 +55,21 @@ const config: Config = {
         tierra: { DEFAULT: '#D97706', light: '#F59E0B', dark: '#B45309' },
 
         // ── Roles (mismos nombres que antes: no rompe el resto del sitio) ──
-        bg: 'var(--color-bg)',
+        bg: 'rgb(var(--color-bg) / <alpha-value>)',
         surface: {
-          DEFAULT: 'var(--color-surface)',
-          soft: 'var(--color-surface-soft)',
-          hover: 'var(--color-surface-hover)',
+          DEFAULT: 'rgb(var(--color-surface) / <alpha-value>)',
+          soft: 'rgb(var(--color-surface-soft) / <alpha-value>)',
+          hover: 'rgb(var(--color-surface-hover) / <alpha-value>)',
         },
         text: {
-          primary: 'var(--color-text-primary)',
-          secondary: 'var(--color-text-secondary)',
-          muted: 'var(--color-text-muted)',
+          primary: 'rgb(var(--color-text-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+          muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
         },
         border: {
-          DEFAULT: 'var(--color-border)',
-          strong: 'var(--color-border-strong)',
-          hover: 'var(--color-border-hover)',
+          DEFAULT: 'rgb(var(--color-border) / <alpha-value>)',
+          strong: 'rgb(var(--color-border-strong) / <alpha-value>)',
+          hover: 'rgb(var(--color-border-hover) / <alpha-value>)',
         },
       },
       fontFamily: {

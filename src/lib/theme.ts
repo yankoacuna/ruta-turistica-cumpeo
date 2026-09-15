@@ -16,7 +16,7 @@
  * las categorías) quedan fuera a propósito: no son decoración de marca.
  */
 
-import { adjustLightness, isValidHex } from './color';
+import { adjustLightness, hexToRgbTriplet, isValidHex } from './color';
 
 export interface FontOption {
   key: string;
@@ -123,31 +123,37 @@ export function resolveTheme(overrides: ThemeOverrides): ResolvedTheme {
     fontBody.key === DEFAULT_FONT_BODY &&
     fontDisplay.key === DEFAULT_FONT_DISPLAY;
 
+  // Formato "R G B" (no hex): es lo que permite que las clases de Tailwind
+  // con opacidad (ej. "bg-paper-warm/95") generen una regla real. Ver
+  // tailwind.config.ts, que consume estas variables como
+  // rgb(var(--x) / <alpha-value>).
+  const rgb = hexToRgbTriplet;
+
   const cssVars: Record<string, string> = {
-    '--color-rojo': primario,
-    '--color-rojo-light': adjustLightness(primario, 12),
-    '--color-rojo-dark': adjustLightness(primario, -16),
-    '--color-border-hover': primario,
+    '--color-rojo': rgb(primario),
+    '--color-rojo-light': rgb(adjustLightness(primario, 12)),
+    '--color-rojo-dark': rgb(adjustLightness(primario, -16)),
+    '--color-border-hover': rgb(primario),
 
-    '--color-sol': acento,
-    '--color-sol-light': adjustLightness(acento, 12),
-    '--color-sol-dark': adjustLightness(acento, -10),
+    '--color-sol': rgb(acento),
+    '--color-sol-light': rgb(adjustLightness(acento, 12)),
+    '--color-sol-dark': rgb(adjustLightness(acento, -10)),
 
-    '--color-bg': fondo,
-    '--color-paper': fondo,
-    '--color-paper-warm': adjustLightness(fondo, 3),
-    '--color-paper-deep': adjustLightness(fondo, -4),
-    '--color-surface': adjustLightness(fondo, 6),
-    '--color-surface-soft': adjustLightness(fondo, 3),
-    '--color-surface-hover': adjustLightness(fondo, -4),
-    '--color-border': adjustLightness(fondo, -8),
-    '--color-border-strong': adjustLightness(fondo, -14),
+    '--color-bg': rgb(fondo),
+    '--color-paper': rgb(fondo),
+    '--color-paper-warm': rgb(adjustLightness(fondo, 3)),
+    '--color-paper-deep': rgb(adjustLightness(fondo, -4)),
+    '--color-surface': rgb(adjustLightness(fondo, 6)),
+    '--color-surface-soft': rgb(adjustLightness(fondo, 3)),
+    '--color-surface-hover': rgb(adjustLightness(fondo, -4)),
+    '--color-border': rgb(adjustLightness(fondo, -8)),
+    '--color-border-strong': rgb(adjustLightness(fondo, -14)),
 
-    '--color-ink': texto,
-    '--color-ink-soft': adjustLightness(texto, 10),
-    '--color-text-primary': texto,
-    '--color-text-secondary': adjustLightness(texto, 20),
-    '--color-text-muted': adjustLightness(texto, 30),
+    '--color-ink': rgb(texto),
+    '--color-ink-soft': rgb(adjustLightness(texto, 10)),
+    '--color-text-primary': rgb(texto),
+    '--color-text-secondary': rgb(adjustLightness(texto, 20)),
+    '--color-text-muted': rgb(adjustLightness(texto, 30)),
 
     '--font-body': `'${fontBody.family}', ${fontBody.fallback}`,
     '--font-display': `'${fontDisplay.family}', '${fontBody.family}', ${fontDisplay.fallback}`,

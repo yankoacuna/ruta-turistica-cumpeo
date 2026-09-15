@@ -11,39 +11,63 @@
    según la tipografía resuelta (por defecto u overrides del CMS).
    ------------------------------------------------------------------- */
 :root {
-  /* Dominante */
-  --color-rojo: #E63946;
-  --color-rojo-light: #FF5A66;
-  --color-rojo-dark: #C1121F;
-  /* Acento */
-  --color-sol: #FFC300;
-  --color-sol-light: #FFD54A;
-  --color-sol-dark: #E0A900;
-  /* Tinta y papel */
-  --color-ink: #231F20;
-  --color-ink-soft: #3D3733;
-  --color-ink-line: #C9BFA8;
-  --color-paper: #F7F3E8;
-  --color-paper-warm: #FDFBF4;
-  --color-paper-deep: #EFE8D6;
-  /* Semánticos de datos (mapa / categorías) */
+  /* Estas variables van en formato "R G B" (sin comas ni "rgb()"), no hex:
+     tailwind.config.ts las consume como rgb(var(--x) / <alpha-value>), que es
+     lo que le permite a clases como "bg-paper-warm/95" o "text-ink/70"
+     generar una regla real con opacidad. Un hex fijo dentro de var() no se
+     puede combinar con el modificador de opacidad de Tailwind. */
+  /* Dominante: #E63946 */
+  --color-rojo: 230 57 70;
+  /* #FF5A66 */
+  --color-rojo-light: 255 90 102;
+  /* #C1121F */
+  --color-rojo-dark: 193 18 31;
+  /* Acento: #FFC300 */
+  --color-sol: 255 195 0;
+  /* #FFD54A */
+  --color-sol-light: 255 213 74;
+  /* #E0A900 */
+  --color-sol-dark: 224 169 0;
+  /* Tinta y papel: #231F20 */
+  --color-ink: 35 31 32;
+  /* #3D3733 */
+  --color-ink-soft: 61 55 51;
+  /* #C9BFA8 */
+  --color-ink-line: 201 191 168;
+  /* #F7F3E8 */
+  --color-paper: 247 243 232;
+  /* #FDFBF4 */
+  --color-paper-warm: 253 251 244;
+  /* #EFE8D6 */
+  --color-paper-deep: 239 232 214;
+  /* Semánticos de datos (mapa / categorías): estos NO pasan por Tailwind con
+     opacidad (tailwind.config.ts los define con hex fijo), se mantienen hex. */
   --color-cielo: #0077B6;
   --color-cielo-light: #0096C7;
   --color-cielo-dark: #023E8A;
   --color-verde: #2A9D8F;
   --color-tierra: #D97706;
   --color-tierra-dark: #B45309;
-  /* Roles */
-  --color-bg: #F7F3E8;
-  --color-surface: #FFFFFF;
-  --color-surface-soft: #FDFBF4;
-  --color-surface-hover: #EFE8D6;
-  --color-text-primary: #231F20;
-  --color-text-secondary: #574F45;
-  --color-text-muted: #6B6055;
-  --color-border: #E0D8C6;
-  --color-border-strong: #C9BFA8;
-  --color-border-hover: #E63946;
+  /* Roles: #F7F3E8 */
+  --color-bg: 247 243 232;
+  /* #FFFFFF */
+  --color-surface: 255 255 255;
+  /* #FDFBF4 */
+  --color-surface-soft: 253 251 244;
+  /* #EFE8D6 */
+  --color-surface-hover: 239 232 214;
+  /* #231F20 */
+  --color-text-primary: 35 31 32;
+  /* #574F45 */
+  --color-text-secondary: 87 79 69;
+  /* #6B6055 */
+  --color-text-muted: 107 96 85;
+  /* #E0D8C6 */
+  --color-border: 224 216 198;
+  /* #C9BFA8 */
+  --color-border-strong: 201 191 168;
+  /* #E63946 */
+  --color-border-hover: 230 57 70;
   --font-body: 'Outfit', system-ui, sans-serif;
   --font-display: 'Fredoka', 'Outfit', sans-serif;
 }
@@ -91,11 +115,11 @@
 
   /* Borde de viñeta: línea de tinta en reposo, tinta plena al hover. */
   .panel-ink {
-    border: 1.5px solid var(--color-border);
+    border: 1.5px solid rgb(var(--color-border));
     transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   }
   .panel-ink:hover {
-    border-color: var(--color-ink);
+    border-color: rgb(var(--color-ink));
   }
 
   /* Título de sección subrayado con regla de tinta (reemplaza el patrón
@@ -107,7 +131,7 @@
     height: 4px;
     margin-top: 0.75rem;
     border-radius: 2px;
-    background: var(--color-rojo);
+    background: rgb(var(--color-rojo));
   }
 }
 

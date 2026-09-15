@@ -10,6 +10,18 @@ export function isValidHex(value: string): boolean {
   return HEX_RE.test(value);
 }
 
+/**
+ * "R G B" (sin comas) para usar en variables CSS consumidas por Tailwind como
+ * `rgb(var(--x) / <alpha-value>)`. Es lo que le permite a las clases con
+ * opacidad (ej. "bg-paper-warm/95") generar una regla real: Tailwind no puede
+ * aplicar opacidad a un color que ya viene como hex fijo dentro de var().
+ */
+export function hexToRgbTriplet(hex: string): string {
+  if (!isValidHex(hex)) return hex;
+  const [r, g, b] = hexToRgb(hex);
+  return `${r} ${g} ${b}`;
+}
+
 function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];

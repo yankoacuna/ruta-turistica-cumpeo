@@ -12,7 +12,10 @@ import { themeToStyleTag, themeToGoogleFontsHref } from '@/lib/theme';
 
 export async function generateViewport(): Promise<Viewport> {
   const theme = await getResolvedTheme();
-  return { themeColor: theme.cssVars['--color-rojo'] };
+  // cssVars vive en formato "R G B" (para las clases de opacidad de
+  // Tailwind, ver theme.ts), pero el meta theme-color necesita un color CSS
+  // valido.
+  return { themeColor: `rgb(${theme.cssVars['--color-rojo']})` };
 }
 
 export const metadata: Metadata = {
