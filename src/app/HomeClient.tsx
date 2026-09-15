@@ -9,7 +9,7 @@ import {
   EmergencyContact,
   CumpeoEvent,
   TourRoute,
-} from '@/lib/types';
+} from '../lib/types';
 import { useToast } from '../components/Toast';
 import { Editable } from '../components/site-text';
 import { useNearbyDestinations } from '../hooks/useNearbyDestinations';
@@ -17,19 +17,19 @@ import { useNearbyDestinations } from '../hooks/useNearbyDestinations';
 // Componentes modulares de la portada
 import { HeroSection } from '../components/home/HeroSection';
 import { QuickActions } from '../components/home/QuickActions';
-import { NearbySection } from '@/components/home/NearbySection';
-import { RutaShowcase } from '@/components/home/RutaShowcase';
-import { FeaturedSection } from '@/components/home/FeaturedSection';
-import { ServicesSection } from '@/components/home/ServicesSection';
-import { CatalogSection } from '@/components/home/CatalogSection';
-import { EventsSection } from '@/components/home/EventsSection';
-import { MunicipalBanner } from '@/components/home/MunicipalBanner';
-import { EmergencyModal } from '@/components/home/EmergencyModal';
+import { NearbySection } from '../components/home/NearbySection';
+import { RutaShowcase } from '../components/home/RutaShowcase';
+import { FeaturedSection } from '../components/home/FeaturedSection';
+import { ServicesSection } from '../components/home/ServicesSection';
+import { CatalogSection } from '../components/home/CatalogSection';
+import { EventsSection } from '../components/home/EventsSection';
+import { MunicipalBanner } from '../components/home/MunicipalBanner';
+import { EmergencyModal } from '../components/home/EmergencyModal';
 import {
   destinationToCard,
   restaurantToCard,
   accommodationToCard,
-} from '@/components/home/adapters';
+} from '../components/home/adapters';
 
 interface HomeClientProps {
   initialConfig: AppConfig;
