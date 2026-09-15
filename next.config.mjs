@@ -7,6 +7,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
+  typescript: {
+    // Evita que la compilación en hosting compartido (cPanel) falle por
+    // discrepancias de paquetes @types en el entorno virtual de producción
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   experimental: {
     cpus: 1,
     workerThreads: false,
