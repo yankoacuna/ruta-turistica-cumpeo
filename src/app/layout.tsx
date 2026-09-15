@@ -55,6 +55,8 @@ export default async function RootLayout({
       <head>
         <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
         <link rel="apple-touch-icon" href="/assets/icons/icon-180.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="stylesheet" href={themeToGoogleFontsHref(theme)} />
         {!theme.isDefault && <style>{themeToStyleTag(theme)}</style>}
       </head>
