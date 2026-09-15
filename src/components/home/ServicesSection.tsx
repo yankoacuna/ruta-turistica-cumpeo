@@ -36,6 +36,33 @@ export function ServicesSection({ restaurants, lodging }: ServicesSectionProps) 
   useEffect(() => {
     if (window.location.hash === '#section-dormir') setTab('dormir');
     else if (window.location.hash === '#section-comer') setTab('comer');
+
+    // QR de señalética municipal para un restaurante o alojamiento puntual:
+    // como no tienen ficha propia (/destino/[slug]), el cartel enlaza a
+    // "/?lugar=<id>" y acá se abre directo la ficha de ese local, sin que el
+    // turista tenga que buscarlo en la lista.
+    const params = new URLSearchParams(window.location.search);
+    const lugarId = params.get('lugar');
+    if (!lugarId) return;
+
+    const enComida = restaurants.find((r) => r.id === lugarId);
+    const enAlojamiento = !enComida ? lodging.find((l) => l.id === lugarId) : undefined;
+    const item = enComida || enAlojamiento;
+    if (!item) return;
+
+    setTab(enComida ? 'comer' : 'dormir');
+    setSelected(item);
+
+    // Limpia el parametro: si el turista recarga o comparte esta URL despues,
+    // no debe reabrir la misma ficha sola.
+    params.delete('lugar');
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      '',
+      window.location.pathname + (query ? `?${query}` : '') + window.location.hash
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (restaurants.length === 0 && lodging.length === 0) return null;

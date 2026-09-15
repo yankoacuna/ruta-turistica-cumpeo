@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
+import { toPng } from 'html-to-image';
 import { Destination, Restaurant, Accommodation } from '@/lib/types';
-import { QrCode, Download, ExternalLink, Sparkles, Printer, Copy, Check } from 'lucide-react';
+import { QrCode, Download, ExternalLink, Sparkles, Printer, Copy, Check, ChevronDown } from 'lucide-react';
 import { Field, inputCls } from './Field';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { useToast } from '@/components/Toast';
@@ -14,6 +15,52 @@ interface QRGeneratorProps {
   alojamientos: Accommodation[];
 }
 
+/** Páginas fijas del sitio (no dependen de un registro del catastro). */
+const PAGINAS_SITIO = [
+  {
+    id: 'inicio',
+    label: 'Inicio',
+    path: '/',
+    signTitle: 'Turismo Cumpeo',
+    signSubtitle: 'Escanea con tu celular para ver la guía turística completa',
+  },
+  {
+    id: 'mapa',
+    label: 'Mapa GPS',
+    path: '/mapa',
+    signTitle: 'Mapa Interactivo GPS de Cumpeo',
+    signSubtitle: 'Escanea con tu celular para abrir el mapa con tu ubicación',
+  },
+  {
+    id: 'ruta',
+    label: 'La Ruta',
+    path: '/ruta',
+    signTitle: 'La Ruta Oficial de Condorito',
+    signSubtitle: 'Escanea con tu celular para ver el recorrido completo',
+  },
+  {
+    id: 'historia',
+    label: 'Historia',
+    path: '/historia',
+    signTitle: 'La Historia de Cumpeo',
+    signSubtitle: 'Escanea con tu celular para conocer la historia del pueblo',
+  },
+  {
+    id: 'contacto',
+    label: 'Contacto',
+    path: '/contacto',
+    signTitle: 'Contacto Turístico',
+    signSubtitle: 'Escanea con tu celular para contactar a la Oficina de Turismo',
+  },
+  {
+    id: 'sumate',
+    label: 'Súmate',
+    path: '/sumate',
+    signTitle: 'Súmate a la Plataforma',
+    signSubtitle: 'Escanea con tu celular para registrar tu negocio o emprendimiento',
+  },
+] as const;
+
 export function QRGenerator({
   destinos,
   restaurantes,
@@ -21,9 +68,12 @@ export function QRGenerator({
 }: QRGeneratorProps) {
   const { showToast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const plaqueRef = useRef<HTMLDivElement | null>(null);
+  const [exportandoPlaca, setExportandoPlaca] = useState(false);
 
-  const [selectedType, setSelectedType] = useState<'destino' | 'restaurante' | 'alojamiento' | 'mapa' | 'custom'>('destino');
+  const [selectedType, setSelectedType] = useState<'destino' | 'restaurante' | 'alojamiento' | 'pagina' | 'custom'>('destino');
   const [selectedId, setSelectedId] = useState<string>(destinos[0]?.id || '');
+  const [selectedPagina, setSelectedPagina] = useState<string>('inicio');
   const [customUrl, setCustomUrl] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
   const [signTitle, setSignTitle] = useState<string>('Turismo Cumpeo');
@@ -33,8 +83,9 @@ export function QRGenerator({
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://turismocumpeo.cl';
 
   const currentUrl = React.useMemo(() => {
-    if (selectedType === 'mapa') {
-      return `${origin}/mapa`;
+    if (selectedType === 'pagina') {
+      const p = PAGINAS_SITIO.find((item) => item.id === selectedPagina);
+      return `${origin}${p?.path || '/'}`;
     }
     if (selectedType === 'custom') {
       return customUrl || origin;
@@ -44,21 +95,28 @@ export function QRGenerator({
       return `${origin}/destino/${d?.slug || selectedId}`;
     }
     if (selectedType === 'restaurante') {
-      return `${origin}/#section-gastronomia`;
+      // El local no tiene ficha propia: el ?lugar= abre directamente su
+      // tarjeta de detalle sobre la portada. El ancla es el respaldo si el
+      // parametro no llega a resolverse (JS deshabilitado, id borrado, etc).
+      return `${origin}/?lugar=${selectedId}#section-servicios`;
     }
     if (selectedType === 'alojamiento') {
-      return `${origin}/#section-alojamientos`;
+      return `${origin}/?lugar=${selectedId}#section-servicios`;
     }
     return origin;
-  }, [selectedType, selectedId, customUrl, destinos, origin]);
+  }, [selectedType, selectedId, selectedPagina, customUrl, destinos, origin]);
 
   // Update default signage title when selection changes
   useEffect(() => {
     if (selectedType === 'destino') {
       const d = destinos.find((item) => item.id === selectedId);
       if (d) setSignTitle(d.nombre);
-    } else if (selectedType === 'mapa') {
-      setSignTitle('Mapa Interactivo GPS de Cumpeo');
+    } else if (selectedType === 'pagina') {
+      const p = PAGINAS_SITIO.find((item) => item.id === selectedPagina);
+      if (p) {
+        setSignTitle(p.signTitle);
+        setSignSubtitle(p.signSubtitle);
+      }
     } else if (selectedType === 'restaurante') {
       const r = restaurantes.find((item) => item.id === selectedId);
       if (r) setSignTitle(r.nombre);
@@ -66,7 +124,7 @@ export function QRGenerator({
       const a = alojamientos.find((item) => item.id === selectedId);
       if (a) setSignTitle(a.nombre);
     }
-  }, [selectedType, selectedId, destinos, restaurantes, alojamientos]);
+  }, [selectedType, selectedId, selectedPagina, destinos, restaurantes, alojamientos]);
 
   // Draw QR code onto canvas
   useEffect(() => {
@@ -118,6 +176,42 @@ export function QRGenerator({
     }
   };
 
+  // Exporta la placa tal cual se ve en la Vista Previa (logo, título, QR,
+  // instrucción y pie), como una sola imagen lista para mandar a imprenta.
+  // Se captura el DOM real en vez de redibujarlo a mano en un canvas: asi
+  // cualquier ajuste futuro al diseño de la placa se refleja solo, sin
+  // mantener el layout duplicado en dos lugares.
+  const handleDownloadPlaquePNG = async () => {
+    if (!plaqueRef.current) return;
+    setExportandoPlaca(true);
+    try {
+      const dataUrl = await toPng(plaqueRef.current, {
+        pixelRatio: 6,
+        cacheBust: true,
+        backgroundColor: '#1E1E24',
+        // Sin esto, la libreria intenta descargar e incrustar la hoja de
+        // estilos de Google Fonts que carga el layout (fuente Fredoka/Outfit)
+        // y esa descarga falla por CORS, tumbando la exportacion entera. El
+        // titulo se exporta en la tipografia de respaldo del sistema.
+        skipFonts: true,
+      });
+
+      const a = document.createElement('a');
+      const filename = `Placa-QR-Cumpeo-${signTitle.toLowerCase().replace(/[^a-z0-9]/gi, '_')}.png`;
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      showToast('Placa completa descargada en alta resolución', 'success');
+    } catch (err: any) {
+      showToast(`Error al exportar la placa: ${err.message}`, 'error');
+    } finally {
+      setExportandoPlaca(false);
+    }
+  };
+
   // Copy link
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentUrl);
@@ -137,13 +231,8 @@ export function QRGenerator({
               Generador de Códigos QR para Señalética Municipal
             </h2>
             <p className="text-sm text-text-secondary mt-1 max-w-2xl">
-              Crea y descarga códigos QR en alta resolución (2048×2048 px) listos para enviar a imprenta y colocarlos en los tótems, placas y letreros de la ruta turística.
+              Crea y descarga códigos QR en alta resolución (2048×2048 px) listos para colocarlos en los tótems, placas y letreros de la ruta turística.
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFE0E2] text-[#C1121F] text-xs font-bold border border-[#FFA8AE]">
-              <Printer size={13} /> Listo para Imprenta
-            </span>
           </div>
         </div>
       </div>
@@ -155,76 +244,107 @@ export function QRGenerator({
             1. Seleccionar Destino o Enlace
           </h3>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {[
-              { id: 'destino', label: 'Destinos' },
-              { id: 'restaurante', label: 'Restaurantes' },
-              { id: 'alojamiento', label: 'Alojamientos' },
-              { id: 'mapa', label: 'Mapa GPS' },
-              { id: 'custom', label: 'URL Personalizada' },
-            ].map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border text-center ${
-                  selectedType === t.id
-                    ? 'bg-rojo text-white border-rojo shadow-sm'
-                    : 'bg-surface-soft text-text-secondary border-border hover:border-rojo hover:text-rojo'
-                }`}
-                onClick={() => {
-                  setSelectedType(t.id as any);
-                  if (t.id === 'destino' && destinos[0]) setSelectedId(destinos[0].id);
-                  if (t.id === 'restaurante' && restaurantes[0]) setSelectedId(restaurantes[0].id);
-                  if (t.id === 'alojamiento' && alojamientos[0]) setSelectedId(alojamientos[0].id);
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { id: 'destino', label: 'Destinos' },
+                { id: 'restaurante', label: 'Restaurantes' },
+                { id: 'alojamiento', label: 'Alojamientos' },
+                { id: 'pagina', label: 'Página del Sitio' },
+                { id: 'custom', label: 'URL Personalizada' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all border text-center ${
+                    selectedType === t.id
+                      ? 'bg-rojo text-white border-rojo shadow-sm'
+                      : 'bg-surface-soft text-text-secondary border-border hover:border-rojo hover:text-rojo'
+                  }`}
+                  onClick={() => {
+                    setSelectedType(t.id as any);
+                    if (t.id === 'destino' && destinos[0]) setSelectedId(destinos[0].id);
+                    if (t.id === 'restaurante' && restaurantes[0]) setSelectedId(restaurantes[0].id);
+                    if (t.id === 'alojamiento' && alojamientos[0]) setSelectedId(alojamientos[0].id);
+                  }}
+                >
+                  {t.label}
+                  <ChevronDown
+                    size={13}
+                    className={`shrink-0 transition-transform ${selectedType === t.id ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Panel del tipo elegido: mismo acento rojo que el boton activo de
+                arriba y pegado sin espacio, para que se lea como su continuacion
+                y no como un campo suelto y desconectado. */}
+            <div className="pt-4 px-3.5 pb-3.5 rounded-b-xl border-2 border-t-0 border-rojo/30 bg-[#FFF8F8]">
+              {selectedType === 'destino' && (
+                <Field label="Selecciona el Destino Turístico" required>
+                  <SearchableSelect
+                    value={selectedId}
+                    onChange={setSelectedId}
+                    options={destinos.map((d) => ({ value: d.id, label: d.nombre, description: d.categoria }))}
+                  />
+                </Field>
+              )}
+
+              {selectedType === 'restaurante' && (
+                <Field label="Selecciona el Restaurante" required>
+                  <SearchableSelect
+                    value={selectedId}
+                    onChange={setSelectedId}
+                    options={restaurantes.map((r) => ({ value: r.id, label: r.nombre }))}
+                  />
+                </Field>
+              )}
+
+              {selectedType === 'alojamiento' && (
+                <Field label="Selecciona el Alojamiento" required>
+                  <SearchableSelect
+                    value={selectedId}
+                    onChange={setSelectedId}
+                    options={alojamientos.map((a) => ({ value: a.id, label: a.nombre, description: a.tipo || 'Hospedaje' }))}
+                  />
+                </Field>
+              )}
+
+              {selectedType === 'pagina' && (
+                <Field label="Selecciona la Página" required>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {PAGINAS_SITIO.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedPagina(p.id)}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border text-center ${
+                          selectedPagina === p.id
+                            ? 'bg-ink text-white border-ink shadow-sm'
+                            : 'bg-surface-soft text-text-secondary border-border hover:border-ink hover:text-ink'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+              )}
+
+              {selectedType === 'custom' && (
+                <Field label="URL de destino" required hint="Ingresa la dirección web completa">
+                  <input
+                    type="url"
+                    className={inputCls}
+                    placeholder="https://..."
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value)}
+                  />
+                </Field>
+              )}
+            </div>
           </div>
-
-          {/* Dynamic Selectors */}
-          {selectedType === 'destino' && (
-            <Field label="Selecciona el Destino Turístico" required>
-              <SearchableSelect
-                value={selectedId}
-                onChange={setSelectedId}
-                options={destinos.map((d) => ({ value: d.id, label: d.nombre, description: d.categoria }))}
-              />
-            </Field>
-          )}
-
-          {selectedType === 'restaurante' && (
-            <Field label="Selecciona el Restaurante" required>
-              <SearchableSelect
-                value={selectedId}
-                onChange={setSelectedId}
-                options={restaurantes.map((r) => ({ value: r.id, label: r.nombre }))}
-              />
-            </Field>
-          )}
-
-          {selectedType === 'alojamiento' && (
-            <Field label="Selecciona el Alojamiento" required>
-              <SearchableSelect
-                value={selectedId}
-                onChange={setSelectedId}
-                options={alojamientos.map((a) => ({ value: a.id, label: a.nombre, description: a.tipo || 'Hospedaje' }))}
-              />
-            </Field>
-          )}
-
-          {selectedType === 'custom' && (
-            <Field label="URL de destino" required hint="Ingresa la dirección web completa">
-              <input
-                type="url"
-                className={inputCls}
-                placeholder="https://..."
-                value={customUrl}
-                onChange={(e) => setCustomUrl(e.target.value)}
-              />
-            </Field>
-          )}
 
           {/* Signage text customizer */}
           <div className="pt-4 border-t border-border space-y-4">
@@ -271,11 +391,14 @@ export function QRGenerator({
         <div className="lg:col-span-5 flex flex-col gap-4">
           <div className="bg-white rounded-2xl border border-border p-6 shadow-md flex flex-col items-center text-center">
             <div className="text-xs font-extrabold uppercase tracking-widest text-text-muted mb-4">
-              Vista Previa de Placa / Tótem
+              Vista Previa de Placa
             </div>
 
             {/* Simulated Totem Sign Plaque */}
-            <div className="w-full max-w-[320px] bg-[#1E1E24] text-white p-6 rounded-3xl shadow-xl border-4 border-sol flex flex-col items-center">
+            <div
+              ref={plaqueRef}
+              className="w-full max-w-[320px] bg-[#1E1E24] text-white p-6 rounded-3xl shadow-xl border-4 border-sol flex flex-col items-center"
+            >
               {/* Header Logo */}
               <div className="flex items-center gap-2 mb-3">
                 <img
@@ -315,10 +438,18 @@ export function QRGenerator({
             {/* Action Download Buttons */}
             <div className="w-full mt-6 flex flex-col gap-2.5">
               <button
-                onClick={handleDownloadHiResPNG}
-                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-rojo text-white font-bold text-sm shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all cursor-pointer"
+                onClick={handleDownloadPlaquePNG}
+                disabled={exportandoPlaca}
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-rojo text-white font-bold text-sm shadow-[0_4px_12px_rgba(230,57,70,0.3)] hover:bg-rojo-dark transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Download size={16} /> Descargar QR para Imprenta (PNG 2048px)
+                <Printer size={16} /> {exportandoPlaca ? 'Generando placa…' : 'Descargar Placa Completa (PNG)'}
+              </button>
+
+              <button
+                onClick={handleDownloadHiResPNG}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-border text-text-secondary font-bold text-xs hover:bg-surface-soft hover:border-rojo hover:text-rojo transition-all cursor-pointer"
+              >
+                <QrCode size={14} /> Descargar Solo el Código QR (PNG 2048px)
               </button>
 
               <a
