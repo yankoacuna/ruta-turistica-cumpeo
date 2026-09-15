@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import {
   Navigation,
   MapPin,
@@ -30,6 +31,27 @@ const BADGE_STYLES: Record<string, string> = {
 const getBadgeStyle = (colorClass: string) => BADGE_STYLES[colorClass] || BADGE_STYLES.gray;
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
+  const destination = await getDestinationByIdOrSlug(params.slug);
+  if (!destination) return { title: 'Destino no encontrado' };
+
+  const title = `${destination.nombre} — Turismo Cumpeo`;
+  const description = destination.descripcionCorta || `Conoce ${destination.nombre} en Cumpeo, Región del Maule.`;
+  const image = formatImgUrl(destination.imagenPrincipal);
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: image ? [image] : undefined,
+      type: 'article',
+    },
+  };
+}
 
 export default async function DestinoDetailPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
