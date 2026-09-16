@@ -2,7 +2,8 @@
 
 import { prisma } from '@/lib/prisma';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, OrderableEntity } from '@/lib/types';
-import { revalidatePath } from 'next/cache';
+import { invalidarContenidoPublico } from '@/lib/revalidate';
+import { CENTRO_CUMPEO } from '@/lib/constants';
 import { assertAuthorized, requireRole } from './authActions';
 
 /**
@@ -25,8 +26,6 @@ async function nextOrden(
 // ENTITY_CONFIGS. Agregar un tipo de lugar nuevo es agregar una entrada ahí,
 // no duplicar el guardado/borrado completo.
 
-const DEFAULT_COORDS = { lat: -35.281739, lng: -71.258714 };
-
 function slugFromNombre(nombre?: string): string {
   return nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
 }
@@ -42,7 +41,6 @@ interface EntityCrudConfig {
   /** Solo Destination tiene columna `slug` propia; los demás derivan el id directo del nombre. */
   hasSlug: boolean;
   idFallback: string;
-  extraRevalidate?: Array<string | [string, 'page']>;
 }
 
 const ENTITY_CONFIGS: Record<string, EntityCrudConfig> = {
@@ -50,7 +48,6 @@ const ENTITY_CONFIGS: Record<string, EntityCrudConfig> = {
     model: 'destination',
     hasSlug: true,
     idFallback: 'new-dest',
-    extraRevalidate: [['/destino/[slug]', 'page']],
     fields: [
       'nombre', 'categoria', 'descripcionCorta', 'descripcionLarga', 'historia',
       'coordenadas', 'direccion', 'horario', 'duracionVisita', 'comoLlegar', 'tags',
@@ -59,7 +56,7 @@ const ENTITY_CONFIGS: Record<string, EntityCrudConfig> = {
     ],
     createDefaults: {
       nombre: 'Nuevo Destino', categoria: 'cultural', descripcionCorta: '',
-      coordenadas: DEFAULT_COORDS, tags: [], destacado: false,
+      coordenadas: CENTRO_CUMPEO, tags: [], destacado: false,
     },
   },
   restaurant: {
@@ -72,7 +69,7 @@ const ENTITY_CONFIGS: Record<string, EntityCrudConfig> = {
       { key: 'tags', coalesce: [] }, 'imagenPrincipal', { key: 'galeria', coalesce: [] },
       'menuUrl', 'contacto', { key: 'activo', coalesce: true },
     ],
-    createDefaults: { nombre: 'Nuevo Restaurante', descripcion: '', coordenadas: DEFAULT_COORDS },
+    createDefaults: { nombre: 'Nuevo Restaurante', descripcion: '', coordenadas: CENTRO_CUMPEO },
   },
   accommodation: {
     model: 'accommodation',
@@ -83,7 +80,7 @@ const ENTITY_CONFIGS: Record<string, EntityCrudConfig> = {
       'telefono', 'whatsapp', { key: 'servicios', coalesce: [] }, 'imagenPrincipal',
       { key: 'galeria', coalesce: [] }, 'contacto', { key: 'activo', coalesce: true },
     ],
-    createDefaults: { nombre: 'Nuevo Alojamiento', descripcion: '', coordenadas: DEFAULT_COORDS },
+    createDefaults: { nombre: 'Nuevo Alojamiento', descripcion: '', coordenadas: CENTRO_CUMPEO },
   },
   event: {
     model: 'event',
@@ -110,20 +107,64 @@ function buildFieldsData(data: Record<string, any>, fields: FieldSpec[]): Record
   return out;
 }
 
+/**
+ * Listado para el panel. A diferencia de las lecturas públicas incluye los
+ * registros inactivos y sin publicar, así que exige sesión: los server actions
+ * son endpoints HTTP públicos, y sin esta línea cualquiera podía invocarlos
+ * desde fuera del panel y sacar el catastro completo —borradores, fichas
+ * ocultas y datos de contacto de los dueños incluidos— sin iniciar sesión.
+ * Un LECTOR puede listar; crear, editar y borrar siguen exigiendo más rol.
+ */
 async function genericGetAdminList(model: EntityCrudConfig['model']) {
+  await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
   return (prisma[model] as any).findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+}
+
+/**
+ * Id libre para una ficha nueva.
+ *
+ * El id se deriva del nombre ("Plaza de Cumpeo" -> "plaza-de-cumpeo") y entraba
+ * directo a un upsert: crear una ficha con el nombre de una que ya existía no
+ * avisaba ni creaba una segunda, sino que sobrescribía la anterior en silencio,
+ * con sus fotos, su historia y su galería. Es un accidente perfectamente
+ * posible con dos locales homónimos ("Donde la Mary") o con dos personas
+ * cargando el catastro a la vez.
+ *
+ * Ahora se busca el primer sufijo libre (plaza-de-cumpeo-2, -3...) y la ficha
+ * existente queda intacta.
+ */
+async function idDisponible(
+  config: EntityCrudConfig,
+  base: string
+): Promise<string> {
+  const modelo = prisma[config.model] as any;
+  for (let intento = 1; intento <= 50; intento++) {
+    const candidato = intento === 1 ? base : `${base}-${intento}`;
+    const ocupado = await modelo.findFirst({
+      // El slug tiene su propio índice único: un id libre con el slug tomado
+      // haría fallar el insert igual.
+      where: config.hasSlug ? { OR: [{ id: candidato }, { slug: candidato }] } : { id: candidato },
+      select: { id: true },
+    });
+    if (!ocupado) return candidato;
+  }
+  return `${base}-${Date.now()}`;
 }
 
 async function genericSaveEntity(config: EntityCrudConfig, data: Record<string, any>) {
   await assertAuthorized();
-  const slug = slugFromNombre(data.nombre) || config.idFallback;
-  const id = data.id || slug;
+
+  const base = slugFromNombre(data.nombre) || config.idFallback;
+  // Editar conserva el id; crear busca uno libre. El slug de una ficha ya
+  // creada no se toca aunque le cambien el nombre: es su URL pública, y los
+  // códigos QR impresos en la señalética apuntan a ella.
+  const id = data.id || (await idDisponible(config, base));
 
   const fieldsData = buildFieldsData(data, config.fields);
 
   const createData: Record<string, any> = {
     id,
-    ...(config.hasSlug ? { slug } : {}),
+    ...(config.hasSlug ? { slug: id } : {}),
     ...fieldsData,
     orden: data.orden ?? (await nextOrden(config.model)),
   };
@@ -137,19 +178,14 @@ async function genericSaveEntity(config: EntityCrudConfig, data: Record<string, 
     create: createData,
   });
 
-  revalidatePath('/');
-  revalidatePath('/mapa');
-  for (const extra of config.extraRevalidate ?? []) {
-    Array.isArray(extra) ? revalidatePath(extra[0], extra[1]) : revalidatePath(extra);
-  }
+  invalidarContenidoPublico();
   return result;
 }
 
 async function genericDeleteEntity(model: EntityCrudConfig['model'], id: string) {
   await requireRole(['ADMIN']);
   await (prisma[model] as any).delete({ where: { id } });
-  revalidatePath('/');
-  revalidatePath('/mapa');
+  invalidarContenidoPublico();
   return true;
 }
 
@@ -260,7 +296,6 @@ export async function updateEntityOrder(
 
   await prisma.$transaction(updates);
 
-  revalidatePath('/');
-  revalidatePath('/mapa');
+  invalidarContenidoPublico();
   return { actualizados: ids.length };
 }

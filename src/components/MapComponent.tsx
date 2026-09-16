@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { CENTRO_CUMPEO } from '@/lib/constants';
 import { POI, TourRoute } from '@/lib/types';
 import {
   Map as MapIcon,
@@ -283,7 +284,7 @@ export default function MapComponent({
   selectedPoi,
   onSelectPoi,
   userCoords,
-  initialCenter = { lat: -35.281739, lng: -71.258714 },
+  initialCenter = { ...CENTRO_CUMPEO },
   initialZoom = 14,
   activeRoute,
   singleTrip,

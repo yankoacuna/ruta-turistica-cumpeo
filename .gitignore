@@ -55,3 +55,6 @@ public/uploads/*
 
 # Documentación de entrega: se maneja fuera del repo
 docs/
+
+# Notas de auditoría internas, no van al repo
+AUDITORIA_ARQUITECTURA.md

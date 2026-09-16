@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { invalidarContenidoPublico } from '@/lib/revalidate';
 import { requireRole } from './authActions';
 
 export async function bulkImportEntitiesAction(
@@ -208,9 +208,7 @@ export async function bulkImportEntitiesAction(
     }
   }
 
-  revalidatePath('/');
-  revalidatePath('/mapa');
-  revalidatePath('/ruta');
+  invalidarContenidoPublico();
 
   return {
     success: true,

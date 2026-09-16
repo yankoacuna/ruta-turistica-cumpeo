@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { CENTRO_CUMPEO } from '@/lib/constants';
 import { createPortal } from 'react-dom';
 import {
   MapPin,
@@ -37,8 +38,7 @@ interface LocationMapPickerModalProps {
 }
 
 export const DEFAULT_CUMPEO_COORDS: Coordinates = {
-  lat: -35.281739,
-  lng: -71.258714,
+  ...CENTRO_CUMPEO,
 };
 
 /**

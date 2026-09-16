@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { invalidarContenidoPublico } from '@/lib/revalidate';
 import { requireRole } from './authActions';
 
 export async function exportDatabaseBackup() {
@@ -116,8 +116,6 @@ export async function restoreDatabaseBackup(backupData: any) {
     }
   }
 
-  revalidatePath('/');
-  revalidatePath('/mapa');
-  revalidatePath('/ruta');
+  invalidarContenidoPublico();
   return { success: true };
 }

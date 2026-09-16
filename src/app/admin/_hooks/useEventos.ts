@@ -1,16 +1,17 @@
-import { useState, useTransition } from 'react';
 import { CumpeoEvent } from '@/lib/types';
 import { saveEvent, deleteEvent } from '../actions';
-import { ToastFn, HookOptions } from '../_types';
+import { HookOptions } from '../_types';
+import { CENTRO_CUMPEO } from '@/lib/constants';
+import { useFichaCrud } from './useFichaCrud';
 
-const emptyEvento = (): Partial<CumpeoEvent> => ({
+const eventoVacio = (): Partial<CumpeoEvent> => ({
   nombre: '',
   tipo: 'cultural',
   descripcion: '',
   descripcionLarga: '',
   fecha: '',
   recurrente: true,
-  coordenadas: { lat: -35.281739, lng: -71.258714 },
+  coordenadas: { ...CENTRO_CUMPEO },
   direccion: '',
   imagenPrincipal: '',
   galeria: [],
@@ -19,65 +20,25 @@ const emptyEvento = (): Partial<CumpeoEvent> => ({
   activo: true,
 });
 
-export function useEventos(initial: CumpeoEvent[], { showToast, confirmAction, onAuthError, onSaved }: HookOptions) {
-  const [eventos, setEventos] = useState<CumpeoEvent[]>(initial);
-  const [editing, setEditing] = useState<Partial<CumpeoEvent> | null>(null);
-  const [isPending, startTransition] = useTransition();
+/** CRUD de eventos en el panel. La mecánica vive en useFichaCrud. */
+export function useEventos(initial: CumpeoEvent[], opciones: HookOptions) {
+  const crud = useFichaCrud<CumpeoEvent>(
+    initial,
+    {
+      nueva: eventoVacio,
+      guardar: saveEvent,
+      eliminar: deleteEvent,
+      etiqueta: 'evento',
+      desdeFila: (fila) =>
+        ({
+          ...fila,
+          coordenadas: fila.coordenadas as any,
+          galeria: fila.galeria as string[],
+          tags: fila.tags as string[],
+        }) as CumpeoEvent,
+    },
+    opciones
+  );
 
-  const openNew = () => setEditing(emptyEvento());
-  const openEdit = (e: CumpeoEvent) => setEditing(e);
-  const close = () => setEditing(null);
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editing?.nombre) return;
-    startTransition(async () => {
-      try {
-        const saved = await saveEvent(editing);
-        setEventos((prev) => {
-          const idx = prev.findIndex((ev) => ev.id === saved.id);
-          const updated = {
-            ...saved,
-            coordenadas: saved.coordenadas as any,
-            galeria: saved.galeria as string[],
-            tags: saved.tags as string[],
-          } as CumpeoEvent;
-          return idx >= 0
-            ? prev.map((ev) => (ev.id === saved.id ? updated : ev))
-            : [...prev, updated];
-        });
-        showToast(`"${saved.nombre}" guardado`, 'success');
-        onSaved?.(saved);
-        close();
-      } catch (err: any) {
-        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
-          onAuthError?.();
-        }
-        showToast(`Error: ${err.message}`, 'error');
-      }
-    });
-  };
-
-  const handleDelete = async (id: string, nombre: string) => {
-    const ok = await confirmAction(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`, {
-      title: 'Eliminar evento',
-      confirmLabel: 'Eliminar',
-      danger: true,
-    });
-    if (!ok) return;
-    startTransition(async () => {
-      try {
-        await deleteEvent(id);
-        setEventos((prev) => prev.filter((ev) => ev.id !== id));
-        showToast('Evento eliminado', 'info');
-      } catch (err: any) {
-        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
-          onAuthError?.();
-        }
-        showToast(`Error: ${err.message}`, 'error');
-      }
-    });
-  };
-
-  return { eventos, setEventos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return { ...crud, eventos: crud.items, setEventos: crud.setItems };
 }

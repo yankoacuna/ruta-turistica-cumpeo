@@ -4,68 +4,115 @@ import { Destination, Accommodation, Restaurant, AppConfig, POI, Coordinates, To
 import { prisma } from './prisma';
 import { resolveTheme, ResolvedTheme, ThemeOverrides } from './theme';
 
-export async function getConfig(): Promise<AppConfig> {
+// ─── CACHÉ DEL CATASTRO PÚBLICO ───────────────────────────────────────────────
+
+/**
+ * Etiqueta única de todo el contenido del catastro (destinos, restaurantes,
+ * alojamientos, eventos, rutas, contactos de emergencia y categorías).
+ *
+ * El sitio público lo lee en cada visita, pero el municipio lo edita unas pocas
+ * veces por semana: sin caché, cada turista que abre la portada dispara ocho
+ * consultas a MySQL en un hosting compartido de un solo proceso. Con esta
+ * etiqueta las lecturas se resuelven una vez y se reusan hasta que alguien
+ * guarda algo en el panel, momento en que `invalidarContenidoPublico()`
+ * (src/lib/revalidate.ts) las bota todas de una.
+ *
+ * Es el mismo patrón que ya usaban los textos y la apariencia del sitio,
+ * aplicado ahora también al catastro.
+ */
+export const CONTENT_TAG = 'contenido-publico';
+
+/**
+ * Red de seguridad: aunque la invalidación por etiqueta es lo que manda, una
+ * entrada nunca vive más de 5 minutos. Si algún día se agrega una ruta de
+ * escritura nueva y se olvida invalidar, el sitio se corrige solo en minutos
+ * en vez de quedar congelado hasta el próximo despliegue.
+ */
+const TTL_CONTENIDO_SEGUNDOS = 300;
+
+/** Envuelve una lectura del catastro en la caché etiquetada del contenido. */
+function cacheContenido<A extends unknown[], R>(
+  clave: string,
+  consulta: (...args: A) => Promise<R>
+): (...args: A) => Promise<R> {
+  return unstable_cache(consulta, [clave], {
+    tags: [CONTENT_TAG],
+    revalidate: TTL_CONTENIDO_SEGUNDOS,
+  });
+}
+
+export const getConfig = cacheContenido('config', async (): Promise<AppConfig> => {
   const config = await prisma.config.findUnique({ where: { id: 'default' } });
   if (config) return { categorias: config.categorias as any };
   return { categorias: [] };
-}
+});
 
-export async function getDestinations(): Promise<Destination[]> {
+export const getDestinations = cacheContenido('destinations', async (): Promise<Destination[]> => {
   const data = await prisma.destination.findMany({ where: { activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
   })) as Destination[];
-}
+});
 
-export async function getDestinationByIdOrSlug(idOrSlug: string): Promise<Destination | null> {
-  try {
-    const d = await prisma.destination.findFirst({
-      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] }
-    });
-    if (!d) return null;
-    return {
-      ...d,
-      coordenadas: d.coordenadas as unknown as Coordinates,
-    } as Destination;
-  } catch (error) {
-    console.warn('Error fetching destination by id or slug:', error);
-    return null;
+export const getDestinationByIdOrSlug = cacheContenido(
+  'destination-by-id-or-slug',
+  async (idOrSlug: string): Promise<Destination | null> => {
+    try {
+      const d = await prisma.destination.findFirst({
+        where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+      });
+      if (!d) return null;
+      return {
+        ...d,
+        coordenadas: d.coordenadas as unknown as Coordinates,
+      } as Destination;
+    } catch (error) {
+      console.warn('Error fetching destination by id or slug:', error);
+      return null;
+    }
   }
-}
+);
+
+const getDestinationsByCategoryCached = cacheContenido(
+  'destinations-by-category',
+  async (categoria: string): Promise<Destination[]> => {
+    try {
+      const data = await prisma.destination.findMany({ where: { categoria, activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+      return data.map((d) => ({
+        ...d,
+        coordenadas: d.coordenadas as unknown as Coordinates,
+      })) as Destination[];
+    } catch (error) {
+      console.warn('Error fetching destinations by category:', error);
+      return [];
+    }
+  }
+);
 
 export async function getDestinationsByCategory(categoria: string): Promise<Destination[]> {
-  try {
-    if (!categoria || categoria === 'todos') return getDestinations();
-    const data = await prisma.destination.findMany({ where: { categoria, activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
-    return data.map((d) => ({
-      ...d,
-      coordenadas: d.coordenadas as unknown as Coordinates,
-    })) as Destination[];
-  } catch (error) {
-    console.warn('Error fetching destinations by category:', error);
-    return [];
-  }
+  if (!categoria || categoria === 'todos') return getDestinations();
+  return getDestinationsByCategoryCached(categoria);
 }
 
-export async function getFeaturedDestinations(): Promise<Destination[]> {
+export const getFeaturedDestinations = cacheContenido('featured-destinations', async (): Promise<Destination[]> => {
   const data = await prisma.destination.findMany({ where: { destacado: true, activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((d) => ({
     ...d,
     coordenadas: d.coordenadas as unknown as Coordinates,
   })) as Destination[];
-}
+});
 
-export async function getAccommodations(): Promise<Accommodation[]> {
+export const getAccommodations = cacheContenido('accommodations', async (): Promise<Accommodation[]> => {
   const data = await prisma.accommodation.findMany({ where: { activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((a) => ({
     ...a,
     coordenadas: a.coordenadas as unknown as Coordinates,
     contacto: a.contacto as any,
   })) as Accommodation[];
-}
+});
 
-export async function getRestaurants(): Promise<Restaurant[]> {
+export const getRestaurants = cacheContenido('restaurants', async (): Promise<Restaurant[]> => {
   const data = await prisma.restaurant.findMany({ where: { activo: true }, orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
   return data.map((r) => ({
     ...r,
@@ -73,9 +120,9 @@ export async function getRestaurants(): Promise<Restaurant[]> {
     horario: r.horario as any,
     contacto: r.contacto as any,
   })) as Restaurant[];
-}
+});
 
-export async function getEvents(): Promise<CumpeoEvent[]> {
+export const getEvents = cacheContenido('events', async (): Promise<CumpeoEvent[]> => {
   try {
     const data = await prisma.event.findMany({
       where: { activo: true },
@@ -89,13 +136,13 @@ export async function getEvents(): Promise<CumpeoEvent[]> {
     console.warn('Error fetching events from DB:', error);
     return [];
   }
-}
+});
 
 export async function getActiveEvents(): Promise<CumpeoEvent[]> {
   return getEvents();
 }
 
-export async function getEmergencyContacts(): Promise<EmergencyContact[]> {
+export const getEmergencyContacts = cacheContenido('emergency-contacts', async (): Promise<EmergencyContact[]> => {
   try {
     return await prisma.emergencyContact.findMany({
       where: { activo: true },
@@ -105,7 +152,7 @@ export async function getEmergencyContacts(): Promise<EmergencyContact[]> {
     console.warn('Error fetching emergency contacts:', error);
     return [];
   }
-}
+});
 
 export async function getAllPOIs(): Promise<POI[]> {
   const [dests, accomm, rests, events] = await Promise.all([
@@ -223,7 +270,7 @@ export function formatImgUrl(url?: string | null): string {
   return `/${url}`;
 }
 
-export async function getTourRoutes(): Promise<TourRoute[]> {
+export const getTourRoutes = cacheContenido('tour-routes', async (): Promise<TourRoute[]> => {
   try {
     const data = await prisma.tourRoute.findMany({
       where: { activo: true },
@@ -236,20 +283,14 @@ export async function getTourRoutes(): Promise<TourRoute[]> {
     console.warn('Error fetching tour routes from DB:', error);
   }
   return [];
-}
+});
 
+/**
+ * Una ruta por id o slug. Se resuelve sobre la lista ya cacheada en vez de
+ * hacer una consulta extra por visita: son pocas rutas y la portada ya las
+ * leyó todas, así que la lista está caliente.
+ */
 export async function getTourRouteByIdOrSlug(idOrSlug: string): Promise<TourRoute | null> {
-  try {
-    const route = await prisma.tourRoute.findFirst({
-      where: {
-        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
-        activo: true,
-      },
-    });
-    if (route) return route as unknown as TourRoute;
-  } catch (error) {
-    console.warn('Error fetching tour route by id/slug from DB:', error);
-  }
   const routes = await getTourRoutes();
   return routes.find((r) => r.id === idOrSlug || r.slug === idOrSlug) || null;
 }

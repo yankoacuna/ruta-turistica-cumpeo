@@ -1,16 +1,17 @@
-import { useState, useTransition } from 'react';
 import { Destination } from '@/lib/types';
 import { saveDestination, deleteDestination } from '../actions';
-import { ToastFn, HookOptions } from '../_types';
+import { HookOptions } from '../_types';
+import { CENTRO_CUMPEO } from '@/lib/constants';
+import { useFichaCrud } from './useFichaCrud';
 
-const emptyDest = (): Partial<Destination> => ({
+const destinoVacio = (): Partial<Destination> => ({
   nombre: '',
   slug: '',
   categoria: 'cultural',
   descripcionCorta: '',
   descripcionLarga: '',
   historia: '',
-  coordenadas: { lat: -35.281739, lng: -71.258714 },
+  coordenadas: { ...CENTRO_CUMPEO },
   direccion: '',
   horario: '',
   duracionVisita: '',
@@ -21,60 +22,19 @@ const emptyDest = (): Partial<Destination> => ({
   galeria: [],
 });
 
-export function useDestinos(initial: Destination[], { showToast, confirmAction, onAuthError, onSaved }: HookOptions) {
-  const [destinos, setDestinos] = useState<Destination[]>(initial);
-  const [editing, setEditing] = useState<Partial<Destination> | null>(null);
-  const [isPending, startTransition] = useTransition();
+/** CRUD de destinos en el panel. La mecánica vive en useFichaCrud. */
+export function useDestinos(initial: Destination[], opciones: HookOptions) {
+  const crud = useFichaCrud<Destination>(
+    initial,
+    {
+      nueva: destinoVacio,
+      guardar: saveDestination,
+      eliminar: deleteDestination,
+      etiqueta: 'destino',
+      desdeFila: (fila) => ({ ...fila, coordenadas: fila.coordenadas as any }) as Destination,
+    },
+    opciones
+  );
 
-  const openNew = () => setEditing(emptyDest());
-  const openEdit = (d: Destination) => setEditing(d);
-  const close = () => setEditing(null);
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editing?.nombre) return;
-    startTransition(async () => {
-      try {
-        const saved = await saveDestination(editing);
-        setDestinos((prev) => {
-          const idx = prev.findIndex((d) => d.id === saved.id);
-          const updated = { ...saved, coordenadas: saved.coordenadas as any } as Destination;
-          return idx >= 0
-            ? prev.map((d) => (d.id === saved.id ? updated : d))
-            : [...prev, updated];
-        });
-        showToast(`"${saved.nombre}" guardado`, 'success');
-        onSaved?.(saved);
-        close();
-      } catch (err: any) {
-        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
-          onAuthError?.();
-        }
-        showToast(`Error: ${err.message}`, 'error');
-      }
-    });
-  };
-
-  const handleDelete = async (id: string, nombre: string) => {
-    const ok = await confirmAction(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`, {
-      title: 'Eliminar destino',
-      confirmLabel: 'Eliminar',
-      danger: true,
-    });
-    if (!ok) return;
-    startTransition(async () => {
-      try {
-        await deleteDestination(id);
-        setDestinos((prev) => prev.filter((d) => d.id !== id));
-        showToast('Destino eliminado', 'info');
-      } catch (err: any) {
-        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
-          onAuthError?.();
-        }
-        showToast(`Error: ${err.message}`, 'error');
-      }
-    });
-  };
-
-  return { destinos, setDestinos, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return { ...crud, destinos: crud.items, setDestinos: crud.setItems };
 }

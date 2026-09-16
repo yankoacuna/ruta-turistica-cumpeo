@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { CENTRO_CUMPEO } from './constants';
 import { slugify } from './slug';
 
 export type BulkEntityType = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';
@@ -28,7 +29,7 @@ export interface ValidationSummary {
 }
 
 // Coordenadas céntricas por defecto de Cumpeo, Maule
-const DEFAULT_CUMPEO_COORDS = { lat: -35.281739, lng: -71.258714 };
+const DEFAULT_CUMPEO_COORDS = CENTRO_CUMPEO;
 
 /**
  * Normaliza claves de encabezados para soportar variaciones comunes de los usuarios

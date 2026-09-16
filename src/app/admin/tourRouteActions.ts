@@ -3,7 +3,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { TourRoute } from '@/lib/types';
-import { revalidatePath } from 'next/cache';
+import { invalidarContenidoPublico } from '@/lib/revalidate';
 import { assertAuthorized, requireRole } from './authActions';
 
 /**
@@ -16,7 +16,9 @@ function toJsonInput<T>(value: T | null | undefined): Prisma.InputJsonValue | un
   return value === null || value === undefined ? undefined : (value as unknown as Prisma.InputJsonValue);
 }
 
+/** Listado para el panel: incluye rutas inactivas, así que exige sesión. */
 export async function getAdminTourRoutes(): Promise<TourRoute[]> {
+  await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
   try {
     const data = await prisma.tourRoute.findMany({
       orderBy: { orden: 'asc' },
@@ -77,18 +79,14 @@ export async function saveTourRoute(
     },
   });
 
-  revalidatePath('/');
-  revalidatePath('/ruta');
-  revalidatePath('/mapa');
+  invalidarContenidoPublico();
   return result;
 }
 
 export async function deleteTourRoute(id: string) {
   await requireRole(['ADMIN']);
   await prisma.tourRoute.delete({ where: { id } });
-  revalidatePath('/');
-  revalidatePath('/ruta');
-  revalidatePath('/mapa');
+  invalidarContenidoPublico();
   return true;
 }
 
@@ -98,7 +96,5 @@ export async function updateTourRouteStops(routeId: string, poiIds: string[]) {
     where: { id: routeId },
     data: { poiIds },
   });
-  revalidatePath('/');
-  revalidatePath('/ruta');
-  revalidatePath('/mapa');
+  invalidarContenidoPublico();
 }

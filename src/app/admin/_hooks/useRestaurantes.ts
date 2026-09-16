@@ -1,13 +1,14 @@
-import { useState, useTransition } from 'react';
 import { Restaurant } from '@/lib/types';
 import { saveRestaurant, deleteRestaurant } from '../actions';
-import { ToastFn, HookOptions } from '../_types';
+import { HookOptions } from '../_types';
+import { CENTRO_CUMPEO } from '@/lib/constants';
+import { useFichaCrud } from './useFichaCrud';
 
-const emptyRest = (): Partial<Restaurant> => ({
+const restauranteVacio = (): Partial<Restaurant> => ({
   nombre: '',
   descripcion: '',
   especialidad: '',
-  coordenadas: { lat: -35.281739, lng: -71.258714 },
+  coordenadas: { ...CENTRO_CUMPEO },
   direccion: '',
   horario: { apertura: '', cierre: '', descripcion: '' },
   contacto: { telefono: '', whatsapp: '', email: '', web: '', instagram: '', facebook: '' },
@@ -16,65 +17,25 @@ const emptyRest = (): Partial<Restaurant> => ({
   tags: [],
 });
 
-export function useRestaurantes(initial: Restaurant[], { showToast, confirmAction, onAuthError, onSaved }: HookOptions) {
-  const [restaurantes, setRestaurantes] = useState<Restaurant[]>(initial);
-  const [editing, setEditing] = useState<Partial<Restaurant> | null>(null);
-  const [isPending, startTransition] = useTransition();
+/** CRUD de restaurantes en el panel. La mecánica vive en useFichaCrud. */
+export function useRestaurantes(initial: Restaurant[], opciones: HookOptions) {
+  const crud = useFichaCrud<Restaurant>(
+    initial,
+    {
+      nueva: restauranteVacio,
+      guardar: saveRestaurant,
+      eliminar: deleteRestaurant,
+      etiqueta: 'restaurante',
+      desdeFila: (fila) =>
+        ({
+          ...fila,
+          coordenadas: fila.coordenadas as any,
+          horario: fila.horario as any,
+          contacto: fila.contacto as any,
+        }) as Restaurant,
+    },
+    opciones
+  );
 
-  const openNew = () => setEditing(emptyRest());
-  const openEdit = (r: Restaurant) => setEditing(r);
-  const close = () => setEditing(null);
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editing?.nombre) return;
-    startTransition(async () => {
-      try {
-        const saved = await saveRestaurant(editing);
-        setRestaurantes((prev) => {
-          const idx = prev.findIndex((r) => r.id === saved.id);
-          const updated = {
-            ...saved,
-            coordenadas: saved.coordenadas as any,
-            horario: saved.horario as any,
-            contacto: saved.contacto as any,
-          } as Restaurant;
-          return idx >= 0
-            ? prev.map((r) => (r.id === saved.id ? updated : r))
-            : [...prev, updated];
-        });
-        showToast(`"${saved.nombre}" guardado`, 'success');
-        onSaved?.(saved);
-        close();
-      } catch (err: any) {
-        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
-          onAuthError?.();
-        }
-        showToast(`Error: ${err.message}`, 'error');
-      }
-    });
-  };
-
-  const handleDelete = async (id: string, nombre: string) => {
-    const ok = await confirmAction(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`, {
-      title: 'Eliminar restaurante',
-      confirmLabel: 'Eliminar',
-      danger: true,
-    });
-    if (!ok) return;
-    startTransition(async () => {
-      try {
-        await deleteRestaurant(id);
-        setRestaurantes((prev) => prev.filter((r) => r.id !== id));
-        showToast('Restaurante eliminado', 'info');
-      } catch (err: any) {
-        if (err?.message?.includes('No autorizado') || err?.message?.includes('Inicia sesión')) {
-          onAuthError?.();
-        }
-        showToast(`Error: ${err.message}`, 'error');
-      }
-    });
-  };
-
-  return { restaurantes, setRestaurantes, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return { ...crud, restaurantes: crud.items, setRestaurantes: crud.setItems };
 }

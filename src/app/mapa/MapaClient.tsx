@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { CENTRO_CUMPEO } from '@/lib/constants';
 import Link from 'next/link';
 import MapComponent from '@/components/MapComponent';
 import { POI, TourRoute } from '@/lib/types';
@@ -38,7 +39,7 @@ interface MapaClientProps {
   initialTourRoutes: TourRoute[];
 }
 
-const CUMPEO_CENTER = { lat: -35.281739, lng: -71.258714 };
+const CUMPEO_CENTER = CENTRO_CUMPEO;
 
 /**
  * Badge "Abierto/Cerrado" en pildora, para la ficha del POI seleccionado.
