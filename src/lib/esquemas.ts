@@ -183,6 +183,24 @@ export const RutaSchema = z.object({
 /** Ids en el orden en que deben quedar los catastros de la portada. */
 export const OrdenSchema = z.array(texto(140)).max(500);
 
+// ─── EXPORTACIÓN / RESTAURACIÓN DEL CATASTRO ──────────────────────────────────
+// Usados solo para validar un archivo de respaldo antes de restaurarlo
+// (src/app/admin/backupActions.ts). No tienen formulario propio en el panel.
+
+export const ContactoEmergenciaSchema = z.object({
+  id: texto(140).min(1, 'Falta el id'),
+  institucion: texto(140).min(1, 'Falta la institución'),
+  telefono: texto(40).min(1, 'Falta el teléfono'),
+  direccion: texto(250).nullable().optional(),
+  orden: z.number().int().min(0).max(100000).optional(),
+  activo: z.boolean().optional(),
+});
+
+export const ConfigSchema = z.object({
+  id: texto(40).optional(),
+  categorias: z.array(z.record(z.string(), z.unknown())).max(100),
+});
+
 // ─── USUARIOS DEL PANEL ───────────────────────────────────────────────────────
 
 /**
@@ -213,7 +231,10 @@ export const UsuarioEdicionSchema = z.object({
   resetPassword: z.boolean().optional(),
 });
 
+/** Largo mínimo de una contraseña elegida por el usuario (no la temporal, que es aleatoria). */
+export const MIN_LARGO_CLAVE = 8;
+
 export const CambioClaveSchema = z.object({
   actual: z.string().min(1, 'Escribe tu contraseña actual'),
-  nueva: z.string().min(6, 'La nueva contraseña debe tener al menos 6 caracteres').max(200),
+  nueva: z.string().min(MIN_LARGO_CLAVE, `La nueva contraseña debe tener al menos ${MIN_LARGO_CLAVE} caracteres`).max(200),
 });

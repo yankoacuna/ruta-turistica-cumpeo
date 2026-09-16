@@ -105,6 +105,38 @@ async function main() {
     console.warn('⚠️ Could not seed tour routes:', err.message);
   }
 
+  // 8. Admin inicial (solo si la tabla User esta vacia)
+  try {
+    const totalUsuarios = await prisma.user.count();
+    if (totalUsuarios === 0) {
+      const email = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
+      const nombre = process.env.INITIAL_ADMIN_NAME?.trim();
+      const claveInicial = process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD;
+
+      if (!email || !nombre || !claveInicial) {
+        console.warn(
+          '⚠️ INITIAL_ADMIN_EMAIL, INITIAL_ADMIN_NAME o ADMIN_SECRET no estan definidas: no se creo un administrador inicial.'
+        );
+      } else {
+        // Mismo formato que hashPassword() en src/lib/auth.ts (salt:hash con
+        // scrypt). Se duplica acá porque este script corre con node plano,
+        // sin el compilador de TypeScript: si cambia el formato en auth.ts,
+        // cambiar tambien acá.
+        const crypto = require('crypto');
+        const salt = crypto.randomBytes(16).toString('hex');
+        const derivedKey = crypto.scryptSync(claveInicial, salt, 64);
+        const password = `${salt}:${derivedKey.toString('hex')}`;
+
+        await prisma.user.create({
+          data: { email, nombre, password, role: 'ADMIN', activo: true },
+        });
+        console.log(`✅ Administrador inicial creado: ${email}`);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not seed initial admin:', err.message);
+  }
+
   console.log('✅ Seed complete!');
 }
 

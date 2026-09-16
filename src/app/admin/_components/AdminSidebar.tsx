@@ -137,13 +137,20 @@ export function AdminSidebar({
           count: undefined,
           highlight: false,
         },
-        {
-          id: 'solicitudes' as AdminSection,
-          label: 'Solicitudes',
-          icon: Inbox,
-          count: counts.solicitudes,
-          color: 'text-rojo',
-        },
+        // El listado de solicitudes trae nombre, correo y telefono de cada
+        // emprendedor; un LECTOR no lo necesita para revisar el resto del
+        // contenido, y el server action ya lo rechaza para ese rol.
+        ...(role !== 'LECTOR'
+          ? [
+              {
+                id: 'solicitudes' as AdminSection,
+                label: 'Solicitudes',
+                icon: Inbox,
+                count: counts.solicitudes,
+                color: 'text-rojo',
+              },
+            ]
+          : []),
       ],
     },
     {

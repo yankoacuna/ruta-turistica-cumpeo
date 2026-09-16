@@ -76,38 +76,19 @@ function limpiarIntentosFallidos(clave: string): void {
   intentosFallidos.delete(clave);
 }
 
-export async function ensureInitialAdmin(): Promise<void> {
-  try {
-    const count = await prisma.user.count();
-    if (count === 0) {
-      const initialEmail = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
-      const initialName = process.env.INITIAL_ADMIN_NAME?.trim();
-      const initialPass = process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD;
-
-      if (!initialEmail || !initialName || !initialPass) {
-        console.warn(
-          'Variables de entorno requeridas no configuradas en .env (INITIAL_ADMIN_EMAIL, INITIAL_ADMIN_NAME o ADMIN_SECRET). No se pudo inicializar el usuario administrador.'
-        );
-        return;
-      }
-
-      await prisma.user.create({
-        data: {
-          email: initialEmail,
-          nombre: initialName,
-          password: hashPassword(initialPass),
-          role: 'ADMIN',
-          activo: true,
-        },
-      });
-    }
-  } catch (error) {
-    console.error('Error ensuring initial admin:', error);
-  }
-}
-
+/**
+ * El primer administrador ya no se crea acá: era una llamada
+ * (`prisma.user.count()`) en cada petición al panel, solo para cubrir el caso
+ * de que la tabla `User` estuviera vacía. Además de ser ruido en el camino
+ * caliente, era una puerta trasera silenciosa: si `User` quedaba vacía por
+ * error (una migración a medias, una restauración parcial), el sistema se
+ * autoreparaba creando un ADMIN con `ADMIN_SECRET` sin que nadie lo notara.
+ *
+ * Ahora es un paso explícito de instalación: `node prisma/seed.js` (ver ese
+ * archivo), documentado en el README. El arranque normal del panel no crea
+ * administradores.
+ */
 export async function getAdminSession(): Promise<AdminSessionUser | null> {
-  await ensureInitialAdmin();
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
@@ -169,8 +150,6 @@ export async function loginAdmin(
   identifierOrPassword: string,
   passwordInput?: string
 ): Promise<{ success: boolean; error?: string; user?: AdminSessionUser }> {
-  await ensureInitialAdmin();
-
   if (!passwordInput) {
     return { success: false, error: 'Contraseña o credenciales inválidas' };
   }

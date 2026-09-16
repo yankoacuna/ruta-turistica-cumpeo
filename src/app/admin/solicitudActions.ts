@@ -3,8 +3,11 @@
 /**
  * Server actions de la bandeja de solicitudes del CMS.
  *
- * Autorización: leer exige sesión de cualquier rol (un LECTOR puede revisar lo
- * que llega, igual que ve el resto del contenido); cambiar el estado exige
+ * Autorización: ver el listado (con nombre, correo y teléfono de cada
+ * emprendedor) exige ADMIN o EDITOR — un LECTOR no necesita el contacto
+ * personal de nadie para revisar el resto del contenido. El conteo de
+ * pendientes sí queda abierto a los tres roles: es solo un número para el
+ * indicador del panel, no expone datos de nadie. Cambiar el estado exige
  * ADMIN o EDITOR; borrar, solo ADMIN, porque es lo único irreversible.
  */
 
@@ -21,8 +24,8 @@ const ESTADOS_VALIDOS: SolicitudEstado[] = [
   'PUBLICADA',
 ];
 
-/** Cualquier rol con sesión puede revisar la bandeja. */
-const ROLES_LECTURA = ['ADMIN', 'EDITOR', 'LECTOR'] as const;
+/** Cualquier rol con sesión puede ver el conteo (no expone datos personales). */
+const ROLES_CONTEO = ['ADMIN', 'EDITOR', 'LECTOR'] as const;
 const ROLES_GESTION = ['ADMIN', 'EDITOR'] as const;
 
 /** Fila de la base a la forma que usa el panel. */
@@ -44,7 +47,7 @@ function aRegistro(fila: Record<string, any>): SolicitudRecord {
  * filtrar y buscar en el panel sin ida y vuelta al servidor.
  */
 export async function getSolicitudes(): Promise<Resultado<SolicitudRecord[]>> {
-  const sesion = await sesionConRol([...ROLES_LECTURA]);
+  const sesion = await sesionConRol([...ROLES_GESTION]);
   if (!sesion.ok) return sesion;
 
   const filas = await prisma.solicitud.findMany({ orderBy: { createdAt: 'desc' } });
@@ -53,7 +56,7 @@ export async function getSolicitudes(): Promise<Resultado<SolicitudRecord[]>> {
 
 /** Cuántas están sin revisar: alimenta el contador rojo de la barra lateral. */
 export async function contarSolicitudesPendientes(): Promise<Resultado<number>> {
-  const sesion = await sesionConRol([...ROLES_LECTURA]);
+  const sesion = await sesionConRol([...ROLES_CONTEO]);
   if (!sesion.ok) return sesion;
 
   const total = await prisma.solicitud.count({

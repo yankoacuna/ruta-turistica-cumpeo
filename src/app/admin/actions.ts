@@ -9,7 +9,6 @@
  */
 
 export {
-  ensureInitialAdmin,
   getAdminSession,
   pingSession,
   loginAdmin,

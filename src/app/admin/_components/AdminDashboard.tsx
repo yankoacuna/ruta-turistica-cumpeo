@@ -205,8 +205,11 @@ export function AdminDashboard({
       </div>
 
       {/* Solicitudes por revisar: lo primero que deberia ver el encargado, porque
-          es gente esperando respuesta, no contenido que ya esta publicado */}
-      {solicitudesPendientes > 0 && (
+          es gente esperando respuesta, no contenido que ya esta publicado.
+          Oculto para LECTOR: el listado (con nombre, correo y telefono de
+          cada emprendedor) exige ADMIN o EDITOR, así que este atajo llevaría
+          a un error en vez de a la bandeja. */}
+      {!isLector && solicitudesPendientes > 0 && (
         <button
           type="button"
           onClick={() => onNavigate('solicitudes')}

@@ -72,15 +72,15 @@ export function BackupManager({
       const a = document.createElement('a');
       const dateStr = new Date().toISOString().split('T')[0];
       a.href = url;
-      a.download = `backup-cumpeo-turismo-${dateStr}.json`;
+      a.download = `exportacion-catastro-cumpeo-${dateStr}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showToast('Copia de seguridad JSON descargada correctamente', 'success');
+      showToast('Exportación del catastro descargada correctamente', 'success');
     } catch (err: any) {
-      showToast(`Error al exportar copia de seguridad: ${err.message}`, 'error');
+      showToast(`Error al exportar el catastro: ${err.message}`, 'error');
     } finally {
       setIsExporting(false);
     }
@@ -125,12 +125,12 @@ export function BackupManager({
         return;
       }
 
-      showToast('¡Copia de seguridad restaurada con éxito!', 'success');
+      showToast('¡Catastro restaurado con éxito!', 'success');
       setRestoreStatus('Restauración completada. Recarga la página para ver los cambios actualizados.');
       setShowRestoreModal(false);
       setPendingBackupData(null);
     } catch (err) {
-      console.error('Error inesperado al restaurar la copia de seguridad:', err);
+      console.error('Error inesperado al restaurar el catastro:', err);
       const aviso = 'No pudimos completar la restauración. Vuelve a intentarlo.';
       showToast(aviso, 'error');
       setRestoreStatus(aviso);
@@ -214,11 +214,14 @@ export function BackupManager({
               <div>
                 <h3 className="font-display font-bold text-base text-text-primary flex items-center gap-2 mb-2">
                   <Download size={18} className="text-rojo" />
-                  1. Exportar Snapshot Completo de la Base de Datos
+                  1. Exportar el Catastro Completo
                 </h3>
                 <p className="text-xs text-text-secondary leading-relaxed mb-4">
-                  Genera una copia de seguridad técnica estructurada en JSON que incluye todas las tablas:
-                  atractivos turísticos, restaurantes, hospedajes, eventos, rutas turísticas, contactos de emergencia y configuraciones del portal.
+                  Genera un archivo JSON con el catastro completo: destinos, restaurantes, alojamientos,
+                  eventos, rutas turísticas, contactos de emergencia, textos del sitio, apariencia y
+                  notificaciones. A propósito <strong>no</strong> es una copia de seguridad del sistema completo:
+                  no incluye usuarios ni solicitudes (son credenciales y datos personales de terceros). Para
+                  una recuperación real ante desastres, usa el respaldo diario de la cuenta en cPanel.
                 </p>
 
                 {/* Resumen de contenido actual en BD */}
@@ -249,7 +252,7 @@ export function BackupManager({
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rojo text-white font-bold text-xs shadow-rojo hover:bg-rojo-dark transition-all disabled:opacity-50"
                 >
                   {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileJson size={16} />}
-                  <span>{isExporting ? 'Generando backup...' : 'Descargar Snapshot Completo (.JSON)'}</span>
+                  <span>{isExporting ? 'Generando exportación...' : 'Descargar Catastro Completo (.JSON)'}</span>
                 </button>
               </div>
             </div>
@@ -359,6 +362,18 @@ export function BackupManager({
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Emergencias:</span>
                     <strong>{pendingBackupData.data?.emergencyContacts?.length || 0}</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
+                    <span>Textos del sitio:</span>
+                    <strong>{pendingBackupData.data?.siteTexts?.length || 0}</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
+                    <span>Apariencia:</span>
+                    <strong>{pendingBackupData.data?.theme ? 'Sí' : '—'}</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
+                    <span>Notificaciones:</span>
+                    <strong>{pendingBackupData.data?.notificaciones ? 'Sí' : '—'}</strong>
                   </div>
                 </div>
               </div>
