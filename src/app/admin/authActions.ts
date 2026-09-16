@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { UserRole, AdminSessionUser } from '@/lib/types';
+import { Resultado, exito, fallo } from '@/lib/resultado';
 import {
   hashPassword,
   verifyPassword,
@@ -308,4 +309,48 @@ export async function requireRole(
 
 export async function assertAuthorized() {
   return requireRole(['ADMIN', 'EDITOR']);
+}
+
+/** Nombre del rol tal como lo ve el funcionario, no la constante del código. */
+const ROL_LABEL: Record<UserRole, string> = {
+  ADMIN: 'Administrador',
+  EDITOR: 'Editor',
+  LECTOR: 'Lector',
+};
+
+/**
+ * Misma puerta que requireRole, pero devolviendo el resultado en vez de lanzar.
+ *
+ * Es la versión que deben usar las acciones que el panel invoca desde el
+ * navegador: una excepción pierde su mensaje al cruzar a producción (ver
+ * src/lib/resultado.ts), y sin mensaje el panel no puede distinguir "se venció
+ * tu sesión" de "se cayó la base".
+ *
+ * requireRole se mantiene para las lecturas que solo ocurren en el servidor
+ * (por ejemplo las que arman /admin), donde lanzar es exactamente lo correcto.
+ */
+export async function sesionConRol(
+  rolesPermitidos: UserRole[]
+): Promise<Resultado<AdminSessionUser>> {
+  const session = await getAdminSession();
+
+  if (!session) {
+    return fallo('NO_AUTORIZADO', 'Tu sesión venció. Vuelve a iniciar sesión para continuar.');
+  }
+
+  if (session.mustChangePassword) {
+    return fallo(
+      'CAMBIO_CLAVE_PENDIENTE',
+      'Debes cambiar tu contraseña temporal antes de seguir trabajando.'
+    );
+  }
+
+  if (!rolesPermitidos.includes(session.role)) {
+    return fallo(
+      'ROL_INSUFICIENTE',
+      `Tu rol (${ROL_LABEL[session.role]}) no tiene permiso para realizar esta acción.`
+    );
+  }
+
+  return exito(session);
 }

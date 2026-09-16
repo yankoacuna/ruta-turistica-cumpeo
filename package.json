@@ -42,7 +42,8 @@
     "sharp": "^0.35.4",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.3.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/geoip-lite": "^1.4.4",

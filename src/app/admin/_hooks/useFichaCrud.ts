@@ -1,5 +1,6 @@
 import { useState, useTransition } from 'react';
 import { HookOptions } from '../_types';
+import { Resultado, ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 
 /**
  * CRUD de una ficha del catastro en el panel.
@@ -19,10 +20,10 @@ import { HookOptions } from '../_types';
 export interface FichaCrudConfig<T> {
   /** Ficha en blanco con la que se abre el formulario de "nuevo". */
   nueva: () => Partial<T>;
-  /** Server action que crea o actualiza; devuelve la fila guardada. */
-  guardar: (data: Partial<T>) => Promise<any>;
+  /** Server action que crea o actualiza. */
+  guardar: (data: Partial<T>) => Promise<Resultado<any>>;
   /** Server action que elimina por id. */
-  eliminar: (id: string) => Promise<unknown>;
+  eliminar: (id: string) => Promise<Resultado<true>>;
   /** Cómo se nombra el tipo en los avisos: "destino", "restaurante"... */
   etiqueta: string;
   /**
@@ -44,23 +45,19 @@ export interface FichaCrud<T> {
   close: () => void;
   handleSave: (e: React.FormEvent) => void;
   handleDelete: (id: string, nombre: string) => Promise<void>;
+  /** Errores por campo del último guardado rechazado, para marcarlos en el formulario. */
+  erroresCampo: Record<string, string>;
 }
 
 /**
- * Un error de autorización del servidor (sesión vencida o rol insuficiente)
- * frente a cualquier otra falla.
+ * Mensaje para una falla que no es de las previstas: la base caída, un bug.
  *
- * Se reconoce por el texto porque es lo que llega hoy desde los server
- * actions; el comentario queda como recordatorio de que es frágil: Next.js
- * reemplaza el mensaje de una excepción de server action por uno genérico en
- * producción, así que lo robusto es que las acciones devuelvan un resultado
- * con código de error en vez de lanzar. Mientras ese cambio no exista, al
- * menos la regla está escrita en un solo lugar.
+ * En producción el mensaje real de una excepción de server action no llega
+ * (Next lo reemplaza por uno genérico con digest), así que mostrar `err.message`
+ * solo serviría para confundir. El detalle queda en la consola y en el log del
+ * servidor, que es donde se puede hacer algo con él.
  */
-function esErrorDeSesion(err: any): boolean {
-  const mensaje = String(err?.message ?? '');
-  return mensaje.includes('No autorizado') || mensaje.includes('Inicia sesión');
-}
+const ERROR_INESPERADO = 'No pudimos completar la acción. Vuelve a intentarlo en unos segundos.';
 
 export function useFichaCrud<T extends { id: string; nombre?: string }>(
   inicial: T[],
@@ -69,15 +66,31 @@ export function useFichaCrud<T extends { id: string; nombre?: string }>(
 ): FichaCrud<T> {
   const [items, setItems] = useState<T[]>(inicial);
   const [editing, setEditing] = useState<Partial<T> | null>(null);
+  const [erroresCampo, setErroresCampo] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
 
-  const openNew = () => setEditing(config.nueva());
-  const openEdit = (item: T) => setEditing(item);
-  const close = () => setEditing(null);
+  const openNew = () => {
+    setErroresCampo({});
+    setEditing(config.nueva());
+  };
+  const openEdit = (item: T) => {
+    setErroresCampo({});
+    setEditing(item);
+  };
+  const close = () => {
+    setErroresCampo({});
+    setEditing(null);
+  };
 
-  const avisarError = (err: any) => {
-    if (esErrorDeSesion(err)) onAuthError?.();
-    showToast(`Error: ${err?.message ?? 'no se pudo completar la acción'}`, 'error');
+  /**
+   * Un fallo que la acción previó y devolvió como valor. Solo la sesión caída
+   * cambia la pantalla; el resto es un aviso y el formulario sigue abierto con
+   * lo que la persona escribió.
+   */
+  const manejarFallo = (res: ResultadoError) => {
+    if (esProblemaDeSesion(res)) onAuthError?.();
+    setErroresCampo(res.detalles ?? {});
+    showToast(res.mensaje, 'error');
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -85,8 +98,13 @@ export function useFichaCrud<T extends { id: string; nombre?: string }>(
     if (!editing?.nombre) return;
     startTransition(async () => {
       try {
-        const fila = await config.guardar(editing);
-        const guardado = (config.desdeFila ? config.desdeFila(fila) : (fila as T));
+        const res = await config.guardar(editing);
+        if (!res.ok) {
+          manejarFallo(res);
+          return;
+        }
+
+        const guardado = (config.desdeFila ? config.desdeFila(res.data) : (res.data as T));
         setItems((prev) => {
           const existe = prev.some((i) => i.id === guardado.id);
           return existe
@@ -96,8 +114,9 @@ export function useFichaCrud<T extends { id: string; nombre?: string }>(
         showToast(`"${guardado.nombre}" guardado`, 'success');
         onSaved?.(guardado as { id: string; nombre?: string });
         close();
-      } catch (err: any) {
-        avisarError(err);
+      } catch (err) {
+        console.error(`Error inesperado al guardar ${config.etiqueta}:`, err);
+        showToast(ERROR_INESPERADO, 'error');
       }
     });
   };
@@ -109,16 +128,39 @@ export function useFichaCrud<T extends { id: string; nombre?: string }>(
       danger: true,
     });
     if (!ok) return;
+
     startTransition(async () => {
       try {
-        await config.eliminar(id);
+        const res = await config.eliminar(id);
+
+        // Si ya no existe, el objetivo igual se cumplió: se saca de la lista y
+        // se avisa sin tratarlo como una falla.
+        if (!res.ok && res.codigo !== 'NO_ENCONTRADO') {
+          manejarFallo(res);
+          return;
+        }
+
         setItems((prev) => prev.filter((i) => i.id !== id));
-        showToast(`${config.etiqueta.charAt(0).toUpperCase()}${config.etiqueta.slice(1)} eliminado`, 'info');
-      } catch (err: any) {
-        avisarError(err);
+        const nombreTipo = `${config.etiqueta.charAt(0).toUpperCase()}${config.etiqueta.slice(1)}`;
+        showToast(res.ok ? `${nombreTipo} eliminado` : res.mensaje, 'info');
+      } catch (err) {
+        console.error(`Error inesperado al eliminar ${config.etiqueta}:`, err);
+        showToast(ERROR_INESPERADO, 'error');
       }
     });
   };
 
-  return { items, setItems, editing, setEditing, isPending, openNew, openEdit, close, handleSave, handleDelete };
+  return {
+    items,
+    setItems,
+    editing,
+    setEditing,
+    isPending,
+    openNew,
+    openEdit,
+    close,
+    handleSave,
+    handleDelete,
+    erroresCampo,
+  };
 }

@@ -4,7 +4,17 @@ import { prisma } from '@/lib/prisma';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, OrderableEntity } from '@/lib/types';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
 import { CENTRO_CUMPEO } from '@/lib/constants';
-import { assertAuthorized, requireRole } from './authActions';
+import { requireRole, sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
+import {
+  DestinoSchema,
+  RestauranteSchema,
+  AlojamientoSchema,
+  EventoSchema,
+  OrdenSchema,
+  detallesDeZod,
+} from '@/lib/esquemas';
+import type { z } from 'zod';
 
 /**
  * Próximo valor de `orden` para una ficha nueva: el mayor actual + 1.
@@ -151,22 +161,37 @@ async function idDisponible(
   return `${base}-${Date.now()}`;
 }
 
-async function genericSaveEntity(config: EntityCrudConfig, data: Record<string, any>) {
-  await assertAuthorized();
+async function genericSaveEntity<T>(
+  config: EntityCrudConfig,
+  esquema: z.ZodType<any>,
+  data: unknown
+): Promise<Resultado<T>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
 
-  const base = slugFromNombre(data.nombre) || config.idFallback;
+  const validado = esquema.safeParse(data ?? {});
+  if (!validado.success) {
+    return fallo(
+      'VALIDACION',
+      'Hay datos que no podemos guardar. Revisa los campos marcados.',
+      detallesDeZod(validado.error)
+    );
+  }
+  const limpio = validado.data as Record<string, any>;
+
+  const base = slugFromNombre(limpio.nombre) || config.idFallback;
   // Editar conserva el id; crear busca uno libre. El slug de una ficha ya
   // creada no se toca aunque le cambien el nombre: es su URL pública, y los
   // códigos QR impresos en la señalética apuntan a ella.
-  const id = data.id || (await idDisponible(config, base));
+  const id = limpio.id || (await idDisponible(config, base));
 
-  const fieldsData = buildFieldsData(data, config.fields);
+  const fieldsData = buildFieldsData(limpio, config.fields);
 
   const createData: Record<string, any> = {
     id,
     ...(config.hasSlug ? { slug: id } : {}),
     ...fieldsData,
-    orden: data.orden ?? (await nextOrden(config.model)),
+    orden: limpio.orden ?? (await nextOrden(config.model)),
   };
   for (const [key, fallback] of Object.entries(config.createDefaults)) {
     if (!createData[key]) createData[key] = fallback;
@@ -179,14 +204,32 @@ async function genericSaveEntity(config: EntityCrudConfig, data: Record<string, 
   });
 
   invalidarContenidoPublico();
-  return result;
+  return exito(result as T);
 }
 
-async function genericDeleteEntity(model: EntityCrudConfig['model'], id: string) {
-  await requireRole(['ADMIN']);
-  await (prisma[model] as any).delete({ where: { id } });
+/** Código con que Prisma avisa que el registro del where no existe. */
+const PRISMA_NO_ENCONTRADO = 'P2025';
+
+async function genericDeleteEntity(
+  config: EntityCrudConfig,
+  id: string
+): Promise<Resultado<true>> {
+  const sesion = await sesionConRol(['ADMIN']);
+  if (!sesion.ok) return sesion;
+
+  try {
+    await (prisma[config.model] as any).delete({ where: { id } });
+  } catch (error: any) {
+    // Dos personas borrando la misma ficha desde dos pestañas es un caso real
+    // en una oficina: la segunda no debería ver un error de sistema.
+    if (error?.code === PRISMA_NO_ENCONTRADO) {
+      return fallo('NO_ENCONTRADO', 'Esa ficha ya no existe: alguien la eliminó antes.');
+    }
+    throw error;
+  }
+
   invalidarContenidoPublico();
-  return true;
+  return exito(true);
 }
 
 // ─── DESTINATIONS ──────────────────────────────────────────────────────────
@@ -200,12 +243,12 @@ export async function getAdminDestinations(): Promise<Destination[]> {
   return genericGetAdminList('destination');
 }
 
-export async function saveDestination(data: Partial<Destination>) {
-  return genericSaveEntity(ENTITY_CONFIGS.destination, data);
+export async function saveDestination(data: Partial<Destination>): Promise<Resultado<Destination>> {
+  return genericSaveEntity<Destination>(ENTITY_CONFIGS.destination, DestinoSchema, data);
 }
 
-export async function deleteDestination(id: string) {
-  return genericDeleteEntity('destination', id);
+export async function deleteDestination(id: string): Promise<Resultado<true>> {
+  return genericDeleteEntity(ENTITY_CONFIGS.destination, id);
 }
 
 // ─── RESTAURANTS ──────────────────────────────────────────────────────────────
@@ -215,12 +258,12 @@ export async function getAdminRestaurants(): Promise<Restaurant[]> {
   return genericGetAdminList('restaurant');
 }
 
-export async function saveRestaurant(data: Partial<Restaurant>) {
-  return genericSaveEntity(ENTITY_CONFIGS.restaurant, data);
+export async function saveRestaurant(data: Partial<Restaurant>): Promise<Resultado<Restaurant>> {
+  return genericSaveEntity<Restaurant>(ENTITY_CONFIGS.restaurant, RestauranteSchema, data);
 }
 
-export async function deleteRestaurant(id: string) {
-  return genericDeleteEntity('restaurant', id);
+export async function deleteRestaurant(id: string): Promise<Resultado<true>> {
+  return genericDeleteEntity(ENTITY_CONFIGS.restaurant, id);
 }
 
 // ─── ACCOMMODATIONS ───────────────────────────────────────────────────────────
@@ -230,12 +273,12 @@ export async function getAdminAccommodations(): Promise<Accommodation[]> {
   return genericGetAdminList('accommodation');
 }
 
-export async function saveAccommodation(data: Partial<Accommodation>) {
-  return genericSaveEntity(ENTITY_CONFIGS.accommodation, data);
+export async function saveAccommodation(data: Partial<Accommodation>): Promise<Resultado<Accommodation>> {
+  return genericSaveEntity<Accommodation>(ENTITY_CONFIGS.accommodation, AlojamientoSchema, data);
 }
 
-export async function deleteAccommodation(id: string) {
-  return genericDeleteEntity('accommodation', id);
+export async function deleteAccommodation(id: string): Promise<Resultado<true>> {
+  return genericDeleteEntity(ENTITY_CONFIGS.accommodation, id);
 }
 
 // ─── EVENTS ───────────────────────────────────────────────────────────────────
@@ -244,12 +287,12 @@ export async function getEvents() {
   return genericGetAdminList('event');
 }
 
-export async function saveEvent(data: Partial<CumpeoEvent>) {
-  return genericSaveEntity(ENTITY_CONFIGS.event, data);
+export async function saveEvent(data: Partial<CumpeoEvent>): Promise<Resultado<CumpeoEvent>> {
+  return genericSaveEntity<CumpeoEvent>(ENTITY_CONFIGS.event, EventoSchema, data);
 }
 
-export async function deleteEvent(id: string) {
-  return genericDeleteEntity('event', id);
+export async function deleteEvent(id: string): Promise<Resultado<true>> {
+  return genericDeleteEntity(ENTITY_CONFIGS.event, id);
 }
 
 // ─── ORDEN DE LOS CATASTROS EN LA PORTADA ─────────────────────────────────────
@@ -268,34 +311,49 @@ export async function deleteEvent(id: string) {
 export async function updateEntityOrder(
   tipo: OrderableEntity,
   orderedIds: string[]
-): Promise<{ actualizados: number }> {
-  await requireRole(['ADMIN', 'EDITOR']);
+): Promise<Resultado<{ actualizados: number }>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
 
-  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
-    return { actualizados: 0 };
+  const validado = OrdenSchema.safeParse(orderedIds);
+  if (!validado.success) {
+    return fallo('VALIDACION', 'La lista de orden que llegó no es válida.');
+  }
+  if (validado.data.length === 0) {
+    return exito({ actualizados: 0 });
   }
 
   // Ids repetidos dejarian dos registros con la misma posicion.
-  const ids = Array.from(new Set(orderedIds.filter((id) => typeof id === 'string' && id)));
+  const ids = Array.from(new Set(validado.data.filter(Boolean)));
 
-  const updates = ids.map((id, index) => {
-    const data = { orden: index };
-    switch (tipo) {
-      case 'destinos':
-        return prisma.destination.update({ where: { id }, data });
-      case 'restaurantes':
-        return prisma.restaurant.update({ where: { id }, data });
-      case 'alojamientos':
-        return prisma.accommodation.update({ where: { id }, data });
-      case 'eventos':
-        return prisma.event.update({ where: { id }, data });
-      default:
-        throw new Error(`Catastro desconocido: ${tipo}`);
+  const modelos: Record<OrderableEntity, EntityCrudConfig['model']> = {
+    destinos: 'destination',
+    restaurantes: 'restaurant',
+    alojamientos: 'accommodation',
+    eventos: 'event',
+  };
+  const modelo = modelos[tipo];
+  if (!modelo) {
+    return fallo('VALIDACION', `Catastro desconocido: ${tipo}`);
+  }
+
+  const updates = ids.map((id, index) =>
+    (prisma[modelo] as any).update({ where: { id }, data: { orden: index } })
+  );
+
+  try {
+    await prisma.$transaction(updates);
+  } catch (error: any) {
+    // Basta que alguien haya borrado una ficha mientras otro reordenaba.
+    if (error?.code === PRISMA_NO_ENCONTRADO) {
+      return fallo(
+        'NO_ENCONTRADO',
+        'Alguna de las fichas ya no existe. Recarga la página y vuelve a ordenar.'
+      );
     }
-  });
-
-  await prisma.$transaction(updates);
+    throw error;
+  }
 
   invalidarContenidoPublico();
-  return { actualizados: ids.length };
+  return exito({ actualizados: ids.length });
 }

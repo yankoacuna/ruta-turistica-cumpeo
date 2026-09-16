@@ -4,7 +4,9 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { TourRoute } from '@/lib/types';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
-import { assertAuthorized, requireRole } from './authActions';
+import { requireRole, sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
+import { RutaSchema, OrdenSchema, detallesDeZod } from '@/lib/esquemas';
 
 /**
  * Único punto donde un campo JSON tipado de la app (RouteMilestone[],
@@ -32,69 +34,110 @@ export async function getAdminTourRoutes(): Promise<TourRoute[]> {
 
 export async function saveTourRoute(
   data: Partial<TourRoute>
-) {
-  await assertAuthorized();
+): Promise<Resultado<TourRoute>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+
+  const validado = RutaSchema.safeParse(data ?? {});
+  if (!validado.success) {
+    return fallo(
+      'VALIDACION',
+      'Hay datos de la ruta que no podemos guardar. Revisa los campos marcados.',
+      detallesDeZod(validado.error)
+    );
+  }
+  const limpio = validado.data as Partial<TourRoute>;
+
   const slug =
-    data.slug ||
-    data.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
+    limpio.slug ||
+    limpio.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') ||
     'nueva-ruta';
-  const id = data.id || slug;
+  const id = limpio.id || slug;
 
   const result = await prisma.tourRoute.upsert({
     where: { id },
     update: {
-      nombre: data.nombre,
+      nombre: limpio.nombre,
       slug,
-      descripcion: data.descripcion,
-      color: data.color || '#E63946',
-      poiIds: data.poiIds || [],
-      duracionEstimada: data.duracionEstimada,
-      distanciaKm: data.distanciaKm ? Number(data.distanciaKm) : null,
-      dificultad: data.dificultad || 'Fácil',
-      hitos: toJsonInput(data.hitos),
-      consejos: toJsonInput(data.consejos),
-      tiemposParada: toJsonInput(data.tiemposParada),
-      mapaImagen: data.mapaImagen,
-      destacada: data.destacada ?? false,
-      activo: data.activo ?? true,
-      orden: data.orden ?? 0,
+      descripcion: limpio.descripcion,
+      color: limpio.color || '#E63946',
+      poiIds: limpio.poiIds || [],
+      duracionEstimada: limpio.duracionEstimada,
+      distanciaKm: limpio.distanciaKm ? Number(limpio.distanciaKm) : null,
+      dificultad: limpio.dificultad || 'Fácil',
+      hitos: toJsonInput(limpio.hitos),
+      consejos: toJsonInput(limpio.consejos),
+      tiemposParada: toJsonInput(limpio.tiemposParada),
+      mapaImagen: limpio.mapaImagen,
+      destacada: limpio.destacada ?? false,
+      activo: limpio.activo ?? true,
+      orden: limpio.orden ?? 0,
     },
     create: {
       id,
       slug,
-      nombre: data.nombre || 'Nueva Ruta',
-      descripcion: data.descripcion || '',
-      color: data.color || '#E63946',
-      poiIds: data.poiIds || [],
-      duracionEstimada: data.duracionEstimada,
-      distanciaKm: data.distanciaKm ? Number(data.distanciaKm) : null,
-      dificultad: data.dificultad || 'Fácil',
-      hitos: toJsonInput(data.hitos) ?? [],
-      consejos: toJsonInput(data.consejos) ?? [],
-      tiemposParada: toJsonInput(data.tiemposParada) ?? {},
-      mapaImagen: data.mapaImagen,
-      destacada: data.destacada ?? false,
-      activo: data.activo ?? true,
-      orden: data.orden ?? 0,
+      nombre: limpio.nombre || 'Nueva Ruta',
+      descripcion: limpio.descripcion || '',
+      color: limpio.color || '#E63946',
+      poiIds: limpio.poiIds || [],
+      duracionEstimada: limpio.duracionEstimada,
+      distanciaKm: limpio.distanciaKm ? Number(limpio.distanciaKm) : null,
+      dificultad: limpio.dificultad || 'Fácil',
+      hitos: toJsonInput(limpio.hitos) ?? [],
+      consejos: toJsonInput(limpio.consejos) ?? [],
+      tiemposParada: toJsonInput(limpio.tiemposParada) ?? {},
+      mapaImagen: limpio.mapaImagen,
+      destacada: limpio.destacada ?? false,
+      activo: limpio.activo ?? true,
+      orden: limpio.orden ?? 0,
     },
   });
 
   invalidarContenidoPublico();
-  return result;
+  return exito(result as unknown as TourRoute);
 }
 
-export async function deleteTourRoute(id: string) {
-  await requireRole(['ADMIN']);
-  await prisma.tourRoute.delete({ where: { id } });
+export async function deleteTourRoute(id: string): Promise<Resultado<true>> {
+  const sesion = await sesionConRol(['ADMIN']);
+  if (!sesion.ok) return sesion;
+
+  try {
+    await prisma.tourRoute.delete({ where: { id } });
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return fallo('NO_ENCONTRADO', 'Esa ruta ya no existe: alguien la eliminó antes.');
+    }
+    throw error;
+  }
+
   invalidarContenidoPublico();
-  return true;
+  return exito(true);
 }
 
-export async function updateTourRouteStops(routeId: string, poiIds: string[]) {
-  await assertAuthorized();
-  await prisma.tourRoute.update({
-    where: { id: routeId },
-    data: { poiIds },
-  });
+export async function updateTourRouteStops(
+  routeId: string,
+  poiIds: string[]
+): Promise<Resultado<true>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+
+  const validado = OrdenSchema.safeParse(poiIds);
+  if (!validado.success) {
+    return fallo('VALIDACION', 'La lista de paradas que llegó no es válida.');
+  }
+
+  try {
+    await prisma.tourRoute.update({
+      where: { id: routeId },
+      data: { poiIds: validado.data },
+    });
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return fallo('NO_ENCONTRADO', 'Esa ruta ya no existe. Recarga la página.');
+    }
+    throw error;
+  }
+
   invalidarContenidoPublico();
+  return exito(true);
 }

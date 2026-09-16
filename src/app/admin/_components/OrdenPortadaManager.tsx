@@ -37,6 +37,7 @@ import type {
   UserRole,
 } from '@/lib/types';
 import { updateEntityOrder } from '../actions';
+import { esProblemaDeSesion } from '@/lib/resultado';
 import type { ToastFn } from '../_types';
 
 /** Lo mínimo que necesita esta pantalla de cualquiera de los cuatro catastros. */
@@ -166,15 +167,25 @@ export function OrdenPortadaManager({
     try {
       const ids = lista.map((i) => i.id);
       const res = await updateEntityOrder(tab, ids);
+
+      if (!res.ok) {
+        if (esProblemaDeSesion(res)) onAuthError?.();
+        showToast(res.mensaje, 'error');
+        return;
+      }
+
       onReordered?.(tab, ids);
+      const { actualizados } = res.data;
       showToast(
-        `Orden guardado: ${res.actualizados} ${res.actualizados === 1 ? 'ficha' : 'fichas'} en la portada`,
+        `Orden guardado: ${actualizados} ${actualizados === 1 ? 'ficha' : 'fichas'} en la portada`,
         'success'
       );
-    } catch (error: any) {
-      const msg = error?.message || 'No se pudo guardar el orden';
-      if (/no autorizado|sesión|sesion/i.test(msg) && onAuthError) onAuthError();
-      showToast(msg, 'error');
+    } catch (error) {
+      // El mensaje real de una excepcion de server action no llega al navegador
+      // en produccion (ver src/lib/resultado.ts): se registra y se avisa en
+      // terminos que el funcionario pueda entender.
+      console.error('Error inesperado al guardar el orden de la portada:', error);
+      showToast('No pudimos guardar el orden. Vuelve a intentarlo en unos segundos.', 'error');
     } finally {
       setGuardando(false);
     }

@@ -58,3 +58,6 @@ docs/
 
 # Documentos de auditoria: material de trabajo interno, no parte del entregable
 AUDITORIA_*.md
+
+# Credenciales del hosting: nunca al repo ni al servidor
+.cpanel.env
