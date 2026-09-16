@@ -6,12 +6,12 @@ import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls } from '../Field';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import {
-  LocationField,
   CommaSeparatedField,
   MediaFields,
   HorarioField,
   ActivoToggle,
 } from './common';
+import { LocationField } from '@/components/campos';
 
 const CATEGORIA_OPTIONS = [
   { value: 'cultural', label: 'Cultural' },

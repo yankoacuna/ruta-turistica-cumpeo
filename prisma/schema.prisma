@@ -40,8 +40,6 @@ model Restaurant {
   propietario      String?  // nombre del dueño (desde catastro)
   coordenadas      Json
   direccion        String?
-  telefono         String?  // Ej: "+56 9 6507 5887"
-  whatsapp         String?  // Ej: "+56 9 6507 5887"
   horario          Json?
   mediosPago       Json     @default("[]") // array de strings, ej. ["Efectivo", "Débito", "Crédito"]
   tags             Json     @default("[]") // array de strings
@@ -63,8 +61,6 @@ model Accommodation {
   descripcion      String
   coordenadas      Json
   direccion        String?
-  telefono         String?
-  whatsapp         String?
   servicios        Json     @default("[]") // array de strings
   imagenPrincipal  String?
   galeria          Json     @default("[]") // array de strings

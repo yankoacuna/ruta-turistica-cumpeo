@@ -4,7 +4,8 @@ import { CumpeoEvent } from '@/lib/types';
 import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls } from '../Field';
 import { SearchableSelect } from '@/components/SearchableSelect';
-import { LocationField, CommaSeparatedField, MediaFields } from './common';
+import { CommaSeparatedField, MediaFields } from './common';
+import { LocationField } from '@/components/campos';
 
 const TIPO_OPTIONS = [
   { value: 'fiestas-religiosas', label: 'Fiestas Religiosas' },

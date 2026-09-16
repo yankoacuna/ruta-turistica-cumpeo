@@ -77,7 +77,7 @@ export const ENTIDADES: Record<TipoEntidad, DescriptorEntidad> = {
     etiqueta: 'restaurante',
     campos: [
       'nombre', 'tipo', 'descripcion', 'especialidad', 'propietario', 'coordenadas',
-      'direccion', 'telefono', 'whatsapp', 'horario', { key: 'mediosPago', coalesce: [] },
+      'direccion', 'horario', { key: 'mediosPago', coalesce: [] },
       { key: 'tags', coalesce: [] }, 'imagenPrincipal', { key: 'galeria', coalesce: [] },
       'menuUrl', 'contacto', { key: 'activo', coalesce: true },
     ],
@@ -91,7 +91,7 @@ export const ENTIDADES: Record<TipoEntidad, DescriptorEntidad> = {
     etiqueta: 'alojamiento',
     campos: [
       'nombre', 'tipo', 'propietario', 'descripcion', 'coordenadas', 'direccion',
-      'telefono', 'whatsapp', { key: 'servicios', coalesce: [] }, 'imagenPrincipal',
+      { key: 'servicios', coalesce: [] }, 'imagenPrincipal',
       { key: 'galeria', coalesce: [] }, 'contacto', { key: 'activo', coalesce: true },
     ],
     createDefaults: { nombre: 'Nuevo Alojamiento', descripcion: '', coordenadas: CENTRO_CUMPEO },

@@ -107,8 +107,6 @@ export const RestauranteSchema = z.object({
   especialidad: texto(140).nullable().optional(),
   propietario: texto(140).nullable().optional(),
   coordenadas: CoordenadasSchema.optional(),
-  telefono: texto(40).nullable().optional(),
-  whatsapp: texto(40).nullable().optional(),
   horario: horarioFlexible.optional(),
   mediosPago: listaDeTextos(20).optional(),
   tags: listaDeTextos(20).optional(),
@@ -123,8 +121,6 @@ export const AlojamientoSchema = z.object({
   propietario: texto(140).nullable().optional(),
   descripcion: texto(4000).optional(),
   coordenadas: CoordenadasSchema.optional(),
-  telefono: texto(40).nullable().optional(),
-  whatsapp: texto(40).nullable().optional(),
   servicios: listaDeTextos(30).optional(),
   contacto: ContactoSchema.nullable().optional(),
 });

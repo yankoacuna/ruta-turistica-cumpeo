@@ -15,41 +15,27 @@ interface ContactoData {
 
 interface ContactoSectionProps {
   contacto?: ContactoData | null;
-  telefono?: string | null;
-  whatsapp?: string | null;
-  onChange: (updated: {
-    contacto: ContactoData;
-    telefono?: string;
-    whatsapp?: string;
-  }) => void;
+  onChange: (contacto: ContactoData) => void;
   instagramPlaceholder?: string;
   facebookPlaceholder?: string;
 }
 
 export function ContactoSection({
   contacto = {},
-  telefono = '',
-  whatsapp = '',
   onChange,
   instagramPlaceholder = 'nombre_local',
   facebookPlaceholder = 'NombreDelLocal',
 }: ContactoSectionProps) {
   const currentContacto: ContactoData = (contacto as ContactoData) || {};
-  const currentTelefono = telefono || currentContacto.telefono || '';
-  const currentWhatsapp = whatsapp || currentContacto.whatsapp || '';
+  const currentTelefono = currentContacto.telefono || '';
+  const currentWhatsapp = currentContacto.whatsapp || '';
 
   const handleTelefonoChange = (value: string) => {
-    onChange({
-      telefono: value,
-      contacto: { ...currentContacto, telefono: value },
-    });
+    onChange({ ...currentContacto, telefono: value });
   };
 
   const handleWhatsappChange = (value: string) => {
-    onChange({
-      whatsapp: value,
-      contacto: { ...currentContacto, whatsapp: value },
-    });
+    onChange({ ...currentContacto, whatsapp: value });
   };
 
   /**
@@ -65,11 +51,7 @@ export function ContactoSection({
       .split(/[/?#]/)[0];
 
   const handleInstagramChange = (value: string) => {
-    onChange({
-      telefono: currentTelefono,
-      whatsapp: currentWhatsapp,
-      contacto: { ...currentContacto, instagram: sanitizeInstagram(value) },
-    });
+    onChange({ ...currentContacto, instagram: sanitizeInstagram(value) });
   };
 
   /** Igual que Instagram, pero Facebook no usa "@": solo se limpia el link o dominio. */
@@ -82,19 +64,11 @@ export function ContactoSection({
       .split(/[/?#]/)[0];
 
   const handleFacebookChange = (value: string) => {
-    onChange({
-      telefono: currentTelefono,
-      whatsapp: currentWhatsapp,
-      contacto: { ...currentContacto, facebook: sanitizeFacebook(value) },
-    });
+    onChange({ ...currentContacto, facebook: sanitizeFacebook(value) });
   };
 
   const handleWebChange = (value: string) => {
-    onChange({
-      telefono: currentTelefono,
-      whatsapp: currentWhatsapp,
-      contacto: { ...currentContacto, web: value },
-    });
+    onChange({ ...currentContacto, web: value });
   };
 
   return (

@@ -48,6 +48,16 @@ export interface Destination {
   updatedAt?: string | Date;
 }
 
+/** Datos de contacto de un restaurante o alojamiento: única fuente de verdad para su teléfono/WhatsApp. */
+export interface ContactoInfo {
+  telefono?: string;
+  whatsapp?: string;
+  email?: string;
+  web?: string;
+  instagram?: string;
+  facebook?: string;
+}
+
 export interface Accommodation {
   id: string;
   nombre: string;
@@ -56,16 +66,7 @@ export interface Accommodation {
   descripcion: string;
   coordenadas: Coordinates;
   direccion?: string | null;
-  telefono?: string | null;
-  whatsapp?: string | null;
-  contacto?: {
-    telefono?: string;
-    whatsapp?: string;
-    email?: string;
-    web?: string;
-    instagram?: string;
-    facebook?: string;
-  } | null;
+  contacto?: ContactoInfo | null;
   servicios?: string[];
   imagenPrincipal?: string | null;
   galeria?: string[];
@@ -85,16 +86,7 @@ export interface Restaurant {
   descripcion: string;
   coordenadas: Coordinates;
   direccion?: string | null;
-  telefono?: string | null;
-  whatsapp?: string | null;
-  contacto?: {
-    telefono?: string;
-    whatsapp?: string;
-    email?: string;
-    web?: string;
-    instagram?: string;
-    facebook?: string;
-  } | null;
+  contacto?: ContactoInfo | null;
   mediosPago?: string[];      // desde catastro: ["Efectivo", "Débito"]
   horario?: Horario | string | null;
   imagenPrincipal?: string | null;

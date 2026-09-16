@@ -4,13 +4,13 @@ import { ModalWrapper, ModalActions } from '../ModalWrapper';
 import { Field, inputCls, textareaCls } from '../Field';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import {
-  LocationField,
   ContactoSection,
   ActivoToggle,
   CommaSeparatedField,
   MediaFields,
   PropietarioField,
 } from './common';
+import { LocationField } from '@/components/campos';
 
 const TIPO_OPTIONS = [
   { value: 'Cabaña', label: 'Cabaña' },
@@ -111,11 +111,7 @@ export function AlojamientoModal({
         {/* Contacto */}
         <ContactoSection
           contacto={editing.contacto}
-          telefono={editing.telefono}
-          whatsapp={editing.whatsapp}
-          onChange={({ contacto, telefono, whatsapp }) =>
-            set({ contacto, telefono, whatsapp })
-          }
+          onChange={(contacto) => set({ contacto })}
           instagramPlaceholder="nombre_hospedaje"
           facebookPlaceholder="NombreDelHospedaje"
         />

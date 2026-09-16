@@ -16,7 +16,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { SolicitudTipo, Coordinates } from '@/lib/types';
-import { LocationField } from '@/app/admin/_components/modals/common';
+import { LocationField } from '@/components/campos';
 
 const MAX_FOTOS = 3;
 
