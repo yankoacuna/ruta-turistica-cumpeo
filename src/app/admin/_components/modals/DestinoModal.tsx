@@ -24,6 +24,7 @@ const CATEGORIA_OPTIONS = [
 
 interface DestinoModalProps {
   editing: Partial<Destination>;
+  errores?: Record<string, string>;
   onChange: (updated: Partial<Destination>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
@@ -32,6 +33,7 @@ interface DestinoModalProps {
 
 export function DestinoModal({
   editing,
+  errores,
   onChange,
   onSubmit,
   onClose,
@@ -54,7 +56,7 @@ export function DestinoModal({
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
         {/* Nombre + Categoría + Estado */}
         <div id="tour-dest-nombre" className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <Field label="Nombre del Destino" required>
+          <Field label="Nombre del Destino" required error={errores?.nombre}>
             <input
               required
               className={inputCls}
@@ -66,7 +68,7 @@ export function DestinoModal({
               }}
             />
           </Field>
-          <Field label="Categoría" required>
+          <Field label="Categoría" required error={errores?.categoria}>
             <SearchableSelect
               value={editing.categoria || ''}
               onChange={(v) => set({ categoria: v as Destination['categoria'] })}
@@ -82,7 +84,7 @@ export function DestinoModal({
 
         {/* Descripciones */}
         <div id="tour-dest-desc" className="flex flex-col gap-4">
-          <Field label="Descripción Corta" required>
+          <Field label="Descripción Corta" required error={errores?.descripcionCorta}>
             <textarea
               required
               className={textareaCls}
@@ -91,7 +93,7 @@ export function DestinoModal({
               onChange={(e) => set({ descripcionCorta: e.target.value })}
             />
           </Field>
-          <Field label="Descripción Completa">
+          <Field label="Descripción Completa" error={errores?.descripcionLarga}>
             <textarea
               className={textareaCls}
               style={{ minHeight: '110px' }}
@@ -100,7 +102,7 @@ export function DestinoModal({
               onChange={(e) => set({ descripcionLarga: e.target.value })}
             />
           </Field>
-          <Field label="Historia / Contexto">
+          <Field label="Historia / Contexto" error={errores?.historia}>
             <textarea
               className={textareaCls}
               placeholder="Historia e información histórica del lugar…"
@@ -111,7 +113,7 @@ export function DestinoModal({
         </div>
 
         {/* Duración */}
-        <Field label="Duración Sugerida">
+        <Field label="Duración Sugerida" error={errores?.duracionVisita}>
           <input
             className={inputCls}
             placeholder="Ej: 45 minutos"
@@ -134,7 +136,7 @@ export function DestinoModal({
         <HorarioField value={editing.horario} onChange={(horario) => set({ horario })} />
 
         {/* Cómo llegar */}
-        <Field label="Cómo Llegar">
+        <Field label="Cómo Llegar" error={errores?.comoLlegar}>
           <textarea
             className={textareaCls}
             style={{ minHeight: '70px' }}

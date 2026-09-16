@@ -29,6 +29,7 @@ const TIPO_LABELS: Record<string, string> = {
 
 interface RutaModalProps {
   editing: Partial<TourRoute>;
+  errores?: Record<string, string>;
   availablePois: POI[];
   onChange: (updated: Partial<TourRoute>) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -105,6 +106,7 @@ function AutoCalcTrasladoButton({
 
 export function RutaModal({
   editing,
+  errores,
   availablePois,
   onChange,
   onSubmit,
@@ -185,7 +187,7 @@ export function RutaModal({
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
         {/* Nombre del circuito */}
         <div id="tour-ruta-nombre">
-          <Field label="Nombre del Circuito / Ruta" required>
+          <Field label="Nombre del Circuito / Ruta" required error={errores?.nombre}>
             <input
               required
               className={inputCls}
@@ -201,7 +203,7 @@ export function RutaModal({
 
         {/* Descripción */}
         <div id="tour-ruta-desc">
-          <Field label="Descripción de la Ruta" required>
+          <Field label="Descripción de la Ruta" required error={errores?.descripcion}>
             <textarea
               required
               rows={3}
@@ -215,7 +217,7 @@ export function RutaModal({
 
         {/* Métricas y Color */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Field label="Color Distintivo">
+          <Field label="Color Distintivo" error={errores?.color}>
             <div className="flex items-center gap-2">
               <input
                 type="color"

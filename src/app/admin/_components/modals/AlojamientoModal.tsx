@@ -23,6 +23,7 @@ const TIPO_OPTIONS = [
 
 interface AlojamientoModalProps {
   editing: Partial<Accommodation>;
+  errores?: Record<string, string>;
   onChange: (updated: Partial<Accommodation>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
@@ -31,6 +32,7 @@ interface AlojamientoModalProps {
 
 export function AlojamientoModal({
   editing,
+  errores,
   onChange,
   onSubmit,
   onClose,
@@ -46,7 +48,7 @@ export function AlojamientoModal({
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {/* Nombre + Tipo + Estado Activo */}
         <div id="tour-aloj-nombre" className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <Field label="Nombre" required>
+          <Field label="Nombre" required error={errores?.nombre}>
             <input
               required
               className={inputCls}
@@ -55,7 +57,7 @@ export function AlojamientoModal({
               onChange={(e) => set({ nombre: e.target.value })}
             />
           </Field>
-          <Field label="Tipo de Alojamiento">
+          <Field label="Tipo de Alojamiento" error={errores?.tipo}>
             <SearchableSelect
               value={editing.tipo || ''}
               onChange={(v) => set({ tipo: v })}
@@ -79,7 +81,7 @@ export function AlojamientoModal({
 
         {/* Descripción + Servicios */}
         <div id="tour-aloj-desc" className="flex flex-col gap-4">
-          <Field label="Descripción" required>
+          <Field label="Descripción" required error={errores?.descripcion}>
             <textarea
               required
               className={textareaCls}

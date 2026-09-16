@@ -15,6 +15,7 @@ const TIPO_OPTIONS = [
 
 interface EventoModalProps {
   editing: Partial<CumpeoEvent>;
+  errores?: Record<string, string>;
   onChange: (updated: Partial<CumpeoEvent>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
@@ -23,6 +24,7 @@ interface EventoModalProps {
 
 export function EventoModal({
   editing,
+  errores,
   onChange,
   onSubmit,
   onClose,
@@ -38,7 +40,7 @@ export function EventoModal({
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {/* Nombre + Tipo + Fecha */}
         <div id="tour-evento-nombre" className="flex flex-col gap-4">
-          <Field label="Nombre del Evento" required>
+          <Field label="Nombre del Evento" required error={errores?.nombre}>
             <input
               required
               className={inputCls}
@@ -49,7 +51,7 @@ export function EventoModal({
           </Field>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Tipo de Evento">
+            <Field label="Tipo de Evento" error={errores?.tipo}>
               <SearchableSelect
                 value={editing.tipo || ''}
                 onChange={(v) => set({ tipo: v })}
@@ -57,7 +59,7 @@ export function EventoModal({
                 options={TIPO_OPTIONS}
               />
             </Field>
-            <Field label="Fecha" hint="Ej: 1 de enero / Fines de semana">
+            <Field label="Fecha" hint="Ej: 1 de enero / Fines de semana" error={errores?.fecha}>
               <div className="relative">
                 <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
                 <input
@@ -73,7 +75,7 @@ export function EventoModal({
 
         {/* Descripciones */}
         <div id="tour-evento-desc" className="flex flex-col gap-4">
-          <Field label="Descripción" required>
+          <Field label="Descripción" required error={errores?.descripcion}>
             <textarea
               required
               className={textareaCls}
@@ -83,7 +85,7 @@ export function EventoModal({
             />
           </Field>
 
-          <Field label="Descripción Detallada" hint="Información completa, historia, qué esperar">
+          <Field label="Descripción Detallada" hint="Información completa, historia, qué esperar" error={errores?.descripcionLarga}>
             <textarea
               className={textareaCls}
               rows={5}

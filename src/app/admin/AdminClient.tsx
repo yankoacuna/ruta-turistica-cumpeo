@@ -526,7 +526,6 @@ export default function AdminClient({
         <AdminTopBar
           activeSection={activeSection}
           currentUser={session}
-          onChangePassword={() => setIsChangePasswordOpen(true)}
           onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           onLogout={handleLogout}
           onStartTour={handleStartTour}
@@ -551,7 +550,6 @@ export default function AdminClient({
               alojamientos={alojamientos.alojamientos}
               eventos={eventos.eventos}
               rutas={rutas.rutas}
-              usersCount={users.length}
               currentUser={session}
               onNavigate={setActiveSection}
               onNewDestino={canEdit ? destinos.openNew : undefined}
@@ -714,6 +712,7 @@ export default function AdminClient({
           {destinos.editing && (
             <DestinoModal
               editing={destinos.editing}
+              errores={destinos.erroresCampo}
               onChange={destinos.setEditing}
               onSubmit={destinos.handleSave}
               onClose={destinos.close}
@@ -723,6 +722,7 @@ export default function AdminClient({
           {restaurantes.editing && (
             <RestauranteModal
               editing={restaurantes.editing}
+              errores={restaurantes.erroresCampo}
               onChange={restaurantes.setEditing}
               onSubmit={restaurantes.handleSave}
               onClose={restaurantes.close}
@@ -732,6 +732,7 @@ export default function AdminClient({
           {alojamientos.editing && (
             <AlojamientoModal
               editing={alojamientos.editing}
+              errores={alojamientos.erroresCampo}
               onChange={alojamientos.setEditing}
               onSubmit={alojamientos.handleSave}
               onClose={alojamientos.close}
@@ -741,6 +742,7 @@ export default function AdminClient({
           {eventos.editing && (
             <EventoModal
               editing={eventos.editing}
+              errores={eventos.erroresCampo}
               onChange={eventos.setEditing}
               onSubmit={eventos.handleSave}
               onClose={eventos.close}
@@ -750,6 +752,7 @@ export default function AdminClient({
           {rutas.editing && (
             <RutaModal
               editing={rutas.editing}
+              errores={rutas.erroresCampo}
               availablePois={allPois}
               onChange={rutas.setEditing}
               onSubmit={rutas.handleSave}

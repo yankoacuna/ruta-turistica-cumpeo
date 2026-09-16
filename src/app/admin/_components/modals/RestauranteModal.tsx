@@ -25,6 +25,7 @@ const TIPO_OPTIONS = [
 
 interface RestauranteModalProps {
   editing: Partial<Restaurant>;
+  errores?: Record<string, string>;
   onChange: (updated: Partial<Restaurant>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
@@ -33,6 +34,7 @@ interface RestauranteModalProps {
 
 export function RestauranteModal({
   editing,
+  errores,
   onChange,
   onSubmit,
   onClose,
@@ -49,7 +51,7 @@ export function RestauranteModal({
         {/* Nombre + Estado Activo */}
         <div id="tour-rest-nombre" className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div className="md:col-span-2">
-            <Field label="Nombre" required>
+            <Field label="Nombre" required error={errores?.nombre}>
               <input
                 required
                 className={inputCls}
@@ -68,7 +70,7 @@ export function RestauranteModal({
 
         {/* Tipo + Propietario */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Tipo de Local">
+          <Field label="Tipo de Local" error={errores?.tipo}>
             <SearchableSelect
               value={editing.tipo || ''}
               onChange={(v) => set({ tipo: v })}
@@ -83,7 +85,7 @@ export function RestauranteModal({
         </div>
 
         {/* Especialidad (Plato estrella eliminado) */}
-        <Field label="Especialidad">
+        <Field label="Especialidad" error={errores?.especialidad}>
           <input
             className={inputCls}
             placeholder="Ej: Cocina típica maulina, carnes a la brasa, repostería casera"
@@ -94,7 +96,7 @@ export function RestauranteModal({
 
         {/* Descripción */}
         <div id="tour-rest-desc">
-          <Field label="Descripción" required>
+          <Field label="Descripción" required error={errores?.descripcion}>
             <textarea
               required
               className={textareaCls}
@@ -154,7 +156,7 @@ export function RestauranteModal({
         />
 
         {/* URL menú */}
-        <Field label="URL del Menú" hint="Enlace a carta digital o PDF">
+        <Field label="URL del Menú" hint="Enlace a carta digital o PDF" error={errores?.menuUrl}>
           <input
             className={inputCls}
             placeholder="https://..."
