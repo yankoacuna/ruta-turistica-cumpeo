@@ -2,14 +2,27 @@
 
 import { prisma } from '@/lib/prisma';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
-import { requireRole } from './authActions';
+import { sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
 
 export async function bulkImportEntitiesAction(
   entityType: 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos',
   items: any[],
   mode: 'upsert' | 'create_only' = 'upsert'
-) {
-  await requireRole(['ADMIN', 'EDITOR']);
+): Promise<
+  Resultado<{
+    createdCount: number;
+    updatedCount: number;
+    skippedCount: number;
+    totalProcessed: number;
+  }>
+> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+
+  if (!Array.isArray(items)) {
+    return fallo('VALIDACION', 'No recibimos registros para importar.');
+  }
 
   let createdCount = 0;
   let updatedCount = 0;
@@ -210,11 +223,10 @@ export async function bulkImportEntitiesAction(
 
   invalidarContenidoPublico();
 
-  return {
-    success: true,
+  return exito({
     createdCount,
     updatedCount,
     skippedCount,
     totalProcessed: items.length,
-  };
+  });
 }

@@ -12,6 +12,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 import {
   ChevronDown,
   ChevronRight,
@@ -124,19 +125,27 @@ export function SiteTextsManager({
     );
   };
 
-  const manejarError = (error: any) => {
-    const msg = error?.message || 'Ocurrió un error al guardar';
-    if (/no autorizado|sesión|sesion/i.test(msg) && onAuthError) onAuthError();
-    showToast(msg, 'error');
+  /** Fallo previsto por la acción: la sesión caída cambia la pantalla, el resto avisa. */
+  const avisarFallo = (res: ResultadoError) => {
+    if (esProblemaDeSesion(res)) onAuthError?.();
+    showToast(res.mensaje, 'error');
+  };
+
+  const manejarError = (contexto: string, error: unknown) => {
+    console.error(contexto, error);
+    showToast('No pudimos completar la acción. Vuelve a intentarlo.', 'error');
   };
 
   const guardarPendientes = async () => {
     if (pendientes.length === 0) return;
     setGuardando(true);
     try {
-      const resultados = await saveSiteTexts(
-        pendientes.map(([key, value]) => ({ key, value }))
-      );
+      const res = await saveSiteTexts(pendientes.map(([key, value]) => ({ key, value })));
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
+      const resultados = res.data;
       setGuardados((prev) => {
         const copia = { ...prev };
         resultados.forEach((r) => {
@@ -151,7 +160,7 @@ export function SiteTextsManager({
         'success'
       );
     } catch (error) {
-      manejarError(error);
+      manejarError('Error inesperado al guardar los textos:', error);
     } finally {
       setGuardando(false);
     }
@@ -165,7 +174,11 @@ export function SiteTextsManager({
     if (!ok) return;
     setGuardando(true);
     try {
-      await resetSiteText(def.key);
+      const res = await resetSiteText(def.key);
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
       setGuardados((prev) => {
         const copia = { ...prev };
         delete copia[def.key];
@@ -178,7 +191,7 @@ export function SiteTextsManager({
       });
       showToast('Texto restaurado al original', 'info');
     } catch (error) {
-      manejarError(error);
+      manejarError('Error inesperado al restaurar el texto:', error);
     } finally {
       setGuardando(false);
     }
@@ -191,11 +204,17 @@ export function SiteTextsManager({
     }
     setCargandoHistorial(true);
     try {
-      const items = await getSiteTextRevisions(key);
-      setHistorial({ key, items });
-      if (items.length === 0) showToast('Este texto todavía no tiene cambios registrados', 'info');
+      const res = await getSiteTextRevisions(key);
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
+      setHistorial({ key, items: res.data });
+      if (res.data.length === 0) {
+        showToast('Este texto todavía no tiene cambios registrados', 'info');
+      }
     } catch (error) {
-      manejarError(error);
+      manejarError('Error inesperado al cargar el historial:', error);
     } finally {
       setCargandoHistorial(false);
     }
@@ -210,21 +229,26 @@ export function SiteTextsManager({
     setGuardando(true);
     try {
       const res = await restoreSiteTextRevision(revision.id);
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
+      const restaurado = res.data;
       setGuardados((prev) => {
         const copia = { ...prev };
-        if (res.record) copia[res.key] = res.record;
-        else delete copia[res.key];
+        if (restaurado.record) copia[restaurado.key] = restaurado.record;
+        else delete copia[restaurado.key];
         return copia;
       });
       setBorradores((prev) => {
         const copia = { ...prev };
-        delete copia[res.key];
+        delete copia[restaurado.key];
         return copia;
       });
       showToast('Versión restaurada', 'success');
       setHistorial(null);
     } catch (error) {
-      manejarError(error);
+      manejarError('Error inesperado al restaurar la versión:', error);
     } finally {
       setGuardando(false);
     }

@@ -166,22 +166,22 @@ export function BulkImportWizard({
     startTransition(async () => {
       try {
         const res = await bulkImportEntitiesAction(entityType, validItemsToImport, importMode);
-        if (res.success) {
-          setImportResult({
-            success: true,
-            createdCount: res.createdCount,
-            updatedCount: res.updatedCount,
-            skippedCount: res.skippedCount,
-          });
-          setShowConfirmModal(false);
-          showToast(
-            `¡Carga masiva completada! ${res.createdCount} creados, ${res.updatedCount} actualizados.`,
-            'success'
-          );
-          if (onSuccess) onSuccess();
+        if (!res.ok) {
+          showToast(res.mensaje, 'error');
+          return;
         }
-      } catch (err: any) {
-        showToast(`Error en la carga masiva: ${err.message}`, 'error');
+
+        const { createdCount, updatedCount, skippedCount } = res.data;
+        setImportResult({ success: true, createdCount, updatedCount, skippedCount });
+        setShowConfirmModal(false);
+        showToast(
+          `¡Carga masiva completada! ${createdCount} creados, ${updatedCount} actualizados.`,
+          'success'
+        );
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        console.error('Error inesperado en la carga masiva:', err);
+        showToast('No pudimos completar la carga masiva. Vuelve a intentarlo.', 'error');
       }
     });
   };

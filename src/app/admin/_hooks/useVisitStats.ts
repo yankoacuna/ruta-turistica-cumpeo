@@ -40,12 +40,12 @@ export function useVisitStats(presetInicial: VisitRangoPreset = '30d'): UseVisit
       setCargando(true);
       setError(false);
       try {
-        const data = await getVisitStatsAdmin(rango, desdeYmd || undefined, hastaYmd || undefined);
-        if (!data) {
+        const res = await getVisitStatsAdmin(rango, desdeYmd || undefined, hastaYmd || undefined);
+        if (!res.ok) {
           setError(true);
           setStats(null);
         } else {
-          setStats(data);
+          setStats(res.data);
         }
       } catch (e) {
         console.error('Error cargando visitas:', e);

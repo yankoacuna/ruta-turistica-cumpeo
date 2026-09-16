@@ -182,3 +182,38 @@ export const RutaSchema = z.object({
 
 /** Ids en el orden en que deben quedar los catastros de la portada. */
 export const OrdenSchema = z.array(texto(140)).max(500);
+
+// ─── USUARIOS DEL PANEL ───────────────────────────────────────────────────────
+
+/**
+ * Validación de correo deliberadamente laxa, igual que en el formulario
+ * público: una expresión estricta rechaza direcciones válidas y deja fuera a
+ * una persona real.
+ */
+const correo = () =>
+  z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(160)
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, 'Revisa el correo: no parece una dirección válida');
+
+export const RolSchema = z.enum(['ADMIN', 'EDITOR', 'LECTOR']);
+
+export const UsuarioNuevoSchema = z.object({
+  email: correo(),
+  nombre: texto(120).min(2, 'El nombre es obligatorio'),
+  role: RolSchema,
+});
+
+export const UsuarioEdicionSchema = z.object({
+  nombre: texto(120).min(2, 'El nombre es obligatorio').optional(),
+  role: RolSchema.optional(),
+  activo: z.boolean().optional(),
+  resetPassword: z.boolean().optional(),
+});
+
+export const CambioClaveSchema = z.object({
+  actual: z.string().min(1, 'Escribe tu contraseña actual'),
+  nueva: z.string().min(6, 'La nueva contraseña debe tener al menos 6 caracteres').max(200),
+});

@@ -2,10 +2,12 @@
 
 import { prisma } from '@/lib/prisma';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
-import { requireRole } from './authActions';
+import { sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
 
 export async function exportDatabaseBackup() {
-  await requireRole(['ADMIN']);
+  const sesion = await sesionConRol(['ADMIN']);
+  if (!sesion.ok) return sesion;
   const [
     destinations,
     restaurants,
@@ -24,7 +26,7 @@ export async function exportDatabaseBackup() {
     prisma.emergencyContact.findMany({ orderBy: { orden: 'asc' } }),
   ]);
 
-  return {
+  return exito({
     version: '1.2',
     exportDate: new Date().toISOString(),
     site: 'Turismo Cumpeo',
@@ -37,14 +39,15 @@ export async function exportDatabaseBackup() {
       tourRoutes,
       emergencyContacts,
     },
-  };
+  });
 }
 
-export async function restoreDatabaseBackup(backupData: any) {
-  await requireRole(['ADMIN']);
+export async function restoreDatabaseBackup(backupData: any): Promise<Resultado<true>> {
+  const sesion = await sesionConRol(['ADMIN']);
+  if (!sesion.ok) return sesion;
 
   if (!backupData?.data) {
-    throw new Error('Formato de copia de seguridad inválido');
+    return fallo('VALIDACION', 'El archivo no tiene el formato de una copia de seguridad.');
   }
 
   const { destinations, restaurants, accommodations, events, tourRoutes, emergencyContacts } =
@@ -117,5 +120,5 @@ export async function restoreDatabaseBackup(backupData: any) {
   }
 
   invalidarContenidoPublico();
-  return { success: true };
+  return exito(true);
 }

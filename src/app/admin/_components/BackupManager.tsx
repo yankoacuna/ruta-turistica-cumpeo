@@ -59,9 +59,13 @@ export function BackupManager({
   const handleExportJSON = async () => {
     try {
       setIsExporting(true);
-      const backup = await exportDatabaseBackup();
+      const res = await exportDatabaseBackup();
+      if (!res.ok) {
+        showToast(res.mensaje, 'error');
+        return;
+      }
 
-      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], {
         type: 'application/json',
       });
       const url = URL.createObjectURL(blob);
@@ -115,15 +119,21 @@ export function BackupManager({
     try {
       setIsRestoring(true);
       setRestoreStatus('Aplicando datos en la base de datos...');
-      await restoreDatabaseBackup(pendingBackupData);
+      const res = await restoreDatabaseBackup(pendingBackupData);
+      if (!res.ok) {
+        showToast(res.mensaje, 'error');
+        return;
+      }
 
       showToast('¡Copia de seguridad restaurada con éxito!', 'success');
       setRestoreStatus('Restauración completada. Recarga la página para ver los cambios actualizados.');
       setShowRestoreModal(false);
       setPendingBackupData(null);
-    } catch (err: any) {
-      showToast(`Error en la restauración: ${err.message}`, 'error');
-      setRestoreStatus(`Error: ${err.message}`);
+    } catch (err) {
+      console.error('Error inesperado al restaurar la copia de seguridad:', err);
+      const aviso = 'No pudimos completar la restauración. Vuelve a intentarlo.';
+      showToast(aviso, 'error');
+      setRestoreStatus(aviso);
     } finally {
       setIsRestoring(false);
     }

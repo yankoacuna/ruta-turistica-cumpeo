@@ -63,25 +63,29 @@ export default async function AdminPage() {
 
     if (session.role === 'ADMIN') {
       try {
-        initialUsers = await getAdminUsers();
+        const res = await getAdminUsers();
+        if (res.ok) initialUsers = res.data;
       } catch (e) {
         console.error('Error fetching initial users:', e);
       }
     }
 
     try {
-      initialSiteTexts = await getSiteTextsAdmin();
+      const res = await getSiteTextsAdmin();
+      if (res.ok) initialSiteTexts = res.data;
     } catch (e) {
       console.error('Error fetching site texts:', e);
     }
     try {
-      initialTheme = await getThemeConfigAdmin();
+      const res = await getThemeConfigAdmin();
+      if (res.ok) initialTheme = res.data;
     } catch (e) {
       console.error('Error fetching theme config:', e);
     }
     if (session.role === 'ADMIN') {
       try {
-        initialNotificaciones = await getNotificacionesAdmin();
+        const res = await getNotificacionesAdmin();
+        if (res.ok) initialNotificaciones = res.data;
       } catch (e) {
         console.error('Error fetching notificaciones config:', e);
       }

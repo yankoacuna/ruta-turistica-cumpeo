@@ -10,7 +10,8 @@
 
 import { prisma } from '@/lib/prisma';
 import { SolicitudRecord, SolicitudEstado, SolicitudTipo, Coordinates, Horario } from '@/lib/types';
-import { getAdminSession, requireRole } from './actions';
+import { sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
 
 const ESTADOS_VALIDOS: SolicitudEstado[] = [
   'NUEVA',
@@ -19,6 +20,10 @@ const ESTADOS_VALIDOS: SolicitudEstado[] = [
   'RECHAZADA',
   'PUBLICADA',
 ];
+
+/** Cualquier rol con sesión puede revisar la bandeja. */
+const ROLES_LECTURA = ['ADMIN', 'EDITOR', 'LECTOR'] as const;
+const ROLES_GESTION = ['ADMIN', 'EDITOR'] as const;
 
 /** Fila de la base a la forma que usa el panel. */
 function aRegistro(fila: Record<string, any>): SolicitudRecord {
@@ -38,20 +43,23 @@ function aRegistro(fila: Record<string, any>): SolicitudRecord {
  * Claro va a recibir decenas al año, no miles, y tenerlas en memoria permite
  * filtrar y buscar en el panel sin ida y vuelta al servidor.
  */
-export async function getSolicitudes(): Promise<SolicitudRecord[]> {
-  const session = await getAdminSession();
-  if (!session) return [];
+export async function getSolicitudes(): Promise<Resultado<SolicitudRecord[]>> {
+  const sesion = await sesionConRol([...ROLES_LECTURA]);
+  if (!sesion.ok) return sesion;
 
   const filas = await prisma.solicitud.findMany({ orderBy: { createdAt: 'desc' } });
-  return filas.map(aRegistro);
+  return exito(filas.map(aRegistro));
 }
 
 /** Cuántas están sin revisar: alimenta el contador rojo de la barra lateral. */
-export async function contarSolicitudesPendientes(): Promise<number> {
-  const session = await getAdminSession();
-  if (!session) return 0;
+export async function contarSolicitudesPendientes(): Promise<Resultado<number>> {
+  const sesion = await sesionConRol([...ROLES_LECTURA]);
+  if (!sesion.ok) return sesion;
 
-  return prisma.solicitud.count({ where: { estado: { in: ['NUEVA', 'EN_REVISION'] } } });
+  const total = await prisma.solicitud.count({
+    where: { estado: { in: ['NUEVA', 'EN_REVISION'] } },
+  });
+  return exito(total);
 }
 
 /**
@@ -62,25 +70,33 @@ export async function cambiarEstadoSolicitud(
   id: string,
   estado: SolicitudEstado,
   notaInterna?: string
-): Promise<SolicitudRecord> {
-  const session = await requireRole(['ADMIN', 'EDITOR']);
+): Promise<Resultado<SolicitudRecord>> {
+  const sesion = await sesionConRol([...ROLES_GESTION]);
+  if (!sesion.ok) return sesion;
 
   if (!ESTADOS_VALIDOS.includes(estado)) {
-    throw new Error('Estado no válido');
+    return fallo('VALIDACION', 'Ese estado no existe.', { estado: 'Estado no válido' });
   }
 
-  const actualizada = await prisma.solicitud.update({
-    where: { id },
-    data: {
-      estado,
-      notaInterna: notaInterna !== undefined ? notaInterna.trim().slice(0, 1000) || null : undefined,
-      revisadoPorId: session.id,
-      revisadoPorNombre: session.nombre,
-      revisadoEn: new Date(),
-    },
-  });
-
-  return aRegistro(actualizada);
+  try {
+    const actualizada = await prisma.solicitud.update({
+      where: { id },
+      data: {
+        estado,
+        notaInterna:
+          notaInterna !== undefined ? notaInterna.trim().slice(0, 1000) || null : undefined,
+        revisadoPorId: sesion.data.id,
+        revisadoPorNombre: sesion.data.nombre,
+        revisadoEn: new Date(),
+      },
+    });
+    return exito(aRegistro(actualizada));
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return fallo('NO_ENCONTRADO', 'Esa solicitud ya no existe.');
+    }
+    throw error;
+  }
 }
 
 /**
@@ -93,27 +109,43 @@ export async function marcarSolicitudPublicada(
   id: string,
   fichaId: string,
   fichaTipo: string
-): Promise<SolicitudRecord> {
-  const session = await requireRole(['ADMIN', 'EDITOR']);
+): Promise<Resultado<SolicitudRecord>> {
+  const sesion = await sesionConRol([...ROLES_GESTION]);
+  if (!sesion.ok) return sesion;
 
-  const actualizada = await prisma.solicitud.update({
-    where: { id },
-    data: {
-      estado: 'PUBLICADA',
-      publicadoComoId: fichaId,
-      publicadoComoTipo: fichaTipo,
-      revisadoPorId: session.id,
-      revisadoPorNombre: session.nombre,
-      revisadoEn: new Date(),
-    },
-  });
-
-  return aRegistro(actualizada);
+  try {
+    const actualizada = await prisma.solicitud.update({
+      where: { id },
+      data: {
+        estado: 'PUBLICADA',
+        publicadoComoId: fichaId,
+        publicadoComoTipo: fichaTipo,
+        revisadoPorId: sesion.data.id,
+        revisadoPorNombre: sesion.data.nombre,
+        revisadoEn: new Date(),
+      },
+    });
+    return exito(aRegistro(actualizada));
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return fallo('NO_ENCONTRADO', 'Esa solicitud ya no existe.');
+    }
+    throw error;
+  }
 }
 
 /** Borra una solicitud. Solo ADMIN: es lo único que no tiene vuelta atrás. */
-export async function eliminarSolicitud(id: string): Promise<boolean> {
-  await requireRole(['ADMIN']);
-  await prisma.solicitud.delete({ where: { id } });
-  return true;
+export async function eliminarSolicitud(id: string): Promise<Resultado<true>> {
+  const sesion = await sesionConRol(['ADMIN']);
+  if (!sesion.ok) return sesion;
+
+  try {
+    await prisma.solicitud.delete({ where: { id } });
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return fallo('NO_ENCONTRADO', 'Esa solicitud ya no existe.');
+    }
+    throw error;
+  }
+  return exito(true);
 }

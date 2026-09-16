@@ -94,7 +94,7 @@ export function AdminDashboard({
   const [solicitudesPendientes, setSolicitudesPendientes] = useState(0);
   useEffect(() => {
     contarSolicitudesPendientes()
-      .then(setSolicitudesPendientes)
+      .then((res) => setSolicitudesPendientes(res.ok ? res.data : 0))
       .catch(() => setSolicitudesPendientes(0));
   }, []);
 

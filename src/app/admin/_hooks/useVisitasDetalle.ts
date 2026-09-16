@@ -38,12 +38,12 @@ export function useVisitasDetalle(
       setCargando(true);
       setError(false);
       try {
-        const data = await getVisitasDetalleAdmin(preset, desde || undefined, hasta || undefined, paginaActual);
-        if (!data) {
+        const res = await getVisitasDetalleAdmin(preset, desde || undefined, hasta || undefined, paginaActual);
+        if (!res.ok) {
           setError(true);
           setDatos(null);
         } else {
-          setDatos(data);
+          setDatos(res.data);
         }
       } catch (e) {
         console.error('Error cargando el detalle de visitas:', e);

@@ -62,6 +62,7 @@ import {
 } from './actions';
 
 import { AdminSection } from './_types';
+import { ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 import { SolicitudRecord } from '@/lib/types';
 import { contarSolicitudesPendientes, marcarSolicitudPublicada } from './solicitudActions';
 
@@ -136,6 +137,18 @@ export default function AdminClient({
     setIsSessionExpired(true);
   };
 
+  /** Fallo previsto por una acción: la sesión caída cambia la pantalla, el resto avisa. */
+  const avisarFallo = (res: ResultadoError) => {
+    if (esProblemaDeSesion(res)) handleAuthError();
+    showToast(res.mensaje, 'error');
+  };
+
+  /** Mensaje para una falla no prevista; el detalle queda en la consola. */
+  const avisarErrorInesperado = (contexto: string, err: unknown) => {
+    console.error(contexto, err);
+    showToast('No pudimos completar la acción. Vuelve a intentarlo en unos segundos.', 'error');
+  };
+
   // Mantiene la sesion viva mientras el usuario esta realmente usando el
   // panel, en vez de dejar que el token expire en silencio y recien avisar
   // cuando intenta guardar algo (ver useSessionHeartbeat para el detalle).
@@ -156,7 +169,11 @@ export default function AdminClient({
     solicitudEnCurso.current = null;
 
     marcarSolicitudPublicada(pendiente.id, saved.id, pendiente.seccion)
-      .then(() => {
+      .then((res) => {
+        if (!res.ok) {
+          showToast('La ficha se guardo, pero la solicitud quedo sin marcar', 'info');
+          return;
+        }
         setSolicitudesPendientes((prev) => Math.max(0, prev - 1));
         showToast('La solicitud quedo marcada como publicada', 'success');
       })
@@ -186,7 +203,7 @@ export default function AdminClient({
   useEffect(() => {
     if (!isAuthenticated) return;
     contarSolicitudesPendientes()
-      .then(setSolicitudesPendientes)
+      .then((res) => setSolicitudesPendientes(res.ok ? res.data : 0))
       .catch(() => setSolicitudesPendientes(0));
   }, [isAuthenticated]);
 
@@ -320,8 +337,8 @@ export default function AdminClient({
 
         if (res.user.role === 'ADMIN') {
           try {
-            const uList = await getAdminUsers();
-            setUsers(uList);
+            const lista = await getAdminUsers();
+            if (lista.ok) setUsers(lista.data);
           } catch (e) {
             console.error('Error fetching users:', e);
           }
@@ -370,12 +387,17 @@ export default function AdminClient({
     setIsUserPending(true);
     try {
       if (editingUser.id) {
-        const { user: updated, temporaryPassword } = await updateAdminUser(editingUser.id, {
+        const res = await updateAdminUser(editingUser.id, {
           nombre: editingUser.nombre,
           role: editingUser.role,
           activo: editingUser.activo,
           resetPassword: editingUser.resetPassword,
         });
+        if (!res.ok) {
+          avisarFallo(res);
+          return;
+        }
+        const { user: updated, temporaryPassword } = res.data;
         setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
         if (temporaryPassword) {
           setGeneratedCredential({ email: updated.email, nombre: updated.nombre, password: temporaryPassword });
@@ -384,21 +406,25 @@ export default function AdminClient({
       } else {
         if (!editingUser.email || !editingUser.nombre) {
           showToast('Por favor completa todos los campos obligatorios', 'error');
-          setIsUserPending(false);
           return;
         }
-        const { user: created, temporaryPassword } = await createAdminUser({
+        const res = await createAdminUser({
           email: editingUser.email,
           nombre: editingUser.nombre,
           role: editingUser.role || 'LECTOR',
         });
+        if (!res.ok) {
+          avisarFallo(res);
+          return;
+        }
+        const { user: created, temporaryPassword } = res.data;
         setUsers((prev) => [...prev, created]);
         setGeneratedCredential({ email: created.email, nombre: created.nombre, password: temporaryPassword });
         showToast(`Usuario "${created.nombre}" creado exitosamente`, 'success');
       }
       setEditingUser(null);
-    } catch (err: any) {
-      showToast(`Error: ${err.message}`, 'error');
+    } catch (err) {
+      avisarErrorInesperado('Error inesperado al guardar el usuario:', err);
     } finally {
       setIsUserPending(false);
     }
@@ -406,16 +432,19 @@ export default function AdminClient({
 
   const handleToggleUserStatus = async (user: AdminUser) => {
     try {
-      const { user: updated } = await updateAdminUser(user.id, {
-        activo: !user.activo,
-      });
+      const res = await updateAdminUser(user.id, { activo: !user.activo });
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
+      const { user: updated } = res.data;
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       showToast(
         `Usuario ${updated.activo ? 'activado' : 'desactivado'} con éxito`,
         'info'
       );
-    } catch (err: any) {
-      showToast(`Error: ${err.message}`, 'error');
+    } catch (err) {
+      avisarErrorInesperado('Error inesperado al cambiar el estado del usuario:', err);
     }
   };
 
@@ -427,11 +456,15 @@ export default function AdminClient({
     });
     if (!ok) return;
     try {
-      await deleteAdminUser(id);
+      const res = await deleteAdminUser(id);
+      if (!res.ok && res.codigo !== 'NO_ENCONTRADO') {
+        avisarFallo(res);
+        return;
+      }
       setUsers((prev) => prev.filter((u) => u.id !== id));
-      showToast(`Usuario "${nombre}" eliminado`, 'info');
-    } catch (err: any) {
-      showToast(`Error: ${err.message}`, 'error');
+      showToast(res.ok ? `Usuario "${nombre}" eliminado` : res.mensaje, 'info');
+    } catch (err) {
+      avisarErrorInesperado('Error inesperado al eliminar el usuario:', err);
     }
   };
 
@@ -537,6 +570,7 @@ export default function AdminClient({
               showToast={showToast}
               confirmAction={confirmAction}
               onCrearFicha={handleCrearFichaDesdeSolicitud}
+              onAuthError={handleAuthError}
             />
           )}
 

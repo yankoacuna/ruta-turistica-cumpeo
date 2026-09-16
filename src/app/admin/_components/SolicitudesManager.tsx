@@ -33,6 +33,7 @@ import {
   eliminarSolicitud,
 } from '../solicitudActions';
 import { ToastFn, ConfirmFn } from '../_types';
+import { ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 
 const TIPO_ICONO: Record<SolicitudTipo, React.ReactNode> = {
   RESTAURANTE: <UtensilsCrossed size={15} />,
@@ -74,6 +75,8 @@ interface SolicitudesManagerProps {
   confirmAction: ConfirmFn;
   /** Abre el formulario de la ficha correspondiente, ya relleno con la solicitud. */
   onCrearFicha: (solicitud: SolicitudRecord) => void;
+  /** Se llama cuando la sesión dejó de ser válida. */
+  onAuthError?: () => void;
 }
 
 /**
@@ -88,6 +91,7 @@ export function SolicitudesManager({
   showToast,
   confirmAction,
   onCrearFicha,
+  onAuthError,
 }: SolicitudesManagerProps) {
   const [solicitudes, setSolicitudes] = useState<SolicitudRecord[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -100,17 +104,31 @@ export function SolicitudesManager({
   const canEdit = currentUser?.role === 'ADMIN' || currentUser?.role === 'EDITOR';
   const canDelete = currentUser?.role === 'ADMIN';
 
+  /** Fallo previsto por una acción: la sesión caída cambia la pantalla, el resto avisa. */
+  const avisarFallo = useCallback(
+    (res: ResultadoError) => {
+      if (esProblemaDeSesion(res)) onAuthError?.();
+      showToast(res.mensaje, 'error');
+    },
+    [showToast, onAuthError]
+  );
+
   const cargar = useCallback(async () => {
     setCargando(true);
     try {
-      setSolicitudes(await getSolicitudes());
+      const res = await getSolicitudes();
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
+      setSolicitudes(res.data);
     } catch (e) {
       console.error('Error cargando solicitudes:', e);
       showToast('No se pudieron cargar las solicitudes', 'error');
     } finally {
       setCargando(false);
     }
-  }, [showToast]);
+  }, [showToast, avisarFallo]);
 
   useEffect(() => {
     cargar();
@@ -140,11 +158,16 @@ export function SolicitudesManager({
   const actualizar = async (id: string, estado: SolicitudEstado) => {
     setOcupada(id);
     try {
-      const actualizada = await cambiarEstadoSolicitud(id, estado, notas[id]);
-      setSolicitudes((prev) => prev.map((s) => (s.id === id ? actualizada : s)));
+      const res = await cambiarEstadoSolicitud(id, estado, notas[id]);
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
+      setSolicitudes((prev) => prev.map((s) => (s.id === id ? res.data : s)));
       showToast(`Solicitud marcada como "${ESTADO_LABEL[estado].toLowerCase()}"`, 'success');
-    } catch (e: any) {
-      showToast(`Error: ${e.message}`, 'error');
+    } catch (e) {
+      console.error('Error inesperado al cambiar el estado de la solicitud:', e);
+      showToast('No pudimos actualizar la solicitud. Vuelve a intentarlo.', 'error');
     } finally {
       setOcupada(null);
     }
@@ -159,11 +182,16 @@ export function SolicitudesManager({
 
     setOcupada(solicitud.id);
     try {
-      await eliminarSolicitud(solicitud.id);
+      const res = await eliminarSolicitud(solicitud.id);
+      if (!res.ok && res.codigo !== 'NO_ENCONTRADO') {
+        avisarFallo(res);
+        return;
+      }
       setSolicitudes((prev) => prev.filter((s) => s.id !== solicitud.id));
-      showToast('Solicitud eliminada', 'info');
-    } catch (e: any) {
-      showToast(`Error: ${e.message}`, 'error');
+      showToast(res.ok ? 'Solicitud eliminada' : res.mensaje, 'info');
+    } catch (e) {
+      console.error('Error inesperado al eliminar la solicitud:', e);
+      showToast('No pudimos eliminar la solicitud. Vuelve a intentarlo.', 'error');
     } finally {
       setOcupada(null);
     }

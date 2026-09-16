@@ -44,13 +44,14 @@ export function ForcedPasswordChangeScreen({ currentUser, onSuccess }: ForcedPas
     setIsPending(true);
     try {
       const res = await changeOwnPassword(currentPassword, newPassword);
-      if (res.success) {
+      if (res.ok) {
         onSuccess();
       } else {
-        setError(res.error || 'Error al cambiar la contraseña');
+        setError(res.mensaje);
       }
-    } catch (err: any) {
-      setError(err.message || 'Error de conexión');
+    } catch (err) {
+      console.error('Error inesperado al cambiar la contraseña:', err);
+      setError('No pudimos cambiar la contraseña. Vuelve a intentarlo en unos segundos.');
     } finally {
       setIsPending(false);
     }

@@ -26,7 +26,9 @@ import type {
   SiteTextSaveResult,
   EditModeAccess,
 } from '@/lib/types';
-import { getAdminSession, requireRole } from './actions';
+import { getAdminSession } from './authActions';
+import { sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
 
 /**
  * Normaliza lo que escribió el editor. Se guarda texto plano: el sitio lo
@@ -89,15 +91,20 @@ export async function getEditModeAccess(): Promise<EditModeAccess> {
   }
 }
 
-/** Guarda un texto. Si el valor queda vacío, vuelve al texto original del código. */
-export async function saveSiteText(
-  key: string,
-  value: string
-): Promise<SiteTextSaveResult> {
-  const session = await requireRole(['ADMIN', 'EDITOR']);
+/** Sesión mínima que necesitan las escrituras para dejar su rastro de auditoría. */
+type AutorCambio = { id: string; email: string; nombre: string };
 
+/**
+ * Guarda un texto ya con la sesión resuelta. Es el núcleo que comparten el
+ * guardado individual y el del formulario completo.
+ */
+async function guardarTexto(
+  key: string,
+  value: string,
+  session: AutorCambio
+): Promise<Resultado<SiteTextSaveResult>> {
   if (!isKnownSiteTextKey(key)) {
-    throw new Error(`El texto "${key}" no existe en el registro del sitio`);
+    return fallo('NO_ENCONTRADO', `El texto "${key}" no existe en el registro del sitio.`);
   }
 
   const nuevo = normalizeValue(value);
@@ -106,11 +113,16 @@ export async function saveSiteText(
 
   // Vaciar el campo equivale a restaurar el texto original.
   if (nuevo.length === 0) {
-    return resetSiteTextInternal(key, session, valorAnterior);
+    return exito(await resetSiteTextInternal(key, session, valorAnterior));
   }
 
   if (valorAnterior === nuevo && anterior) {
-    return { key, valorVigente: anterior.value, esOriginal: false, record: toRecord(anterior) };
+    return exito({
+      key,
+      valorVigente: anterior.value,
+      esOriginal: false,
+      record: toRecord(anterior),
+    });
   }
 
   const [saved] = await prisma.$transaction([
@@ -144,25 +156,44 @@ export async function saveSiteText(
   ]);
 
   revalidateSite();
-  return { key, valorVigente: saved.value, esOriginal: false, record: toRecord(saved) };
+  return exito({ key, valorVigente: saved.value, esOriginal: false, record: toRecord(saved) });
+}
+
+/** Guarda un texto. Si el valor queda vacío, vuelve al texto original del código. */
+export async function saveSiteText(
+  key: string,
+  value: string
+): Promise<Resultado<SiteTextSaveResult>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+  return guardarTexto(key, value, sesion.data);
 }
 
 /** Guarda varios textos de una vez: es lo que usa el formulario del CMS. */
 export async function saveSiteTexts(
   entries: Array<{ key: string; value: string }>
-): Promise<SiteTextSaveResult[]> {
-  await requireRole(['ADMIN', 'EDITOR']);
+): Promise<Resultado<SiteTextSaveResult[]>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+
+  if (!Array.isArray(entries)) {
+    return fallo('VALIDACION', 'No recibimos los textos a guardar.');
+  }
 
   const out: SiteTextSaveResult[] = [];
   for (const entry of entries) {
-    out.push(await saveSiteText(entry.key, entry.value));
+    const res = await guardarTexto(entry?.key, entry?.value ?? '', sesion.data);
+    // Una clave desconocida detiene el guardado: es un error de programación,
+    // no algo que el editor pueda corregir desde el formulario.
+    if (!res.ok) return res;
+    out.push(res.data);
   }
-  return out;
+  return exito(out);
 }
 
 async function resetSiteTextInternal(
   key: string,
-  session: { id: string; email: string; nombre: string },
+  session: AutorCambio,
   valorAnterior: string | null
 ): Promise<SiteTextSaveResult> {
   const original = SITE_TEXT_DEFAULTS[key] ?? '';
@@ -187,24 +218,29 @@ async function resetSiteTextInternal(
 }
 
 /** Descarta el cambio y vuelve al texto original que trae el código. */
-export async function resetSiteText(key: string): Promise<SiteTextSaveResult> {
-  const session = await requireRole(['ADMIN', 'EDITOR']);
+export async function resetSiteText(key: string): Promise<Resultado<SiteTextSaveResult>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+
   if (!isKnownSiteTextKey(key)) {
-    throw new Error(`El texto "${key}" no existe en el registro del sitio`);
+    return fallo('NO_ENCONTRADO', `El texto "${key}" no existe en el registro del sitio.`);
   }
+
   const anterior = await prisma.siteText.findUnique({ where: { key } });
-  return resetSiteTextInternal(key, session, anterior?.value ?? null);
+  return exito(await resetSiteTextInternal(key, sesion.data, anterior?.value ?? null));
 }
 
 /** Textos modificados, con su auditoría, para el listado del CMS. */
-export async function getSiteTextsAdmin(): Promise<SiteTextRecord[]> {
-  await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
+export async function getSiteTextsAdmin(): Promise<Resultado<SiteTextRecord[]>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR', 'LECTOR']);
+  if (!sesion.ok) return sesion;
+
   try {
     const rows = await prisma.siteText.findMany({ orderBy: { updatedAt: 'desc' } });
-    return rows.filter((r) => isKnownSiteTextKey(r.key)).map(toRecord);
+    return exito(rows.filter((r) => isKnownSiteTextKey(r.key)).map(toRecord));
   } catch (error) {
     console.warn('Error fetching site texts (admin):', error);
-    return [];
+    return exito([]);
   }
 }
 
@@ -212,40 +248,51 @@ export async function getSiteTextsAdmin(): Promise<SiteTextRecord[]> {
 export async function getSiteTextRevisions(
   key: string,
   limit = 20
-): Promise<SiteTextRevisionRecord[]> {
-  await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
+): Promise<Resultado<SiteTextRevisionRecord[]>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR', 'LECTOR']);
+  if (!sesion.ok) return sesion;
+
   try {
     const rows = await prisma.siteTextRevision.findMany({
       where: { key },
       orderBy: { createdAt: 'desc' },
       take: Math.min(Math.max(limit, 1), 100),
     });
-    return rows.map((r) => ({
-      id: r.id,
-      key: r.key,
-      valorAnterior: r.valorAnterior,
-      valorNuevo: r.valorNuevo,
-      accion: r.accion,
-      autorEmail: r.autorEmail,
-      autorNombre: r.autorNombre,
-      createdAt: r.createdAt.toISOString(),
-    }));
+    return exito(
+      rows.map((r) => ({
+        id: r.id,
+        key: r.key,
+        valorAnterior: r.valorAnterior,
+        valorNuevo: r.valorNuevo,
+        accion: r.accion,
+        autorEmail: r.autorEmail,
+        autorNombre: r.autorNombre,
+        createdAt: r.createdAt.toISOString(),
+      }))
+    );
   } catch (error) {
     console.warn('Error fetching site text revisions:', error);
-    return [];
+    return exito([]);
   }
 }
 
 /** Vuelve a dejar vigente el valor de una versión anterior. */
 export async function restoreSiteTextRevision(
   revisionId: string
-): Promise<SiteTextSaveResult> {
-  const session = await requireRole(['ADMIN', 'EDITOR']);
+): Promise<Resultado<SiteTextSaveResult>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+  const session = sesion.data;
 
   const revision = await prisma.siteTextRevision.findUnique({ where: { id: revisionId } });
-  if (!revision) throw new Error('La versión que intentas restaurar ya no existe');
+  if (!revision) {
+    return fallo('NO_ENCONTRADO', 'La versión que intentas restaurar ya no existe.');
+  }
   if (!isKnownSiteTextKey(revision.key)) {
-    throw new Error(`El texto "${revision.key}" no existe en el registro del sitio`);
+    return fallo(
+      'NO_ENCONTRADO',
+      `El texto "${revision.key}" no existe en el registro del sitio.`
+    );
   }
 
   const actual = await prisma.siteText.findUnique({ where: { key: revision.key } });
@@ -254,7 +301,7 @@ export async function restoreSiteTextRevision(
 
   // Restaurar al valor original del código significa borrar el override.
   if (destino === (SITE_TEXT_DEFAULTS[revision.key] ?? '')) {
-    return resetSiteTextInternal(revision.key, session, valorAnterior);
+    return exito(await resetSiteTextInternal(revision.key, session, valorAnterior));
   }
 
   const [saved] = await prisma.$transaction([
@@ -288,10 +335,10 @@ export async function restoreSiteTextRevision(
   ]);
 
   revalidateSite();
-  return {
+  return exito({
     key: revision.key,
     valorVigente: saved.value,
     esOriginal: false,
     record: toRecord(saved),
-  };
+  });
 }

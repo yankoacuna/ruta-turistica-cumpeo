@@ -10,6 +10,7 @@ import { Loader2, Mail, Plus, Save, Trash2 } from 'lucide-react';
 import type { NotificacionesConfigRecord, UserRole } from '@/lib/types';
 import { saveNotificaciones } from '../notificacionesActions';
 import type { ToastFn } from '../_types';
+import { esProblemaDeSesion } from '@/lib/resultado';
 
 interface NotificacionesManagerProps {
   initial: NotificacionesConfigRecord | null;
@@ -50,12 +51,16 @@ export function NotificacionesManager({ initial, role, showToast, onAuthError }:
   const guardar = async () => {
     setGuardando(true);
     try {
-      await saveNotificaciones(emails);
+      const res = await saveNotificaciones(emails);
+      if (!res.ok) {
+        if (esProblemaDeSesion(res)) onAuthError?.();
+        showToast(res.mensaje, 'error');
+        return;
+      }
       showToast('Destinatarios actualizados', 'success');
-    } catch (error: any) {
-      const msg = error?.message || 'Ocurrió un error al guardar';
-      if (/no autorizado|sesión|sesion/i.test(msg) && onAuthError) onAuthError();
-      showToast(msg, 'error');
+    } catch (error) {
+      console.error('Error inesperado al guardar los destinatarios:', error);
+      showToast('No pudimos guardar los destinatarios. Vuelve a intentarlo.', 'error');
     } finally {
       setGuardando(false);
     }

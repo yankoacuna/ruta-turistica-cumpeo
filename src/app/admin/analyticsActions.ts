@@ -10,16 +10,20 @@
 
 import { getVisitStats, getVisitasDetalle } from '@/lib/analytics';
 import type { VisitStats, VisitRangoPreset, VisitasDetalle } from '@/lib/types';
-import { getAdminSession } from './actions';
+import { sesionConRol } from './authActions';
+import { Resultado, exito } from '@/lib/resultado';
+
+/** Cualquier rol con sesión puede ver las métricas: son datos agregados y anónimos. */
+const ROLES = ['ADMIN', 'EDITOR', 'LECTOR'] as const;
 
 export async function getVisitStatsAdmin(
   preset: VisitRangoPreset = '30d',
   desde?: string,
   hasta?: string
-): Promise<VisitStats | null> {
-  const session = await getAdminSession();
-  if (!session) return null;
-  return getVisitStats(preset, desde, hasta);
+): Promise<Resultado<VisitStats>> {
+  const sesion = await sesionConRol([...ROLES]);
+  if (!sesion.ok) return sesion;
+  return exito(await getVisitStats(preset, desde, hasta));
 }
 
 export async function getVisitasDetalleAdmin(
@@ -27,8 +31,8 @@ export async function getVisitasDetalleAdmin(
   desde?: string,
   hasta?: string,
   pagina: number = 1
-): Promise<VisitasDetalle | null> {
-  const session = await getAdminSession();
-  if (!session) return null;
-  return getVisitasDetalle(preset, desde, hasta, pagina);
+): Promise<Resultado<VisitasDetalle>> {
+  const sesion = await sesionConRol([...ROLES]);
+  if (!sesion.ok) return sesion;
+  return exito(await getVisitasDetalle(preset, desde, hasta, pagina));
 }

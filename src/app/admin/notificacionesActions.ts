@@ -10,7 +10,8 @@
 
 import { prisma } from '@/lib/prisma';
 import type { NotificacionesConfigRecord } from '@/lib/types';
-import { requireRole } from './actions';
+import { sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
 
 const MAX_EMAILS = 10;
 
@@ -33,37 +34,46 @@ function toRecord(row: {
 }
 
 /** Destinatarios guardados, para precargar el formulario del CMS. */
-export async function getNotificacionesAdmin(): Promise<NotificacionesConfigRecord | null> {
-  await requireRole(['ADMIN']);
+export async function getNotificacionesAdmin(): Promise<Resultado<NotificacionesConfigRecord | null>> {
+  const sesion = await sesionConRol(['ADMIN']);
+  if (!sesion.ok) return sesion;
+
   try {
     const row = await prisma.notificacionesConfig.findUnique({ where: { id: 'default' } });
-    return row ? toRecord(row) : null;
+    return exito(row ? toRecord(row) : null);
   } catch (error) {
     console.warn('Error fetching notificaciones config:', error);
-    return null;
+    return exito(null);
   }
 }
 
 /** Guarda la lista completa de destinatarios (reemplaza la anterior). */
-export async function saveNotificaciones(emailsCrudos: string[]): Promise<NotificacionesConfigRecord> {
-  const session = await requireRole(['ADMIN']);
+export async function saveNotificaciones(
+  emailsCrudos: string[]
+): Promise<Resultado<NotificacionesConfigRecord>> {
+  const sesion = await sesionConRol(['ADMIN']);
+  if (!sesion.ok) return sesion;
+
+  if (!Array.isArray(emailsCrudos)) {
+    return fallo('VALIDACION', 'No recibimos la lista de destinatarios.');
+  }
 
   const emails = Array.from(
-    new Set(emailsCrudos.map((e) => e.trim().toLowerCase()).filter(Boolean))
+    new Set(emailsCrudos.map((e) => String(e).trim().toLowerCase()).filter(Boolean))
   );
 
   if (emails.length > MAX_EMAILS) {
-    throw new Error(`No puedes guardar más de ${MAX_EMAILS} destinatarios.`);
+    return fallo('VALIDACION', `No puedes guardar más de ${MAX_EMAILS} destinatarios.`);
   }
   const invalido = emails.find((e) => !emailValido(e));
   if (invalido) {
-    throw new Error(`"${invalido}" no es un correo válido.`);
+    return fallo('VALIDACION', `"${invalido}" no es un correo válido.`, { emails: invalido });
   }
 
   const data = {
     emails,
-    updatedByEmail: session.email,
-    updatedByNombre: session.nombre,
+    updatedByEmail: sesion.data.email,
+    updatedByNombre: sesion.data.nombre,
   };
 
   const saved = await prisma.notificacionesConfig.upsert({
@@ -72,5 +82,5 @@ export async function saveNotificaciones(emailsCrudos: string[]): Promise<Notifi
     update: data,
   });
 
-  return toRecord(saved);
+  return exito(toRecord(saved));
 }

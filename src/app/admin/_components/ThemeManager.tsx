@@ -25,6 +25,7 @@ import {
 import type { ThemeConfigRecord, ThemeSaveInput, UserRole } from '@/lib/types';
 import { resetTheme, saveTheme } from '../themeActions';
 import type { ToastFn, ConfirmFn } from '../_types';
+import { ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 
 interface ThemeManagerProps {
   initial: ThemeConfigRecord | null;
@@ -144,21 +145,30 @@ export function ThemeManager({ initial, role, showToast, confirmAction, onAuthEr
       guardado?.fontDisplay
   );
 
-  const manejarError = (error: any) => {
-    const msg = error?.message || 'Ocurrió un error al guardar';
-    if (/no autorizado|sesión|sesion/i.test(msg) && onAuthError) onAuthError();
-    showToast(msg, 'error');
+  /** Fallo previsto por la acción: la sesión caída cambia la pantalla, el resto avisa. */
+  const avisarFallo = (res: ResultadoError) => {
+    if (esProblemaDeSesion(res)) onAuthError?.();
+    showToast(res.mensaje, 'error');
+  };
+
+  const manejarError = (contexto: string, error: unknown) => {
+    console.error(contexto, error);
+    showToast('No pudimos guardar la apariencia. Vuelve a intentarlo.', 'error');
   };
 
   const guardar = async () => {
     setGuardando(true);
     try {
       const input: ThemeSaveInput = { ...draft };
-      const saved = await saveTheme(input);
-      setGuardado(saved);
+      const res = await saveTheme(input);
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
+      setGuardado(res.data);
       showToast('Apariencia actualizada en el sitio', 'success');
     } catch (error) {
-      manejarError(error);
+      manejarError('Error inesperado al guardar la apariencia:', error);
     } finally {
       setGuardando(false);
     }
@@ -172,12 +182,16 @@ export function ThemeManager({ initial, role, showToast, confirmAction, onAuthEr
     if (!ok) return;
     setGuardando(true);
     try {
-      await resetTheme();
+      const res = await resetTheme();
+      if (!res.ok) {
+        avisarFallo(res);
+        return;
+      }
       setGuardado(null);
       setDraft(toDraft(null));
       showToast('Apariencia restaurada a los valores originales', 'info');
     } catch (error) {
-      manejarError(error);
+      manejarError('Error inesperado al restaurar la apariencia:', error);
     } finally {
       setGuardando(false);
     }

@@ -184,26 +184,39 @@ export function SiteTextProvider({ initial, children }: SiteTextProviderProps) {
 
       try {
         const res = await saveSiteText(key, nuevo);
+
+        // Revertir: dejar exactamente lo que había antes del intento.
+        const revertir = () =>
+          setValues((prev) => {
+            const copia = { ...prev };
+            if (anterior === undefined) delete copia[key];
+            else copia[key] = anterior;
+            return copia;
+          });
+
+        if (!res.ok) {
+          revertir();
+          showToast(res.mensaje, 'error');
+          return;
+        }
+
         // El servidor devuelve el valor vigente resuelto: si el editor dejó el
         // campo vacío, eso es el texto original del código.
-        setValues((prev) => ({ ...prev, [key]: res.valorVigente }));
+        setValues((prev) => ({ ...prev, [key]: res.data.valorVigente }));
         setEditadosEnSesion((prev) => (prev.includes(key) ? prev : [...prev, key]));
         showToast(
-          res.esOriginal ? 'Texto restaurado al original' : 'Texto actualizado en el sitio',
+          res.data.esOriginal ? 'Texto restaurado al original' : 'Texto actualizado en el sitio',
           'success'
         );
-      } catch (error: any) {
-        // Revertir: dejar exactamente lo que había antes del intento.
+      } catch (error) {
+        console.error('Error inesperado al guardar el texto:', error);
         setValues((prev) => {
           const copia = { ...prev };
           if (anterior === undefined) delete copia[key];
           else copia[key] = anterior;
           return copia;
         });
-        showToast(
-          error?.message || 'No se pudo guardar el texto. Revisa tu sesión e intenta de nuevo.',
-          'error'
-        );
+        showToast('No se pudo guardar el texto. Vuelve a intentarlo.', 'error');
       } finally {
         setSaving((prev) => prev.filter((k) => k !== key));
       }

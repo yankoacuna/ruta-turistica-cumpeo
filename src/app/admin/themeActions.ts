@@ -17,7 +17,8 @@ import {
 } from '@/lib/theme';
 import { isValidHex } from '@/lib/color';
 import type { ThemeConfigRecord, ThemeSaveInput } from '@/lib/types';
-import { requireRole } from './actions';
+import { sesionConRol } from './authActions';
+import { Resultado, exito, fallo } from '@/lib/resultado';
 
 function revalidateSite() {
   revalidateTag(THEME_TAG);
@@ -51,34 +52,56 @@ function toRecord(row: {
 }
 
 /** Apariencia guardada, para precargar el formulario del CMS. */
-export async function getThemeConfigAdmin(): Promise<ThemeConfigRecord | null> {
-  await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
+export async function getThemeConfigAdmin(): Promise<Resultado<ThemeConfigRecord | null>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR', 'LECTOR']);
+  if (!sesion.ok) return sesion;
+
   try {
     const row = await prisma.themeConfig.findUnique({ where: { id: 'default' } });
-    return row ? toRecord(row) : null;
+    return exito(row ? toRecord(row) : null);
   } catch (error) {
     console.warn('Error fetching theme config (admin):', error);
-    return null;
+    return exito(null);
   }
 }
 
-function normalizeHex(value: string | null | undefined, label: string): string | null {
-  if (value === null || value === undefined || value === '') return null;
+/** Hex normalizado, o el mensaje de error si el valor no sirve. */
+function normalizeHex(
+  value: string | null | undefined,
+  label: string
+): { hex: string | null; error?: undefined } | { hex?: undefined; error: string } {
+  if (value === null || value === undefined || value === '') return { hex: null };
   const v = value.trim();
   if (!isValidHex(v)) {
-    throw new Error(`${label}: "${v}" no es un color hexadecimal válido (ej. #E63946)`);
+    return { error: `${label}: "${v}" no es un color hexadecimal válido (ej. #E63946)` };
   }
-  return v;
+  return { hex: v };
 }
 
 /** Guarda la apariencia completa. Un campo en null vuelve a su valor por defecto. */
-export async function saveTheme(input: ThemeSaveInput): Promise<ThemeConfigRecord> {
-  const session = await requireRole(['ADMIN', 'EDITOR']);
+export async function saveTheme(input: ThemeSaveInput): Promise<Resultado<ThemeConfigRecord>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
 
-  const colorPrimario = normalizeHex(input.colorPrimario, 'Color dominante');
-  const colorAcento = normalizeHex(input.colorAcento, 'Color de acento');
-  const colorFondo = normalizeHex(input.colorFondo, 'Fondo / papel');
-  const colorTexto = normalizeHex(input.colorTexto, 'Texto / tinta');
+  const revisados = {
+    colorPrimario: normalizeHex(input?.colorPrimario, 'Color dominante'),
+    colorAcento: normalizeHex(input?.colorAcento, 'Color de acento'),
+    colorFondo: normalizeHex(input?.colorFondo, 'Fondo / papel'),
+    colorTexto: normalizeHex(input?.colorTexto, 'Texto / tinta'),
+  };
+
+  const detalles: Record<string, string> = {};
+  for (const [campo, revisado] of Object.entries(revisados)) {
+    if (revisado.error) detalles[campo] = revisado.error;
+  }
+  if (Object.keys(detalles).length > 0) {
+    return fallo('VALIDACION', 'Revisa los colores marcados.', detalles);
+  }
+
+  const colorPrimario = revisados.colorPrimario.hex ?? null;
+  const colorAcento = revisados.colorAcento.hex ?? null;
+  const colorFondo = revisados.colorFondo.hex ?? null;
+  const colorTexto = revisados.colorTexto.hex ?? null;
 
   const fontBody = input.fontBody && isKnownFontKey(BODY_FONTS, input.fontBody) ? input.fontBody : null;
   const fontDisplay = input.fontDisplay && isKnownFontKey(DISPLAY_FONTS, input.fontDisplay) ? input.fontDisplay : null;
@@ -90,8 +113,8 @@ export async function saveTheme(input: ThemeSaveInput): Promise<ThemeConfigRecor
     colorTexto,
     fontBody,
     fontDisplay,
-    updatedByEmail: session.email,
-    updatedByNombre: session.nombre,
+    updatedByEmail: sesion.data.email,
+    updatedByNombre: sesion.data.nombre,
   };
 
   const saved = await prisma.themeConfig.upsert({
@@ -101,12 +124,15 @@ export async function saveTheme(input: ThemeSaveInput): Promise<ThemeConfigRecor
   });
 
   revalidateSite();
-  return toRecord(saved);
+  return exito(toRecord(saved));
 }
 
 /** Descarta todos los cambios y vuelve a la apariencia original del código. */
-export async function resetTheme(): Promise<void> {
-  await requireRole(['ADMIN', 'EDITOR']);
+export async function resetTheme(): Promise<Resultado<true>> {
+  const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
+  if (!sesion.ok) return sesion;
+
   await prisma.themeConfig.deleteMany({ where: { id: 'default' } });
   revalidateSite();
+  return exito(true);
 }

@@ -40,11 +40,11 @@ export function ChangePasswordModal({ onClose }: ChangePasswordModalProps) {
     setIsPending(true);
     try {
       const res = await changeOwnPassword(currentPassword, newPassword);
-      if (res.success) {
+      if (res.ok) {
         showToast('Tu contraseña ha sido actualizada con éxito', 'success');
         onClose();
       } else {
-        setError(res.error || 'Error al cambiar la contraseña');
+        setError(res.mensaje);
       }
     } catch (err: any) {
       setError(err.message || 'Error de conexión');
