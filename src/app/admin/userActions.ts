@@ -10,7 +10,7 @@ import {
   CambioClaveSchema,
   detallesDeZod,
 } from '@/lib/esquemas';
-import { getAdminSession, sesionConRol } from './authActions';
+import { getAdminSession, sesionConRol, emitirCookieSesion } from './authActions';
 
 /** Campos del usuario que el panel puede ver; nunca incluye el hash de la contraseña. */
 const CAMPOS_PUBLICOS = {
@@ -124,6 +124,7 @@ export async function updateAdminUser(
     temporaryPassword = generateTemporaryPassword(destino.email);
     updateData.password = hashPassword(temporaryPassword);
     updateData.mustChangePassword = true;
+    updateData.tokenVersion = { increment: 1 };
   }
 
   try {
@@ -196,10 +197,16 @@ export async function changeOwnPassword(
     });
   }
 
-  await prisma.user.update({
+  const actualizado = await prisma.user.update({
     where: { id: user.id },
-    data: { password: hashPassword(validado.data.nueva), mustChangePassword: false },
+    data: {
+      password: hashPassword(validado.data.nueva),
+      mustChangePassword: false,
+      tokenVersion: { increment: 1 },
+    },
   });
+
+  await emitirCookieSesion(session, actualizado.tokenVersion);
 
   return exito(true);
 }

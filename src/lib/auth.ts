@@ -34,6 +34,10 @@ function getSecret(): string {
 
 export const SESSION_COOKIE_NAME = 'admin_session_token';
 
+/** Vigencia de una sesión, en segundos. */
+export const SESION_DURACION_SEGUNDOS = 2 * 24 * 60 * 60;
+const SESION_RENOVAR_UMBRAL_SEGUNDOS = 1 * 24 * 60 * 60;
+
 /**
  * Genera un hash seguro con salt usando crypto.scryptSync nativo de Node.js
  */
@@ -94,19 +98,22 @@ export function generateTemporaryPassword(email: string): string {
 }
 
 export interface SessionTokenPayload extends AdminSessionUser {
+  tokenVersion: number;
   iat?: number;
   exp?: number;
 }
 
 /**
- * Crea un token de sesión firmado para el usuario con expiración de 7 días
+ * Crea un token de sesión firmado para el usuario, con la versión vigente al
+ * momento de emitirlo (ver `tokenVersion` en el modelo `User`).
  */
-export function createSessionToken(user: AdminSessionUser): string {
+export function createSessionToken(user: AdminSessionUser, tokenVersion: number): string {
   const now = Math.floor(Date.now() / 1000);
   const payloadData: SessionTokenPayload = {
     ...user,
+    tokenVersion,
     iat: now,
-    exp: now + 7 * 24 * 60 * 60, // 7 días de validez
+    exp: now + SESION_DURACION_SEGUNDOS,
   };
   const payload = Buffer.from(JSON.stringify(payloadData)).toString('base64url');
   const secret = getSecret();
@@ -118,9 +125,12 @@ export function createSessionToken(user: AdminSessionUser): string {
 }
 
 /**
- * Valida la firma del token y retorna los datos del usuario en sesión
+ * Valida la firma del token y retorna los datos del usuario en sesión, junto
+ * con la versión de token que llevaba grabada al firmarse: quien llama
+ * (`getAdminSession`) es quien la compara contra la columna en base para
+ * decidir si la sesión sigue siendo válida.
  */
-export function verifySessionToken(token: string): AdminSessionUser | null {
+export function verifySessionToken(token: string): (AdminSessionUser & { tokenVersion: number }) | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 2) return null;
@@ -157,6 +167,9 @@ export function verifySessionToken(token: string): AdminSessionUser | null {
       email: user.email,
       nombre: user.nombre,
       role: user.role,
+      // Un token sin este campo equivale a version 0, igual que el valor por
+      // defecto de la columna.
+      tokenVersion: user.tokenVersion ?? 0,
     };
   } catch {
     return null;
@@ -164,8 +177,8 @@ export function verifySessionToken(token: string): AdminSessionUser | null {
 }
 
 /**
- * Determina si el token de sesión está próximo a expirar (menos de 3 días restantes)
- * para realizar una renovación deslizante automática (Sliding Session).
+ * Determina si el token de sesión está próximo a expirar, para renovarlo
+ * solo (Sliding Session).
  */
 export function shouldRefreshToken(token: string): boolean {
   try {
@@ -181,8 +194,7 @@ export function shouldRefreshToken(token: string): boolean {
     const now = Math.floor(Date.now() / 1000);
     const remainingSeconds = user.exp - now;
 
-    // Renovar si le quedan menos de 3 días (3 * 86400 = 259200 segundos)
-    return remainingSeconds < 3 * 24 * 60 * 60;
+    return remainingSeconds < SESION_RENOVAR_UMBRAL_SEGUNDOS;
   } catch {
     return false;
   }

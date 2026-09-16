@@ -147,6 +147,9 @@ model User {
   /// true cuando la contraseña actual fue asignada por un admin (alta o reseteo)
   /// y el usuario todavía no elige la suya: se le exige cambiarla al entrar.
   mustChangePassword  Boolean  @default(false)
+  /// Sube en cada cambio de contraseña. Un token de sesión firmado con una
+  /// versión distinta a esta deja de ser válido, aunque no haya expirado.
+  tokenVersion        Int      @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }

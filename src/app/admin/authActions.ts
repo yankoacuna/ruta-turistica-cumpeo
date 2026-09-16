@@ -10,6 +10,7 @@ import {
   verifySessionToken,
   shouldRefreshToken,
   SESSION_COOKIE_NAME,
+  SESION_DURACION_SEGUNDOS,
 } from '@/lib/auth';
 
 import crypto from 'crypto';
@@ -77,17 +78,22 @@ function limpiarIntentosFallidos(clave: string): void {
 }
 
 /**
- * El primer administrador ya no se crea acá: era una llamada
- * (`prisma.user.count()`) en cada petición al panel, solo para cubrir el caso
- * de que la tabla `User` estuviera vacía. Además de ser ruido en el camino
- * caliente, era una puerta trasera silenciosa: si `User` quedaba vacía por
- * error (una migración a medias, una restauración parcial), el sistema se
- * autoreparaba creando un ADMIN con `ADMIN_SECRET` sin que nadie lo notara.
- *
- * Ahora es un paso explícito de instalación: `node prisma/seed.js` (ver ese
- * archivo), documentado en el README. El arranque normal del panel no crea
- * administradores.
+ * El primer administrador se crea con `node prisma/seed.js` (ver ese
+ * archivo), no en tiempo de ejecución.
  */
+
+/** Firma un token nuevo con la versión de clave vigente y lo deja en la cookie. */
+export async function emitirCookieSesion(user: AdminSessionUser, tokenVersion: number): Promise<void> {
+  const token = createSessionToken(user, tokenVersion);
+  (await cookies()).set(SESSION_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: SESION_DURACION_SEGUNDOS,
+  });
+}
+
 export async function getAdminSession(): Promise<AdminSessionUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -99,9 +105,12 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
   try {
     const user = await prisma.user.findUnique({
       where: { id: session.id },
-      select: { id: true, email: true, nombre: true, role: true, activo: true, mustChangePassword: true },
+      select: {
+        id: true, email: true, nombre: true, role: true, activo: true,
+        mustChangePassword: true, tokenVersion: true,
+      },
     });
-    if (!user || !user.activo) {
+    if (!user || !user.activo || user.tokenVersion !== session.tokenVersion) {
       return null;
     }
     const sessionUser: AdminSessionUser = {
@@ -112,17 +121,10 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
       mustChangePassword: user.mustChangePassword,
     };
 
-    // Renovación deslizante automática (Sliding Session) si quedan menos de 3 días
+    // Renovación deslizante automática (Sliding Session)
     if (shouldRefreshToken(token)) {
       try {
-        const refreshedToken = createSessionToken(sessionUser);
-        cookieStore.set(SESSION_COOKIE_NAME, refreshedToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 7,
-        });
+        await emitirCookieSesion(sessionUser, user.tokenVersion);
       } catch {
         // En contexto de Server Component de solo lectura, cookies().set no está permitido; se ignora sin error
       }
@@ -203,14 +205,7 @@ export async function loginAdmin(
     mustChangePassword: user.mustChangePassword,
   };
 
-  const token = createSessionToken(sessionUser);
-  (await cookies()).set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  await emitirCookieSesion(sessionUser, user.tokenVersion);
 
   return { success: true, user: sessionUser };
 }
