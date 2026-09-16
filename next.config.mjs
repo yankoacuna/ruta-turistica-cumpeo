@@ -23,15 +23,16 @@ const nextConfig = {
   // dependencia; como geoip-lite arma la ruta a sus .dat en runtime (no con
   // un require/import estático), el tracer no los ve solo. Se fuerza acá.
   //
-  // Se incluyen todos los .dat (país + región + ciudad, ~111MB): geoip-lite
-  // los carga enteros a memoria de forma permanente apenas arranca el proceso
-  // (preload() síncrono al hacer require, no en cada lookup) — costo fijo por
-  // proceso, no por visita, de ~106MB de RAM. Si hiciera falta reducirlo, con
-  // sacar geoip-city*.dat y geoip-city-names.dat de este glob alcanza:
-  // geoip-lite cae solo a país automáticamente (ver geoip-lite/lib/geoip.js),
-  // sin tocar código.
+  // Solo se incluyen los .dat de país (~6MB): geoip-lite los carga enteros a
+  // memoria de forma permanente apenas arranca el proceso (preload() síncrono
+  // al hacer require, no en cada lookup) — costo fijo por proceso, no por
+  // visita. Los .dat de ciudad (geoip-city*.dat, geoip-city-names.dat) pesan
+  // ~104MB adicionales para resolver región y ciudad; se decidió no incluirlos
+  // por el costo de RAM en este hosting compartido. `region` y `ciudad` en
+  // `PageView` quedan `null` para las visitas nuevas (ver geoip-lite/lib/geoip.js:
+  // sin los .dat de ciudad, cae automáticamente a resolver solo país).
   outputFileTracingIncludes: {
-    '/api/track': ['./node_modules/geoip-lite/data/**/*'],
+    '/api/track': ['./node_modules/geoip-lite/data/geoip-country*.dat'],
   },
   // ─── CABECERAS DE SEGURIDAD ───────────────────────────────────────────────
   async headers() {
