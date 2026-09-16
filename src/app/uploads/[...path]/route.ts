@@ -35,6 +35,13 @@ export async function GET(
     headers: {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=31536000, immutable",
+      // Estos archivos los sube gente de fuera (fotos de postulaciones). Se
+      // repiten acá aunque next.config.mjs ya las declare: es la respuesta que
+      // manda esta ruta, y no debe depender de que nadie toque esa lista.
+      // nosniff impide que el navegador reinterprete una imagen como HTML, y
+      // la CSP deja el archivo sin permiso para ejecutar absolutamente nada.
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'; img-src 'self'; sandbox",
     },
   });
 }

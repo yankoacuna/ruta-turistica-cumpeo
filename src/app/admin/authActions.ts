@@ -11,6 +11,7 @@ import {
   SESSION_COOKIE_NAME,
 } from '@/lib/auth';
 
+import crypto from 'crypto';
 import { cookies, headers } from 'next/headers';
 
 // Freno de fuerza bruta al login: mismo patrón que ya usan los formularios
@@ -28,6 +29,27 @@ const VENTANA_INTENTOS_MS = 15 * 60 * 1000;
 const MAX_INTENTOS_FALLIDOS_IP = 8;
 const MAX_INTENTOS_FALLIDOS_CUENTA = 20;
 const intentosFallidos = new Map<string, { cuenta: number; expira: number }>();
+
+/**
+ * Un solo mensaje para todo fallo de credenciales.
+ *
+ * Antes el login distinguía "Usuario no encontrado", "Contraseña incorrecta" y
+ * "Esta cuenta ha sido desactivada". Las tres juntas son un buscador de
+ * cuentas: probando correos, cualquiera podía averiguar quién tiene acceso al
+ * panel municipal sin acertar una sola contraseña, y dirigir a esas personas
+ * un correo de phishing creíble.
+ */
+const ERROR_CREDENCIALES = 'Correo o contraseña incorrectos.';
+
+/**
+ * Hash señuelo contra el que se verifica cuando el correo no existe.
+ *
+ * Sin esto, un correo inexistente responde al instante y uno real se demora lo
+ * que tarda scrypt: esa diferencia, medible desde fuera, delata igual qué
+ * cuentas existen aunque el mensaje sea el mismo. Se calcula una vez al
+ * arrancar el proceso, sobre un valor aleatorio que nadie conoce.
+ */
+const HASH_SENUELO = hashPassword(crypto.randomBytes(32).toString('hex'));
 
 async function ipDelPedido(): Promise<string> {
   const headersList = await headers();
@@ -179,21 +201,28 @@ export async function loginAdmin(
 
   // Verificación regular contra base de datos
   const user = await prisma.user.findUnique({ where: { email } });
+
   if (!user) {
+    // Se verifica igual contra el señuelo para gastar el mismo tiempo que
+    // gastaría una cuenta real. El resultado se descarta.
+    verifyPassword(password, HASH_SENUELO);
     registrarIntentoFallido(claveIp);
     registrarIntentoFallido(claveCuenta);
-    return { success: false, error: 'Usuario no encontrado o credenciales incorrectas' };
-  }
-
-  if (!user.activo) {
-    return { success: false, error: 'Esta cuenta ha sido desactivada. Contacta al administrador.' };
+    return { success: false, error: ERROR_CREDENCIALES };
   }
 
   const isValid = verifyPassword(password, user.password);
   if (!isValid) {
     registrarIntentoFallido(claveIp);
     registrarIntentoFallido(claveCuenta);
-    return { success: false, error: 'Contraseña incorrecta' };
+    return { success: false, error: ERROR_CREDENCIALES };
+  }
+
+  // La cuenta desactivada se avisa recién acá, después de validar la
+  // contraseña: así el funcionario entiende por qué no entra, y quien solo
+  // está probando correos ajenos no se entera de que la cuenta existe.
+  if (!user.activo) {
+    return { success: false, error: 'Esta cuenta está desactivada. Contacta al administrador.' };
   }
 
   limpiarIntentosFallidos(claveIp);
@@ -254,6 +283,18 @@ export async function requireRole(
   const session = await getAdminSession();
   if (!session) {
     throw new Error('No autorizado: Inicia sesión para continuar');
+  }
+
+  // El cambio de clave obligatorio se mostraba solo como pantalla en el
+  // navegador (ver AdminClient), y una pantalla no detiene a nadie: los server
+  // actions se pueden invocar directo, así que quien tuviera una contraseña
+  // temporal podía trabajar sin cambiarla nunca y dejarla viva para siempre.
+  // Acá se corta de verdad. changeOwnPassword no pasa por esta función, así
+  // que la salida —cambiar la clave— sigue abierta.
+  if (session.mustChangePassword) {
+    throw new Error(
+      'No autorizado: Debes cambiar tu contraseña temporal antes de continuar'
+    );
   }
 
   if (!allowedRoles.includes(session.role)) {

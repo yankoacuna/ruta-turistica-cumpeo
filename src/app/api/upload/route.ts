@@ -19,6 +19,22 @@ const ALLOWED_TYPES: Record<string, string> = {
   "image/avif": "avif",
 };
 
+/**
+ * Rechaza el envío por el tamaño que declara la cabecera, antes de leer el
+ * cuerpo.
+ *
+ * El control de tamaño se hacía con file.size, que solo se conoce después de
+ * que formData() ya cargó el envío completo en memoria: alguien podía mandar
+ * 500 MB y el proceso los guardaba enteros antes de descubrir que sobraban. En
+ * un hosting compartido eso tumba la aplicación aunque el archivo termine
+ * rechazado. Se deja un 20% de holgura por el envoltorio multipart.
+ */
+function excedeTamanoDeclarado(req: NextRequest, maxMb: number): boolean {
+  const declarado = Number(req.headers.get('content-length'));
+  if (!Number.isFinite(declarado) || declarado <= 0) return false;
+  return declarado > maxMb * 1024 * 1024 * 1.2;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getAdminSession();
@@ -27,6 +43,10 @@ export async function POST(req: NextRequest) {
         { error: "No autorizado: Se requiere rol de Administrador o Editor para subir archivos" },
         { status: 403 }
       );
+    }
+
+    if (excedeTamanoDeclarado(req, MAX_SIZE_MB)) {
+      return NextResponse.json({ error: `Archivo muy grande. Maximo: ${MAX_SIZE_MB}MB` }, { status: 413 });
     }
 
     const formData = await req.formData();

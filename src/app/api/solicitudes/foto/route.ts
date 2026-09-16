@@ -48,6 +48,22 @@ function ipDe(req: NextRequest): string {
 }
 
 /**
+ * Rechaza el envío por el tamaño que declara la cabecera, antes de leer el
+ * cuerpo.
+ *
+ * El control de tamaño se hacía con file.size, que solo se conoce después de
+ * que formData() ya cargó el envío completo en memoria: alguien podía mandar
+ * 500 MB y el proceso los guardaba enteros antes de descubrir que sobraban. En
+ * un hosting compartido eso tumba la aplicación aunque el archivo termine
+ * rechazado. Se deja un 20% de holgura por el envoltorio multipart.
+ */
+function excedeTamanoDeclarado(req: NextRequest, maxMb: number): boolean {
+  const declarado = Number(req.headers.get('content-length'));
+  if (!Number.isFinite(declarado) || declarado <= 0) return false;
+  return declarado > maxMb * 1024 * 1024 * 1.2;
+}
+
+/**
  * Fotos que adjunta un emprendedor al postular su negocio.
  *
  * Va aparte de /api/upload porque aquel exige sesión de administrador. Acá no
@@ -65,6 +81,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Demasiadas fotos desde esta conexión. Intenta más tarde.' },
         { status: 429 }
+      );
+    }
+
+    if (excedeTamanoDeclarado(req, MAX_SIZE_MB)) {
+      return NextResponse.json(
+        { error: `La foto supera el máximo de ${MAX_SIZE_MB}MB.` },
+        { status: 413 }
       );
     }
 

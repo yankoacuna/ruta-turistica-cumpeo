@@ -19,23 +19,47 @@ const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_EVENTS = 40;
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
-function superaLimite(visitorId: string): boolean {
+// Tope adicional por IP.
+//
+// El límite de arriba se cuenta por visitorId, que es un valor que manda el
+// propio cliente: basta con inventar uno nuevo en cada petición para que nunca
+// se alcance y escribir filas en PageView sin fin. Este segundo tope cuenta por
+// IP, que el cliente no elige (salvo que falsee x-forwarded-for, ver más
+// abajo), y es más alto para no castigar a una familia o una oficina que
+// navegan tras la misma conexión.
+const RATE_MAX_EVENTS_IP = 200;
+const rateBucketsIp = new Map<string, { count: number; resetAt: number }>();
+
+function superaLimiteEn(
+  mapa: Map<string, { count: number; resetAt: number }>,
+  clave: string,
+  max: number,
+  maxEntradas: number
+): boolean {
   const ahora = Date.now();
 
   // Limpieza oportunista: sin esto el Map crece sin fin en un server largo.
-  if (rateBuckets.size > 5000) {
-    for (const [key, bucket] of rateBuckets) {
-      if (bucket.resetAt <= ahora) rateBuckets.delete(key);
+  if (mapa.size > maxEntradas) {
+    for (const [key, bucket] of mapa) {
+      if (bucket.resetAt <= ahora) mapa.delete(key);
     }
   }
 
-  const bucket = rateBuckets.get(visitorId);
+  const bucket = mapa.get(clave);
   if (!bucket || bucket.resetAt <= ahora) {
-    rateBuckets.set(visitorId, { count: 1, resetAt: ahora + RATE_WINDOW_MS });
+    mapa.set(clave, { count: 1, resetAt: ahora + RATE_WINDOW_MS });
     return false;
   }
   bucket.count += 1;
-  return bucket.count > RATE_MAX_EVENTS;
+  return bucket.count > max;
+}
+
+function superaLimite(visitorId: string): boolean {
+  return superaLimiteEn(rateBuckets, visitorId, RATE_MAX_EVENTS, 5000);
+}
+
+function superaLimiteIp(ip: string): boolean {
+  return superaLimiteEn(rateBucketsIp, ip, RATE_MAX_EVENTS_IP, 5000);
 }
 
 const BOT_PATTERN =
@@ -128,7 +152,7 @@ export async function POST(req: NextRequest) {
     if (!visitorId || !sessionId) {
       return NextResponse.json({ ok: true, ignored: 'sin-id' });
     }
-    if (superaLimite(visitorId)) {
+    if (superaLimite(visitorId) || superaLimiteIp(ipDelPedido(req) || 'desconocida')) {
       return NextResponse.json({ ok: true, ignored: 'rate-limit' });
     }
 

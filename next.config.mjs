@@ -7,6 +7,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
+
+  // La versión del framework no le sirve a nadie salvo a quien busca un
+  // exploit conocido para ella.
+  poweredByHeader: false,
   typescript: {
     // Evita que la compilación en hosting compartido (cPanel) falle por
     // discrepancias de paquetes @types en el entorno virtual de producción
@@ -38,6 +42,56 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/track': ['./node_modules/geoip-lite/data/**/*'],
   },
+  // ─── CABECERAS DE SEGURIDAD ───────────────────────────────────────────────
+  //
+  // No había ninguna. Son la defensa que actúa en el navegador del visitante,
+  // independiente de lo que haga el código del servidor.
+  async headers() {
+    const base = [
+      // Nada de adivinar el tipo de un archivo por su contenido: una imagen
+      // subida por un desconocido se trata como imagen y nunca como HTML.
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      // Al salir del sitio se manda solo el dominio, no la URL completa: una
+      // ficha o una búsqueda no tienen por qué viajar a terceros.
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      // El sitio pide ubicación (mapa y "cerca de mí"); cámara y micrófono no
+      // los usa nadie, así que se niegan de entrada.
+      { key: 'Permissions-Policy', value: 'geolocation=(self), camera=(), microphone=(), payment=()' },
+      // Una vez que el dominio esté en HTTPS, el navegador no vuelve a
+      // intentar http. Sin includeSubDomains a propósito: los subdominios del
+      // hosting (webmail, cpanel) no son de esta app.
+      { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
+    ];
+
+    return [
+      // El sitio público puede necesitar embeberse en la web municipal.
+      { source: '/:path*', headers: [...base, { key: 'X-Frame-Options', value: 'SAMEORIGIN' }] },
+      // El panel, en cambio, no se embebe en ningún lado: un iframe invisible
+      // sobre /admin es la receta clásica de clickjacking contra quien ya
+      // tiene la sesión abierta.
+      {
+        source: '/admin/:path*',
+        headers: [
+          ...base,
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+          // El panel nunca debe quedar en la caché de un equipo compartido.
+          { key: 'Cache-Control', value: 'no-store, max-age=0' },
+        ],
+      },
+      // Archivos subidos: se sirven como archivo y nada más. Sin scripts, sin
+      // iframes, sin nada activo, aunque alguien logre colar un archivo raro.
+      {
+        source: '/uploads/:path*',
+        headers: [
+          ...base,
+          { key: 'Content-Security-Policy', value: "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox" },
+          { key: 'X-Frame-Options', value: 'DENY' },
+        ],
+      },
+    ];
+  },
+
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

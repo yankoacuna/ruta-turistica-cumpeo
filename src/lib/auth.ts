@@ -66,16 +66,37 @@ export function verifyPassword(password: string, combinedHash: string): boolean 
 }
 
 /**
- * Genera una contraseña temporal a partir del usuario del correo (parte antes
- * de la @) más 4 dígitos al azar, para que sea fácil de leer y transcribir al
- * entregarla por teléfono o WhatsApp. Es intencionalmente simple: solo dura
- * hasta el primer inicio de sesión, donde el sistema exige cambiarla (ver
- * mustChangePassword), así que la ventana de exposición es mínima.
+ * Alfabeto sin caracteres que se confunden al dictar por teléfono: fuera el 0
+ * y la O, el 1 y la I/L. Lo que queda se puede leer en voz alta sin que la
+ * otra persona tenga que preguntar "¿cero o letra o?".
+ */
+const ALFABETO_TEMPORAL = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+/**
+ * Contraseña temporal para un usuario recién creado o al que se le reseteó la
+ * clave. Dura hasta el primer inicio de sesión, donde el sistema exige
+ * cambiarla (ver mustChangePassword).
+ *
+ * Antes era el nombre del correo más 4 dígitos. El problema es que la parte
+ * del correo la sabe cualquiera, así que el secreto real eran esos 4 dígitos:
+ * 10.000 combinaciones. Con el tope de 20 intentos por cuenta cada 15 minutos,
+ * probarlas todas toma unos días — y la clave sigue viva mientras el usuario
+ * no entre por primera vez, que puede ser una semana.
+ *
+ * Ahora son 10 caracteres al azar de un alfabeto de 31 (~50 bits): se sigue
+ * dictando sin problema en tres grupos, y adivinarla deja de ser un plan.
  */
 export function generateTemporaryPassword(email: string): string {
-  const localPart = (email.split('@')[0] || 'usuario').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const digits = crypto.randomInt(1000, 10000);
-  return `${localPart || 'usuario'}${digits}`;
+  const prefijo = (email.split('@')[0] || 'usuario')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 12) || 'usuario';
+
+  const grupos = [0, 1, 2].map(() =>
+    Array.from({ length: 4 }, () => ALFABETO_TEMPORAL[crypto.randomInt(0, ALFABETO_TEMPORAL.length)]).join('')
+  );
+
+  return `${prefijo}-${grupos.join('-')}`;
 }
 
 export interface SessionTokenPayload extends AdminSessionUser {

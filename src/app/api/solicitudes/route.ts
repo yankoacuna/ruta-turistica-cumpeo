@@ -37,6 +37,26 @@ function ipDe(req: NextRequest): string {
 }
 
 /**
+ * URL del sitio para el enlace que va en el correo al municipio.
+ *
+ * Sale de una variable de entorno y NO de la cabecera Host, que la escribe
+ * quien hace la petición. Con la cabecera, cualquiera podía mandar una
+ * postulación con `Host: sitio-falso.cl` y lograr que al municipio le llegara
+ * un correo legítimo del sistema con un enlace a "su" panel: phishing dirigido
+ * a los administradores, firmado por nuestro propio servidor.
+ *
+ * Si la variable no está configurada, el correo va sin enlace: es mejor que el
+ * funcionario abra el panel por sus medios a mandarle un enlace que no
+ * controlamos.
+ */
+function urlDelSitio(_req: NextRequest): string | undefined {
+  const configurada = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  if (!configurada) return undefined;
+  // Sin barra final, para no armar enlaces con doble barra.
+  return configurada.replace(/[/]+$/, '');
+}
+
+/**
  * Recibe una solicitud del sitio público: la postulación de un emprendedor
  * (/sumate) o una consulta del formulario de contacto.
  *
@@ -108,9 +128,7 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
 
-    const host = req.headers.get('host');
-    const base = host ? `${req.nextUrl.protocol}//${host}` : undefined;
-    await avisarSolicitud(data, creada.id, base);
+    await avisarSolicitud(data, creada.id, urlDelSitio(req));
 
     return NextResponse.json({ ok: true, id: creada.id });
   } catch (error) {
