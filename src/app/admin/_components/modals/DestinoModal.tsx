@@ -152,7 +152,7 @@ export function DestinoModal({
           onGaleriaChange={(galeria) => set({ galeria })}
         />
 
-        {/* Tags Refactorizado */}
+        {/* Tags */}
         <CommaSeparatedField
           label="Tags"
           icon={<Tag size={14} />}

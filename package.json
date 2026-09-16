@@ -49,6 +49,8 @@
     "@types/geoip-lite": "^1.4.4",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.23.1",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.25",
     "pg": "^8.23.0"
   }
 }

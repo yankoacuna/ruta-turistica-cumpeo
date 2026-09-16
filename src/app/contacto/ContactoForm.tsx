@@ -23,8 +23,7 @@ export function ContactoForm() {
 
   /**
    * Envia la consulta al panel, donde queda en la bandeja de Solicitudes junto
-   * a las postulaciones. Antes esto era un setTimeout que simulaba el envio:
-   * la persona veia "mensaje enviado" y el mensaje no llegaba a nadie.
+   * a las postulaciones.
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

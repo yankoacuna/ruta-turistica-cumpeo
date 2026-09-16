@@ -4,14 +4,9 @@ import { getDestinations, getConfig } from '@/lib/data';
 const BASE_URL = 'https://turismocumpeo.cl';
 
 /**
- * Mapa del sitio para los buscadores.
- *
- * Las fichas salen de la base, pero si la base no responde el sitemap se
- * publica igual con las páginas fijas. Esto no es defensa contra un error
- * cualquiera: el sitemap se genera al compilar, así que una caída momentánea de
- * MySQL —o un despliegue hecho desde una máquina sin acceso a la base— hacía
- * fallar el build completo y dejaba al sitio sin poder publicarse. Un sitemap
- * con seis rutas es infinitamente mejor que un despliegue que no sale.
+ * Mapa del sitio para los buscadores. Las fichas salen de la base; si no
+ * responde se publican solo las rutas fijas, porque el sitemap se genera al
+ * compilar y una base inalcanzable no debe impedir un despliegue.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let destinations: Awaited<ReturnType<typeof getDestinations>> = [];

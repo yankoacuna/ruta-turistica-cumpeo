@@ -19,11 +19,9 @@ const INITIAL = 4;
 /**
  * Servicios de la comuna en un solo bloque con pestañas.
  *
- * Antes eran dos secciones separadas ("Donde Comer" y "Donde Dormir"), cada
- * una con su encabezado completo y tres tarjetas con foto grande: seis modulos
- * visualmente identicos y muchisimo scroll para lo que en el fondo es una
- * guia telefonica. Unificarlas en una pestaña acorta la portada, deja claro
- * que es contenido de servicio (no aspiracional) y permite comparar.
+ * Comer y dormir viven en un mismo bloque con pestañas: en el fondo son una
+ * guia telefonica, de modo que agruparlos acorta la portada, deja claro que es
+ * contenido de servicio y no aspiracional, y permite comparar.
  */
 export function ServicesSection({ restaurants, lodging }: ServicesSectionProps) {
   const [tab, setTab] = useState<'comer' | 'dormir'>('comer');

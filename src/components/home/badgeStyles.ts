@@ -1,10 +1,8 @@
 /**
  * Estilos de badge de categoria.
  *
- * Antes habia siete tratamientos de color distintos (rojo, sol, cielo, verde,
- * tierra, gris, morado). Sobre tarjetas con foto, eso significaba hasta cinco
- * colores compitiendo en una misma grilla y ningun nivel de jerarquia: es la
- * causa principal de que la portada se viera generica.
+ * Sobre tarjetas con foto, varios colores compitiendo en una misma grilla
+ * quitan jerarquia a la portada, por lo que el tratamiento de color es unico.
  *
  * Ahora el badge es uno solo, monocromo sobre papel, y la categoria se
  * distingue por su texto. El color queda reservado para lo que de verdad

@@ -157,8 +157,8 @@ export function RutaModal({
   const totalExtraMinutos = currentPoiIds.reduce((sum, id) => sum + (tiemposParada[id] || 0), 0);
   const totalMinutosEstimados = (autoTraslado?.minutos || 0) + totalExtraMinutos;
 
-  // La duración ya no la escribe el admin: en cuanto se calcula el traslado
-  // una vez, el total (manejo + tiempo por parada) queda siempre en sincronía.
+  // La duración no se escribe a mano: en cuanto se calcula el traslado una
+  // vez, el total (manejo + tiempo por parada) queda siempre en sincronía.
   useEffect(() => {
     if (autoTraslado) {
       set({ duracionEstimada: formatMinutos(totalMinutosEstimados) || '0 min' });

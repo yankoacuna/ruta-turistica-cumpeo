@@ -132,8 +132,7 @@ export default function HomeClient({
       {/* 5.5. Viñeta patrimonial pequeña: Invitación a conocer la historia de Cumpeo */}
       <HistoriaTeaser />
 
-      {/* 6. Servicios: comer y dormir unificados en pestañas y filas compactas.
-             Antes eran dos secciones de tarjetas-foto casi identicas. */}
+      {/* 6. Servicios: comer y dormir unificados en pestañas y filas compactas. */}
       <ServicesSection restaurants={restaurantCards} lodging={lodgingCards} />
 
       {/* 7. Catastro turistico completo, filtrable. */}

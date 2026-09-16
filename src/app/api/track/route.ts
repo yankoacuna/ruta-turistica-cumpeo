@@ -19,13 +19,9 @@ const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_EVENTS = 40;
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
-// Tope adicional por IP.
-//
-// El límite de arriba se cuenta por visitorId, que es un valor que manda el
-// propio cliente: basta con inventar uno nuevo en cada petición para que nunca
-// se alcance y escribir filas en PageView sin fin. Este segundo tope cuenta por
-// IP, que el cliente no elige (salvo que falsee x-forwarded-for, ver más
-// abajo), y es más alto para no castigar a una familia o una oficina que
+// Tope adicional por IP. El de arriba se cuenta por visitorId, un valor que
+// genera el cliente y puede renovar en cada petición; este cuenta por IP, que
+// no elige, y es más alto para no castigar a una oficina o una familia que
 // navegan tras la misma conexión.
 const RATE_MAX_EVENTS_IP = 200;
 const rateBucketsIp = new Map<string, { count: number; resetAt: number }>();

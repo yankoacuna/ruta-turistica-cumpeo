@@ -3,19 +3,13 @@ import { HookOptions } from '../_types';
 import { Resultado, ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 
 /**
- * CRUD de una ficha del catastro en el panel.
+ * CRUD de una ficha del catastro en el panel: abre el formulario vacío o con la
+ * ficha elegida, guarda contra un server action, refleja el resultado en la
+ * lista sin recargar, pide confirmación para borrar y detecta la sesión caída.
  *
- * Destinos, restaurantes, alojamientos y eventos se administran exactamente
- * igual: se abre un formulario vacío o con la ficha elegida, se guarda contra
- * un server action, se refleja el resultado en la lista sin recargar, se pide
- * confirmación para borrar y se detecta la sesión caída. Eso estaba escrito
- * cuatro veces, casi idéntico; cualquier arreglo (por ejemplo, tratar bien un
- * error de autorización) había que acordarse de aplicarlo en los cuatro.
- *
- * Acá vive una sola vez. Lo único propio de cada tipo —qué server action usa,
- * cómo es una ficha vacía, cómo se llama en los mensajes— entra por
- * configuración, y sumar un quinto tipo de ficha es escribir esa configuración,
- * no copiar otras ochenta líneas.
+ * Destinos, restaurantes, alojamientos y eventos comparten esta mecánica. Lo
+ * propio de cada tipo —qué server action usa, cómo es una ficha vacía, cómo se
+ * llama en los mensajes— entra por configuración.
  */
 export interface FichaCrudConfig<T> {
   /** Ficha en blanco con la que se abre el formulario de "nuevo". */
@@ -50,12 +44,9 @@ export interface FichaCrud<T> {
 }
 
 /**
- * Mensaje para una falla que no es de las previstas: la base caída, un bug.
- *
- * En producción el mensaje real de una excepción de server action no llega
- * (Next lo reemplaza por uno genérico con digest), así que mostrar `err.message`
- * solo serviría para confundir. El detalle queda en la consola y en el log del
- * servidor, que es donde se puede hacer algo con él.
+ * Mensaje para una falla no prevista. El mensaje real de una excepción de
+ * server action no llega al navegador en producción, así que el detalle queda
+ * en la consola y en el log del servidor.
  */
 const ERROR_INESPERADO = 'No pudimos completar la acción. Vuelve a intentarlo en unos segundos.';
 
@@ -83,9 +74,8 @@ export function useFichaCrud<T extends { id: string; nombre?: string }>(
   };
 
   /**
-   * Un fallo que la acción previó y devolvió como valor. Solo la sesión caída
-   * cambia la pantalla; el resto es un aviso y el formulario sigue abierto con
-   * lo que la persona escribió.
+   * Fallo previsto por la acción. Solo la sesión caída cambia la pantalla; el
+   * resto deja el formulario abierto con lo que la persona escribió.
    */
   const manejarFallo = (res: ResultadoError) => {
     if (esProblemaDeSesion(res)) onAuthError?.();
@@ -133,8 +123,7 @@ export function useFichaCrud<T extends { id: string; nombre?: string }>(
       try {
         const res = await config.eliminar(id);
 
-        // Si ya no existe, el objetivo igual se cumplió: se saca de la lista y
-        // se avisa sin tratarlo como una falla.
+        // Si ya no existe, el objetivo igual se cumplió.
         if (!res.ok && res.codigo !== 'NO_ENCONTRADO') {
           manejarFallo(res);
           return;

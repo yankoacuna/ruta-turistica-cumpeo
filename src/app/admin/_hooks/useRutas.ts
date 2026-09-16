@@ -22,7 +22,7 @@ const emptyRuta = (): Partial<TourRoute> => ({
   tiemposParada: {},
 });
 
-/** Ver la nota de useFichaCrud: en producción el mensaje real no llega al navegador. */
+/** El mensaje real de una excepción de server action no llega al navegador en producción. */
 const ERROR_INESPERADO = 'No pudimos completar la acción. Vuelve a intentarlo en unos segundos.';
 
 export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAuthError }: HookOptions) {

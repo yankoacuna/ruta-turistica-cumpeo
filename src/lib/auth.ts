@@ -13,9 +13,9 @@ const LARGO_MINIMO_SECRETO = 32;
  * Es a propósito una variable distinta de ADMIN_SECRET. Esa otra es una
  * contraseña: se escribe en un formulario, se dicta por teléfono y se rota
  * cuando cambia quien administra. Esta nunca sale del servidor. Si fueran la
- * misma —como lo eran antes—, filtrar la contraseña del administrador no solo
- * permitiría entrar: permitiría forjar tokens de sesión con cualquier id y
- * cualquier rol, sin pasar nunca por el login ni por la base de datos.
+ * misma, filtrar la contraseña del administrador permitiría forjar tokens de
+ * sesión con cualquier id y cualquier rol, sin pasar por el login ni por la
+ * base de datos.
  */
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
@@ -77,14 +77,8 @@ const ALFABETO_TEMPORAL = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
  * clave. Dura hasta el primer inicio de sesión, donde el sistema exige
  * cambiarla (ver mustChangePassword).
  *
- * Antes era el nombre del correo más 4 dígitos. El problema es que la parte
- * del correo la sabe cualquiera, así que el secreto real eran esos 4 dígitos:
- * 10.000 combinaciones. Con el tope de 20 intentos por cuenta cada 15 minutos,
- * probarlas todas toma unos días — y la clave sigue viva mientras el usuario
- * no entre por primera vez, que puede ser una semana.
- *
- * Ahora son 10 caracteres al azar de un alfabeto de 31 (~50 bits): se sigue
- * dictando sin problema en tres grupos, y adivinarla deja de ser un plan.
+ * Son 12 caracteres al azar (~50 bits) en tres grupos precedidos del nombre del
+ * correo, para poder dictarla por teléfono sin ambigüedad.
  */
 export function generateTemporaryPassword(email: string): string {
   const prefijo = (email.split('@')[0] || 'usuario')
@@ -164,7 +158,7 @@ export function verifySessionToken(token: string): AdminSessionUser | null {
       nombre: user.nombre,
       role: user.role,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

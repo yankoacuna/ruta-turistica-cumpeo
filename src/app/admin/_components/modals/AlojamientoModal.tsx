@@ -108,7 +108,7 @@ export function AlojamientoModal({
           />
         </div>
 
-        {/* Contacto Refactorizado */}
+        {/* Contacto */}
         <ContactoSection
           contacto={editing.contacto}
           telefono={editing.telefono}

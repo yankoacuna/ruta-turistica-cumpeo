@@ -78,8 +78,7 @@ export function HeroSection({ destinations }: HeroSectionProps) {
 
         <div className="relative z-10 w-full max-w-shell mx-auto px-4 pt-14 pb-14 md:pt-24 md:pb-20">
           <div className="max-w-2xl">
-            {/* Escala asimetrica: "Cumpeo" domina, el subtitular acompaña.
-                Antes los cinco elementos tenian el mismo peso visual. */}
+            {/* Escala asimetrica: "Cumpeo" domina, el subtitular acompaña. */}
             <h1 className="font-display font-bold text-white">
               <Editable k="home.hero.titulo" className="block text-display-xl" />
               <Editable

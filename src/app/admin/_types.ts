@@ -14,6 +14,15 @@ export type AdminSection =
   | 'usuarios'
   | 'notificaciones';
 
+/**
+ * Las secciones que son un catastro de fichas y comparten tabla, formulario y
+ * acciones. Es lo que admite AdminTable.
+ */
+export type CatastroSection = Extract<
+  AdminSection,
+  'destinos' | 'restaurantes' | 'alojamientos' | 'eventos'
+>;
+
 export type { UserRole, AdminUser, AdminSessionUser } from '@/lib/types';
 
 export type ToastFn = (message: string, type: 'success' | 'error' | 'info') => void;

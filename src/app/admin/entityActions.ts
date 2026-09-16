@@ -102,8 +102,8 @@ const ENTITY_CONFIGS: Record<string, EntityCrudConfig> = {
       { key: 'galeria', coalesce: [] }, { key: 'tags', coalesce: [] },
       { key: 'destacado', coalesce: false }, { key: 'activo', coalesce: true },
     ],
-    // A diferencia de los otros 3 tipos, un evento nuevo sin coordenadas no
-    // recibe una por defecto — así se comportaba antes de este refactor.
+    // Un evento nuevo sin coordenadas no recibe una por defecto, a diferencia
+    // de los otros tres tipos.
     createDefaults: { nombre: 'Nuevo Evento', tipo: 'ferias-libres', descripcion: '' },
   },
 };
@@ -118,12 +118,9 @@ function buildFieldsData(data: Record<string, any>, fields: FieldSpec[]): Record
 }
 
 /**
- * Listado para el panel. A diferencia de las lecturas públicas incluye los
- * registros inactivos y sin publicar, así que exige sesión: los server actions
- * son endpoints HTTP públicos, y sin esta línea cualquiera podía invocarlos
- * desde fuera del panel y sacar el catastro completo —borradores, fichas
- * ocultas y datos de contacto de los dueños incluidos— sin iniciar sesión.
- * Un LECTOR puede listar; crear, editar y borrar siguen exigiendo más rol.
+ * Listado para el panel. Incluye los registros inactivos y sin publicar, así
+ * que exige sesión: un LECTOR puede listar, mientras que crear, editar y borrar
+ * exigen más rol.
  */
 async function genericGetAdminList(model: EntityCrudConfig['model']) {
   await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
@@ -131,17 +128,9 @@ async function genericGetAdminList(model: EntityCrudConfig['model']) {
 }
 
 /**
- * Id libre para una ficha nueva.
- *
- * El id se deriva del nombre ("Plaza de Cumpeo" -> "plaza-de-cumpeo") y entraba
- * directo a un upsert: crear una ficha con el nombre de una que ya existía no
- * avisaba ni creaba una segunda, sino que sobrescribía la anterior en silencio,
- * con sus fotos, su historia y su galería. Es un accidente perfectamente
- * posible con dos locales homónimos ("Donde la Mary") o con dos personas
- * cargando el catastro a la vez.
- *
- * Ahora se busca el primer sufijo libre (plaza-de-cumpeo-2, -3...) y la ficha
- * existente queda intacta.
+ * Primer id libre derivado del nombre: "Plaza de Cumpeo" -> "plaza-de-cumpeo",
+ * y si ya está tomado, "plaza-de-cumpeo-2", "-3"... Dos fichas con el mismo
+ * nombre reciben ids distintos en vez de compartir uno.
  */
 async function idDisponible(
   config: EntityCrudConfig,
@@ -220,8 +209,7 @@ async function genericDeleteEntity(
   try {
     await (prisma[config.model] as any).delete({ where: { id } });
   } catch (error: any) {
-    // Dos personas borrando la misma ficha desde dos pestañas es un caso real
-    // en una oficina: la segunda no debería ver un error de sistema.
+    // Borrado concurrente desde dos pestañas: no es un error de sistema.
     if (error?.code === PRISMA_NO_ENCONTRADO) {
       return fallo('NO_ENCONTRADO', 'Esa ficha ya no existe: alguien la eliminó antes.');
     }

@@ -181,9 +181,8 @@ export function OrdenPortadaManager({
         'success'
       );
     } catch (error) {
-      // El mensaje real de una excepcion de server action no llega al navegador
-      // en produccion (ver src/lib/resultado.ts): se registra y se avisa en
-      // terminos que el funcionario pueda entender.
+      // El mensaje real no llega al navegador en producción (ver
+      // src/lib/resultado.ts): se registra y se avisa en términos generales.
       console.error('Error inesperado al guardar el orden de la portada:', error);
       showToast('No pudimos guardar el orden. Vuelve a intentarlo en unos segundos.', 'error');
     } finally {

@@ -12,11 +12,9 @@ interface EventsSectionProps {
 /**
  * Calendario comunal en formato agenda.
  *
- * Antes era otro carrusel de tarjetas blancas (el cuarto de la portada) y
- * ademas usaba colores crudos de Tailwind (amber-50, emerald-50) que no
- * existen en el sistema, sumando dos hues mas al desorden. Una agenda es una
- * lista con fechas: leerla en filas es mas rapido y le da a la seccion una
- * forma propia dentro de la pagina.
+ * Una agenda es una lista con fechas: leerla en filas es mas rapido que en
+ * tarjetas y le da a la seccion una forma propia dentro de la pagina. Los
+ * colores salen del sistema de diseno, no de la paleta cruda de Tailwind.
  */
 export function EventsSection({ events }: EventsSectionProps) {
   if (!events || events.length === 0) return null;

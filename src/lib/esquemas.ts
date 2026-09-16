@@ -1,26 +1,21 @@
 import { z } from 'zod';
 
 /**
- * Reglas de lo que el panel puede guardar en el catastro.
+ * Reglas de validación de lo que el panel guarda en el catastro.
  *
- * Por qué existe: `saveDestination(data: Partial<Destination>)` confiaba en que
- * el navegador mandara lo que el tipo declara, y TypeScript no existe en tiempo
- * de ejecución. Los server actions son endpoints HTTP públicos: `coordenadas`
- * podía llegar como "hola", `rating` como texto, `nombre` con dos megas y
- * `categoria` con un valor que no está en el catálogo. La lista blanca de
- * campos de entityActions evitaba escribir en columnas ajenas, pero no miraba
- * el contenido — y lo que se guarda es lo que después muestra el sitio público.
+ * Los server actions son endpoints HTTP públicos y TypeScript no existe en
+ * tiempo de ejecución, así que todo lo que llega se valida acá antes de tocar
+ * la base.
  *
- * Dos decisiones que conviene tener presentes al editar esto:
+ * Dos convenciones a respetar al editar estos esquemas:
  *
- * 1. Casi todo es opcional a propósito. El panel guarda fichas completas y
- *    parciales con la misma acción, y un campo ausente significa "no lo toques",
- *    no "déjalo vacío". Poner un .default() donde había undefined haría que
- *    editar el teléfono borrara la descripción.
+ * 1. Casi todo es opcional. El panel guarda fichas completas y parciales con la
+ *    misma acción, y un campo ausente significa "no lo toques": un .default()
+ *    convertiría una edición parcial en un borrado de los demás campos.
  *
- * 2. Las claves desconocidas se descartan en silencio (comportamiento por
- *    defecto de Zod). Es lo que queremos: el formulario manda la ficha entera,
- *    con createdAt y updatedAt incluidos, y esos no se guardan desde acá.
+ * 2. Las claves desconocidas se descartan (comportamiento por defecto de Zod).
+ *    El formulario manda la ficha entera, con createdAt y updatedAt incluidos,
+ *    y esos no se escriben desde acá.
  */
 
 /** Errores por campo, con el formato que espera `Resultado.detalles`. */
@@ -45,9 +40,8 @@ const listaDeTextos = (maxItems: number, maxLargo = 80) =>
 const imagen = () => texto(500);
 
 /**
- * Coordenadas dentro de Chile continental. Mismo criterio que ya usa el
- * formulario público (src/lib/solicitudes.ts): un punto en otro continente es
- * siempre un error de carga, no un dato que valga la pena guardar.
+ * Coordenadas dentro de Chile continental, mismo rango que aplica el formulario
+ * público (src/lib/solicitudes.ts).
  */
 export const CoordenadasSchema = z.object({
   lat: z.number().min(-56, 'Latitud fuera de Chile').max(-17, 'Latitud fuera de Chile'),

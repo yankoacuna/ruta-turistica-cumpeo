@@ -21,13 +21,9 @@ const ALLOWED_TYPES: Record<string, string> = {
 
 /**
  * Rechaza el envío por el tamaño que declara la cabecera, antes de leer el
- * cuerpo.
- *
- * El control de tamaño se hacía con file.size, que solo se conoce después de
- * que formData() ya cargó el envío completo en memoria: alguien podía mandar
- * 500 MB y el proceso los guardaba enteros antes de descubrir que sobraban. En
- * un hosting compartido eso tumba la aplicación aunque el archivo termine
- * rechazado. Se deja un 20% de holgura por el envoltorio multipart.
+ * cuerpo: file.size solo se conoce con el envío completo ya en memoria. Se deja
+ * un 20% de holgura por el envoltorio multipart. La cabecera puede mentir, por
+ * eso la validación por file.size se mantiene después.
  */
 function excedeTamanoDeclarado(req: NextRequest, maxMb: number): boolean {
   const declarado = Number(req.headers.get('content-length'));

@@ -18,13 +18,9 @@ interface RutaShowcaseProps {
 /**
  * Viñeta de acento para el producto estrella de la comuna.
  *
- * Cambios respecto de la version anterior:
- * - Ya no muestra un mosaico 2x2 de cuatro fotos sueltas, sino el plano
- *   turistico ilustrado, que es justamente la pieza que pide el EETT.
- * - Los "atributos" eran etiquetas decorativas fijas ("Con mapa GPS"). Ahora
- *   son datos reales de la ruta: paradas, duracion y distancia.
- * - Lista las primeras paradas numeradas: da una razon concreta para entrar,
- *   en vez de un CTA a ciegas.
+ * Muestra el plano turistico ilustrado, que es la pieza que pide el EETT, con
+ * los datos reales de la ruta (paradas, duracion y distancia) y las primeras
+ * paradas numeradas, para dar una razon concreta para entrar.
  */
 export function RutaShowcase({ route, stops = [] }: RutaShowcaseProps) {
   const { get } = useSiteText();

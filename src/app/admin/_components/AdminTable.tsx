@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Destination, Restaurant, Accommodation, CumpeoEvent } from '@/lib/types';
 import { formatHorario } from '@/lib/openingHours';
-import { AdminSection } from '../_types';
+import { CatastroSection } from '../_types';
 import { Tooltip } from './Tooltip';
 import { SearchableSelect } from '@/components/SearchableSelect';
 
@@ -34,7 +34,7 @@ interface EntityHandlers<T> {
 }
 
 interface AdminTableProps {
-  activeSection: Exclude<AdminSection, 'dashboard' | 'qrcodes' | 'backups' | 'usuarios'>;
+  activeSection: CatastroSection;
   destinos: Destination[];
   restaurantes: Restaurant[];
   alojamientos: Accommodation[];

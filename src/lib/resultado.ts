@@ -1,24 +1,14 @@
 /**
  * Resultado de un server action.
  *
- * Por qué existe: Next.js reemplaza el mensaje de cualquier excepción no
- * capturada de un server action por uno genérico con digest cuando corre en
- * producción, para no filtrar detalles del servidor al navegador. El panel, en
- * cambio, decidía qué hacer leyendo ese mensaje:
+ * Los errores esperados —sin sesión, rol insuficiente, clave temporal sin
+ * cambiar, datos inválidos, registro inexistente— son parte del contrato de la
+ * acción y se devuelven como valor, con un código que el panel puede leer.
  *
- *     if (err.message.includes('No autorizado')) mostrarSesionExpirada();
- *     showToast(`Error: ${err.message}`);
- *
- * En el hosting real eso nunca se cumple: el modal de sesión vencida no
- * aparecía jamás y al funcionario municipal le salía "An error occurred in the
- * Server Components render" en vez de un aviso en español. Peor aún, es
- * invisible en desarrollo, donde el mensaje sí llega entero.
- *
- * La regla, entonces: los errores ESPERADOS —sin sesión, rol insuficiente,
- * datos inválidos, registro no encontrado— son parte del contrato de la acción
- * y se devuelven como valor. Las excepciones quedan para las fallas genuinas
- * (la base caída, un bug), donde el mensaje genérico de Next sí es lo correcto
- * y lo que importa es el log del servidor.
+ * No se comunican lanzando: en producción Next reemplaza el mensaje de una
+ * excepción de server action por uno genérico con digest, de modo que el
+ * navegador no recibe nada con que distinguir un caso de otro. Las excepciones
+ * quedan para las fallas genuinas, donde lo que importa es el log del servidor.
  */
 
 export type CodigoError =
@@ -64,9 +54,8 @@ export function fallo(
 }
 
 /**
- * Los tres códigos que significan "esta sesión ya no sirve". El panel los trata
- * distinto del resto: en vez de un aviso pasajero, abre la pantalla de volver a
- * iniciar sesión.
+ * Códigos que significan que la sesión ya no sirve. El panel los trata distinto
+ * del resto: abre la pantalla de inicio de sesión en vez de un aviso pasajero.
  */
 const CODIGOS_DE_SESION: CodigoError[] = [
   'NO_AUTORIZADO',

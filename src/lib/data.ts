@@ -7,26 +7,19 @@ import { resolveTheme, ResolvedTheme, ThemeOverrides } from './theme';
 // ─── CACHÉ DEL CATASTRO PÚBLICO ───────────────────────────────────────────────
 
 /**
- * Etiqueta única de todo el contenido del catastro (destinos, restaurantes,
- * alojamientos, eventos, rutas, contactos de emergencia y categorías).
+ * Etiqueta de caché de todo el contenido del catastro: destinos, restaurantes,
+ * alojamientos, eventos, rutas, contactos de emergencia y categorías.
  *
- * El sitio público lo lee en cada visita, pero el municipio lo edita unas pocas
- * veces por semana: sin caché, cada turista que abre la portada dispara ocho
- * consultas a MySQL en un hosting compartido de un solo proceso. Con esta
- * etiqueta las lecturas se resuelven una vez y se reusan hasta que alguien
- * guarda algo en el panel, momento en que `invalidarContenidoPublico()`
- * (src/lib/revalidate.ts) las bota todas de una.
- *
- * Es el mismo patrón que ya usaban los textos y la apariencia del sitio,
- * aplicado ahora también al catastro.
+ * Las lecturas etiquetadas se resuelven una vez y se reusan entre visitas hasta
+ * que una escritura del panel llama a `invalidarContenidoPublico()`
+ * (src/lib/revalidate.ts).
  */
 export const CONTENT_TAG = 'contenido-publico';
 
 /**
- * Red de seguridad: aunque la invalidación por etiqueta es lo que manda, una
- * entrada nunca vive más de 5 minutos. Si algún día se agrega una ruta de
- * escritura nueva y se olvida invalidar, el sitio se corrige solo en minutos
- * en vez de quedar congelado hasta el próximo despliegue.
+ * Vida máxima de una entrada cacheada. La invalidación por etiqueta es lo que
+ * manda; este tope acota cuánto puede quedar desactualizado el sitio si una
+ * escritura no invalida.
  */
 const TTL_CONTENIDO_SEGUNDOS = 300;
 
@@ -285,11 +278,7 @@ export const getTourRoutes = cacheContenido('tour-routes', async (): Promise<Tou
   return [];
 });
 
-/**
- * Una ruta por id o slug. Se resuelve sobre la lista ya cacheada en vez de
- * hacer una consulta extra por visita: son pocas rutas y la portada ya las
- * leyó todas, así que la lista está caliente.
- */
+/** Una ruta por id o slug, resuelta sobre la lista ya cacheada. */
 export async function getTourRouteByIdOrSlug(idOrSlug: string): Promise<TourRoute | null> {
   const routes = await getTourRoutes();
   return routes.find((r) => r.id === idOrSlug || r.slug === idOrSlug) || null;

@@ -31,24 +31,14 @@ const MAX_INTENTOS_FALLIDOS_IP = 8;
 const MAX_INTENTOS_FALLIDOS_CUENTA = 20;
 const intentosFallidos = new Map<string, { cuenta: number; expira: number }>();
 
-/**
- * Un solo mensaje para todo fallo de credenciales.
- *
- * Antes el login distinguía "Usuario no encontrado", "Contraseña incorrecta" y
- * "Esta cuenta ha sido desactivada". Las tres juntas son un buscador de
- * cuentas: probando correos, cualquiera podía averiguar quién tiene acceso al
- * panel municipal sin acertar una sola contraseña, y dirigir a esas personas
- * un correo de phishing creíble.
- */
+/** Mensaje único para todo fallo de credenciales: no revela si el correo existe. */
 const ERROR_CREDENCIALES = 'Correo o contraseña incorrectos.';
 
 /**
- * Hash señuelo contra el que se verifica cuando el correo no existe.
- *
- * Sin esto, un correo inexistente responde al instante y uno real se demora lo
- * que tarda scrypt: esa diferencia, medible desde fuera, delata igual qué
- * cuentas existen aunque el mensaje sea el mismo. Se calcula una vez al
- * arrancar el proceso, sobre un valor aleatorio que nadie conoce.
+ * Hash contra el que se verifica cuando el correo no existe, para que la
+ * respuesta tarde lo mismo que con una cuenta real: la diferencia de tiempo
+ * delataría qué correos están registrados. Se calcula una vez al arrancar el
+ * proceso, sobre un valor aleatorio.
  */
 const HASH_SENUELO = hashPassword(crypto.randomBytes(32).toString('hex'));
 
@@ -204,8 +194,7 @@ export async function loginAdmin(
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    // Se verifica igual contra el señuelo para gastar el mismo tiempo que
-    // gastaría una cuenta real. El resultado se descarta.
+    // Mismo costo que una cuenta real; el resultado se descarta.
     verifyPassword(password, HASH_SENUELO);
     registrarIntentoFallido(claveIp);
     registrarIntentoFallido(claveCuenta);
@@ -219,9 +208,7 @@ export async function loginAdmin(
     return { success: false, error: ERROR_CREDENCIALES };
   }
 
-  // La cuenta desactivada se avisa recién acá, después de validar la
-  // contraseña: así el funcionario entiende por qué no entra, y quien solo
-  // está probando correos ajenos no se entera de que la cuenta existe.
+  // Solo se informa a quien acertó la contraseña.
   if (!user.activo) {
     return { success: false, error: 'Esta cuenta está desactivada. Contacta al administrador.' };
   }
@@ -286,12 +273,8 @@ export async function requireRole(
     throw new Error('No autorizado: Inicia sesión para continuar');
   }
 
-  // El cambio de clave obligatorio se mostraba solo como pantalla en el
-  // navegador (ver AdminClient), y una pantalla no detiene a nadie: los server
-  // actions se pueden invocar directo, así que quien tuviera una contraseña
-  // temporal podía trabajar sin cambiarla nunca y dejarla viva para siempre.
-  // Acá se corta de verdad. changeOwnPassword no pasa por esta función, así
-  // que la salida —cambiar la clave— sigue abierta.
+  // changeOwnPassword no pasa por esta función, de modo que cambiar la clave
+  // sigue siendo posible con una sesión en este estado.
   if (session.mustChangePassword) {
     throw new Error(
       'No autorizado: Debes cambiar tu contraseña temporal antes de continuar'
@@ -319,15 +302,12 @@ const ROL_LABEL: Record<UserRole, string> = {
 };
 
 /**
- * Misma puerta que requireRole, pero devolviendo el resultado en vez de lanzar.
+ * Autorización para las acciones que el panel invoca desde el navegador:
+ * devuelve el resultado en vez de lanzar, porque el mensaje de una excepción de
+ * server action no llega al navegador en producción (ver src/lib/resultado.ts).
  *
- * Es la versión que deben usar las acciones que el panel invoca desde el
- * navegador: una excepción pierde su mensaje al cruzar a producción (ver
- * src/lib/resultado.ts), y sin mensaje el panel no puede distinguir "se venció
- * tu sesión" de "se cayó la base".
- *
- * requireRole se mantiene para las lecturas que solo ocurren en el servidor
- * (por ejemplo las que arman /admin), donde lanzar es exactamente lo correcto.
+ * requireRole es la variante para las lecturas que solo ocurren en el servidor,
+ * como las que arman /admin.
  */
 export async function sesionConRol(
   rolesPermitidos: UserRole[]

@@ -145,7 +145,7 @@ export function RestauranteModal({
           </div>
         </div>
 
-        {/* Contacto Refactorizado */}
+        {/* Contacto */}
         <ContactoSection
           contacto={editing.contacto}
           telefono={editing.telefono}

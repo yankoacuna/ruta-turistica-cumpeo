@@ -8,17 +8,8 @@ const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
 
-  // La versión del framework no le sirve a nadie salvo a quien busca un
-  // exploit conocido para ella.
+  // No anunciar el framework ni su versión.
   poweredByHeader: false,
-  typescript: {
-    // Evita que la compilación en hosting compartido (cPanel) falle por
-    // discrepancias de paquetes @types en el entorno virtual de producción
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   experimental: {
     cpus: 1,
   },
@@ -43,32 +34,25 @@ const nextConfig = {
     '/api/track': ['./node_modules/geoip-lite/data/**/*'],
   },
   // ─── CABECERAS DE SEGURIDAD ───────────────────────────────────────────────
-  //
-  // No había ninguna. Son la defensa que actúa en el navegador del visitante,
-  // independiente de lo que haga el código del servidor.
   async headers() {
     const base = [
       // Nada de adivinar el tipo de un archivo por su contenido: una imagen
       // subida por un desconocido se trata como imagen y nunca como HTML.
       { key: 'X-Content-Type-Options', value: 'nosniff' },
-      // Al salir del sitio se manda solo el dominio, no la URL completa: una
-      // ficha o una búsqueda no tienen por qué viajar a terceros.
+      // Al salir del sitio se manda solo el dominio, no la URL completa.
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       // El sitio pide ubicación (mapa y "cerca de mí"); cámara y micrófono no
       // los usa nadie, así que se niegan de entrada.
       { key: 'Permissions-Policy', value: 'geolocation=(self), camera=(), microphone=(), payment=()' },
-      // Una vez que el dominio esté en HTTPS, el navegador no vuelve a
-      // intentar http. Sin includeSubDomains a propósito: los subdominios del
-      // hosting (webmail, cpanel) no son de esta app.
+      // Sin includeSubDomains: los subdominios del hosting (webmail, cpanel)
+      // no son de esta aplicación.
       { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
     ];
 
     return [
       // El sitio público puede necesitar embeberse en la web municipal.
       { source: '/:path*', headers: [...base, { key: 'X-Frame-Options', value: 'SAMEORIGIN' }] },
-      // El panel, en cambio, no se embebe en ningún lado: un iframe invisible
-      // sobre /admin es la receta clásica de clickjacking contra quien ya
-      // tiene la sesión abierta.
+      // El panel no se embebe en ningún lado.
       {
         source: '/admin/:path*',
         headers: [
@@ -79,8 +63,7 @@ const nextConfig = {
           { key: 'Cache-Control', value: 'no-store, max-age=0' },
         ],
       },
-      // Archivos subidos: se sirven como archivo y nada más. Sin scripts, sin
-      // iframes, sin nada activo, aunque alguien logre colar un archivo raro.
+      // Archivos subidos: se sirven como archivo y nada más, sin nada activo.
       {
         source: '/uploads/:path*',
         headers: [
