@@ -8,7 +8,7 @@ import {
   UtensilsCrossed,
   BedDouble,
   CalendarDays,
-  Image,
+  Image as ImageIcon,
   Pencil,
   Trash2,
   Star,
@@ -83,7 +83,7 @@ function Thumbnail({ url }: { url?: string | null }) {
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-[#FAF8F5]" title="Sin imagen asignada">
-          <Image size={14} className="text-text-muted/60" />
+          <ImageIcon size={14} className="text-text-muted/60" />
         </div>
       )}
     </div>

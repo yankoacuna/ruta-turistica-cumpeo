@@ -7,11 +7,6 @@ import {
   ExternalLink,
   LogOut,
   ChevronRight,
-  ShieldCheck,
-  ShieldAlert,
-  Shield,
-  Eye,
-  KeyRound,
   Sparkles,
   ChevronDown,
   Compass,
@@ -33,7 +28,6 @@ interface AdminTopBarProps {
   activeSection: AdminSection;
   currentUser?: AdminSessionUser | null;
   onToggleMobileSidebar: () => void;
-  onChangePassword?: () => void;
   onLogout: () => void;
   onStartTour?: (tourId: TourId) => void;
 }
@@ -42,7 +36,6 @@ export function AdminTopBar({
   activeSection,
   currentUser,
   onToggleMobileSidebar,
-  onChangePassword,
   onLogout,
   onStartTour,
 }: AdminTopBarProps) {
@@ -71,21 +64,6 @@ export function AdminTopBar({
     category: 'Módulo',
     label: 'Administración',
   };
-
-  const getRoleBadge = () => {
-    switch (currentUser?.role) {
-      case 'ADMIN':
-        return { label: 'Admin', icon: ShieldAlert, cls: 'bg-red-50 text-rojo border-red-200' };
-      case 'EDITOR':
-        return { label: 'Editor', icon: Shield, cls: 'bg-purple-50 text-purple-700 border-purple-200' };
-      case 'LECTOR':
-      default:
-        return { label: 'Lector', icon: Eye, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    }
-  };
-
-  const role = getRoleBadge();
-  const RoleIcon = role.icon;
 
   return (
     <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-border px-4 lg:px-8 h-16 flex items-center justify-between gap-4 select-none">

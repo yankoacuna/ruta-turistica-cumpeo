@@ -17,7 +17,6 @@ import {
   ExternalLink,
   LogOut,
   X,
-  ShieldCheck,
   ShieldAlert,
   Shield,
   Eye,

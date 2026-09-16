@@ -9,7 +9,6 @@ import {
   Upload,
   FileSpreadsheet,
   FileJson,
-  CheckCircle2,
   AlertTriangle,
   Loader2,
   ShieldAlert,
@@ -19,7 +18,6 @@ import {
 import { useToast } from '@/components/Toast';
 import { UserRole } from '@/lib/types';
 import { BulkImportWizard } from './BulkImportWizard';
-import { exportDatasetToXLSX } from '@/lib/bulkValidator';
 
 interface BackupManagerProps {
   destinos: Destination[];

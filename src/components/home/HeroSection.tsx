@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, ChevronRight, X, Compass, QrCode } from 'lucide-react';
+import { Search, MapPin, ChevronRight, X, Compass } from 'lucide-react';
 import { Destination } from '@/lib/types';
 import { Editable, EditableImage, useSiteText } from '@/components/site-text';
 

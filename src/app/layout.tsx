@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import Link from 'next/link';
 import './globals.css';
 import SiteLayout from '@/components/SiteLayout';
 import PWARegister from '@/components/PWARegister';

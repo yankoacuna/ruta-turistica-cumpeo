@@ -14,7 +14,6 @@ import {
   AlertCircle,
   Sparkles,
   Pencil,
-  PenLine,
 } from 'lucide-react';
 import {
   APIProvider,

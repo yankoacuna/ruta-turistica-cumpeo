@@ -608,7 +608,6 @@ export function SumateForm() {
                   key={url}
                   className="relative w-24 h-24 rounded-xl overflow-hidden border border-border bg-surface-soft"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt="Foto adjunta" className="w-full h-full object-cover" />
                   <button
                     type="button"

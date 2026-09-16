@@ -7,22 +7,15 @@ import {
   BedDouble,
   CalendarDays,
   Compass,
-  Database,
   TrendingUp,
-  CheckCircle2,
-  Image,
+  Image as ImageIcon,
   Star,
   Plus,
   ArrowRight,
-  HardDrive,
-  QrCode,
   Map,
-  Users,
   Eye,
   UserRound,
   Inbox,
-  Shield,
-  ShieldAlert,
   Sparkles,
 } from 'lucide-react';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, TourRoute, AdminSessionUser, UserRole } from '@/lib/types';
@@ -47,7 +40,6 @@ interface AdminDashboardProps {
   alojamientos: Accommodation[];
   eventos?: CumpeoEvent[];
   rutas?: TourRoute[];
-  usersCount?: number;
   currentUser?: AdminSessionUser | null;
   onNavigate: (section: AdminSection) => void;
   onNewDestino?: () => void;
@@ -64,7 +56,6 @@ export function AdminDashboard({
   alojamientos,
   eventos = [],
   rutas = [],
-  usersCount = 0,
   currentUser,
   onNavigate,
   onNewDestino,
@@ -75,7 +66,6 @@ export function AdminDashboard({
   onStartTour,
 }: AdminDashboardProps) {
   const isLector = currentUser?.role === 'LECTOR';
-  const isAdmin = currentUser?.role === 'ADMIN';
 
   // Una sola consulta de visitas para la tarjeta del grid y el panel detallado.
   const visitas = useVisitStats('30d');
@@ -97,9 +87,6 @@ export function AdminDashboard({
       .then((res) => setSolicitudesPendientes(res.ok ? res.data : 0))
       .catch(() => setSolicitudesPendientes(0));
   }, []);
-
-  const totalItems =
-    destinos.length + restaurantes.length + alojamientos.length + eventos.length + rutas.length;
 
   const hasRealPhoto = (img?: string | null): img is string =>
     Boolean(img && !img.includes('placeholder'));
@@ -472,7 +459,7 @@ export function AdminDashboard({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Image size={16} className="text-text-muted" />
+                        <ImageIcon size={16} className="text-text-muted" />
                       </div>
                     )}
                   </div>

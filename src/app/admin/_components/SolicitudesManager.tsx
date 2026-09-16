@@ -504,7 +504,6 @@ export function SolicitudesManager({
                             rel="noopener noreferrer"
                             className="w-24 h-24 rounded-xl overflow-hidden border border-border bg-surface-soft block hover:border-rojo transition-colors"
                           >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={url}
                               alt={`Foto de ${s.nombre}`}

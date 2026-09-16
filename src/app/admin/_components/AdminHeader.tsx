@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { LogOut, CheckCircle2, LayoutDashboard, MapPin, UtensilsCrossed, BedDouble } from 'lucide-react';
+import { LogOut, CheckCircle2 } from 'lucide-react';
 import { AdminSection } from '../_types';
 
 interface NavTab {

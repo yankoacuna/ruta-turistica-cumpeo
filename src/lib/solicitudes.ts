@@ -69,7 +69,6 @@ function texto(valor: unknown, max: number): string {
       .replace(/\r\n?/g, '\n')
       // Fuera los caracteres de control: no aportan nada a un texto escrito a
       // mano y ensucian tanto el panel como el correo de aviso.
-      // eslint-disable-next-line no-control-regex
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
       .trim()
       .slice(0, max)

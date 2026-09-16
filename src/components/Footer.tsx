@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Info, Bus, CalendarDays, Thermometer, Phone, AlertTriangle,
-  Building2, Navigation, Home, Map, Target, UtensilsCrossed,
-  BedDouble, MapPin, Store
+  Building2, Navigation, Home, Map, Target, Store
 } from 'lucide-react';
 import { Editable } from '@/components/site-text';
 

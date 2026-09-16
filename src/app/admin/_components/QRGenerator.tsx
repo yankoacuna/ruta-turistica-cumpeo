@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { toPng } from 'html-to-image';
 import { Destination, Restaurant, Accommodation } from '@/lib/types';
-import { QrCode, Download, ExternalLink, Sparkles, Printer, Copy, Check, ChevronDown } from 'lucide-react';
+import { QrCode, ExternalLink, Printer, Copy, Check, ChevronDown } from 'lucide-react';
 import { Field, inputCls } from './Field';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { useToast } from '@/components/Toast';

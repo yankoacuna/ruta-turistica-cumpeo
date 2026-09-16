@@ -9,7 +9,6 @@ import {
   AlertCircle,
   ExternalLink,
   Link as LinkIcon,
-  RefreshCw,
   Globe,
   ClipboardPaste,
 } from "lucide-react";
