@@ -3,27 +3,17 @@
 import { prisma } from '@/lib/prisma';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, OrderableEntity } from '@/lib/types';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
-import { CENTRO_CUMPEO } from '@/lib/constants';
 import { requireRole, sesionConRol } from './authActions';
 import { Resultado, exito, fallo } from '@/lib/resultado';
-import {
-  DestinoSchema,
-  RestauranteSchema,
-  AlojamientoSchema,
-  EventoSchema,
-  OrdenSchema,
-  detallesDeZod,
-} from '@/lib/esquemas';
-import type { z } from 'zod';
+import { OrdenSchema, detallesDeZod } from '@/lib/esquemas';
+import { ENTIDADES, DescriptorEntidad, buildFieldsData, slugFromNombre } from '@/lib/entidades';
 
 /**
  * Próximo valor de `orden` para una ficha nueva: el mayor actual + 1.
  * Sin esto, una ficha nueva nace en 0 y salta al primer lugar de la portada,
  * por delante de todo lo que el municipio ya ordenó a mano.
  */
-async function nextOrden(
-  model: 'destination' | 'restaurant' | 'accommodation' | 'event'
-): Promise<number> {
+async function nextOrden(model: DescriptorEntidad['modelo']): Promise<number> {
   const agg = await (prisma[model] as any).aggregate({ _max: { orden: true } });
   return (agg._max.orden ?? -1) + 1;
 }
@@ -31,98 +21,16 @@ async function nextOrden(
 // ─── CRUD GENÉRICO PARA LOS TIPOS DE LUGAR ─────────────────────────────────
 // Destino, Restaurante, Alojamiento y Evento comparten la misma mecánica de
 // guardado (upsert por id derivado del nombre, orden automático al crear,
-// revalidación de rutas) y de borrado. Lo único que cambia entre ellos es qué
-// campos tienen y qué valor usan por defecto al crear uno nuevo — eso vive en
-// ENTITY_CONFIGS. Agregar un tipo de lugar nuevo es agregar una entrada ahí,
-// no duplicar el guardado/borrado completo.
-
-function slugFromNombre(nombre?: string): string {
-  return nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || '';
-}
-
-/** Campo simple (se guarda tal cual llega) o con un valor de reemplazo cuando viene nulo/vacío. */
-type FieldSpec = string | { key: string; coalesce: unknown };
-
-interface EntityCrudConfig {
-  model: 'destination' | 'restaurant' | 'accommodation' | 'event';
-  fields: FieldSpec[];
-  /** Solo se aplican al crear un registro nuevo, y solo si el campo llega vacío. */
-  createDefaults: Record<string, unknown>;
-  /** Solo Destination tiene columna `slug` propia; los demás derivan el id directo del nombre. */
-  hasSlug: boolean;
-  idFallback: string;
-}
-
-const ENTITY_CONFIGS: Record<string, EntityCrudConfig> = {
-  destination: {
-    model: 'destination',
-    hasSlug: true,
-    idFallback: 'new-dest',
-    fields: [
-      'nombre', 'categoria', 'descripcionCorta', 'descripcionLarga', 'historia',
-      'coordenadas', 'direccion', 'horario', 'duracionVisita', 'comoLlegar', 'tags',
-      'imagenPrincipal', { key: 'galeria', coalesce: [] }, 'rating', 'destacado',
-      { key: 'activo', coalesce: true },
-    ],
-    createDefaults: {
-      nombre: 'Nuevo Destino', categoria: 'cultural', descripcionCorta: '',
-      coordenadas: CENTRO_CUMPEO, tags: [], destacado: false,
-    },
-  },
-  restaurant: {
-    model: 'restaurant',
-    hasSlug: false,
-    idFallback: 'new-rest',
-    fields: [
-      'nombre', 'tipo', 'descripcion', 'especialidad', 'propietario', 'coordenadas',
-      'direccion', 'telefono', 'whatsapp', 'horario', { key: 'mediosPago', coalesce: [] },
-      { key: 'tags', coalesce: [] }, 'imagenPrincipal', { key: 'galeria', coalesce: [] },
-      'menuUrl', 'contacto', { key: 'activo', coalesce: true },
-    ],
-    createDefaults: { nombre: 'Nuevo Restaurante', descripcion: '', coordenadas: CENTRO_CUMPEO },
-  },
-  accommodation: {
-    model: 'accommodation',
-    hasSlug: false,
-    idFallback: 'new-acc',
-    fields: [
-      'nombre', 'tipo', 'propietario', 'descripcion', 'coordenadas', 'direccion',
-      'telefono', 'whatsapp', { key: 'servicios', coalesce: [] }, 'imagenPrincipal',
-      { key: 'galeria', coalesce: [] }, 'contacto', { key: 'activo', coalesce: true },
-    ],
-    createDefaults: { nombre: 'Nuevo Alojamiento', descripcion: '', coordenadas: CENTRO_CUMPEO },
-  },
-  event: {
-    model: 'event',
-    hasSlug: false,
-    idFallback: 'new-event',
-    fields: [
-      'nombre', 'tipo', 'descripcion', 'descripcionLarga', 'fecha',
-      { key: 'recurrente', coalesce: true }, 'coordenadas', 'direccion', 'imagenPrincipal',
-      { key: 'galeria', coalesce: [] }, { key: 'tags', coalesce: [] },
-      { key: 'destacado', coalesce: false }, { key: 'activo', coalesce: true },
-    ],
-    // Un evento nuevo sin coordenadas no recibe una por defecto, a diferencia
-    // de los otros tres tipos.
-    createDefaults: { nombre: 'Nuevo Evento', tipo: 'ferias-libres', descripcion: '' },
-  },
-};
-
-function buildFieldsData(data: Record<string, any>, fields: FieldSpec[]): Record<string, any> {
-  const out: Record<string, any> = {};
-  for (const f of fields) {
-    if (typeof f === 'string') out[f] = data[f];
-    else out[f.key] = data[f.key] ?? f.coalesce;
-  }
-  return out;
-}
+// revalidación de rutas) y de borrado. Lo único que cambia entre ellos es la
+// forma de cada uno, descrita en `@/lib/entidades`. Agregar un tipo de lugar
+// nuevo es agregar una entrada ahí, no duplicar el guardado/borrado completo.
 
 /**
  * Listado para el panel. Incluye los registros inactivos y sin publicar, así
  * que exige sesión: un LECTOR puede listar, mientras que crear, editar y borrar
  * exigen más rol.
  */
-async function genericGetAdminList(model: EntityCrudConfig['model']) {
+async function genericGetAdminList(model: DescriptorEntidad['modelo']) {
   await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
   return (prisma[model] as any).findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
 }
@@ -133,10 +41,10 @@ async function genericGetAdminList(model: EntityCrudConfig['model']) {
  * nombre reciben ids distintos en vez de compartir uno.
  */
 async function idDisponible(
-  config: EntityCrudConfig,
+  config: DescriptorEntidad,
   base: string
 ): Promise<string> {
-  const modelo = prisma[config.model] as any;
+  const modelo = prisma[config.modelo] as any;
   for (let intento = 1; intento <= 50; intento++) {
     const candidato = intento === 1 ? base : `${base}-${intento}`;
     const ocupado = await modelo.findFirst({
@@ -151,14 +59,13 @@ async function idDisponible(
 }
 
 async function genericSaveEntity<T>(
-  config: EntityCrudConfig,
-  esquema: z.ZodType<any>,
+  config: DescriptorEntidad,
   data: unknown
 ): Promise<Resultado<T>> {
   const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
   if (!sesion.ok) return sesion;
 
-  const validado = esquema.safeParse(data ?? {});
+  const validado = config.esquema.safeParse(data ?? {});
   if (!validado.success) {
     return fallo(
       'VALIDACION',
@@ -174,19 +81,19 @@ async function genericSaveEntity<T>(
   // códigos QR impresos en la señalética apuntan a ella.
   const id = limpio.id || (await idDisponible(config, base));
 
-  const fieldsData = buildFieldsData(limpio, config.fields);
+  const fieldsData = buildFieldsData(limpio, config.campos);
 
   const createData: Record<string, any> = {
     id,
     ...(config.hasSlug ? { slug: id } : {}),
     ...fieldsData,
-    orden: limpio.orden ?? (await nextOrden(config.model)),
+    orden: limpio.orden ?? (await nextOrden(config.modelo)),
   };
   for (const [key, fallback] of Object.entries(config.createDefaults)) {
     if (!createData[key]) createData[key] = fallback;
   }
 
-  const result = await (prisma[config.model] as any).upsert({
+  const result = await (prisma[config.modelo] as any).upsert({
     where: { id },
     update: fieldsData,
     create: createData,
@@ -200,14 +107,14 @@ async function genericSaveEntity<T>(
 const PRISMA_NO_ENCONTRADO = 'P2025';
 
 async function genericDeleteEntity(
-  config: EntityCrudConfig,
+  config: DescriptorEntidad,
   id: string
 ): Promise<Resultado<true>> {
   const sesion = await sesionConRol(['ADMIN']);
   if (!sesion.ok) return sesion;
 
   try {
-    await (prisma[config.model] as any).delete({ where: { id } });
+    await (prisma[config.modelo] as any).delete({ where: { id } });
   } catch (error: any) {
     // Borrado concurrente desde dos pestañas: no es un error de sistema.
     if (error?.code === PRISMA_NO_ENCONTRADO) {
@@ -232,11 +139,11 @@ export async function getAdminDestinations(): Promise<Destination[]> {
 }
 
 export async function saveDestination(data: Partial<Destination>): Promise<Resultado<Destination>> {
-  return genericSaveEntity<Destination>(ENTITY_CONFIGS.destination, DestinoSchema, data);
+  return genericSaveEntity<Destination>(ENTIDADES.destination, data);
 }
 
 export async function deleteDestination(id: string): Promise<Resultado<true>> {
-  return genericDeleteEntity(ENTITY_CONFIGS.destination, id);
+  return genericDeleteEntity(ENTIDADES.destination, id);
 }
 
 // ─── RESTAURANTS ──────────────────────────────────────────────────────────────
@@ -247,11 +154,11 @@ export async function getAdminRestaurants(): Promise<Restaurant[]> {
 }
 
 export async function saveRestaurant(data: Partial<Restaurant>): Promise<Resultado<Restaurant>> {
-  return genericSaveEntity<Restaurant>(ENTITY_CONFIGS.restaurant, RestauranteSchema, data);
+  return genericSaveEntity<Restaurant>(ENTIDADES.restaurant, data);
 }
 
 export async function deleteRestaurant(id: string): Promise<Resultado<true>> {
-  return genericDeleteEntity(ENTITY_CONFIGS.restaurant, id);
+  return genericDeleteEntity(ENTIDADES.restaurant, id);
 }
 
 // ─── ACCOMMODATIONS ───────────────────────────────────────────────────────────
@@ -262,11 +169,11 @@ export async function getAdminAccommodations(): Promise<Accommodation[]> {
 }
 
 export async function saveAccommodation(data: Partial<Accommodation>): Promise<Resultado<Accommodation>> {
-  return genericSaveEntity<Accommodation>(ENTITY_CONFIGS.accommodation, AlojamientoSchema, data);
+  return genericSaveEntity<Accommodation>(ENTIDADES.accommodation, data);
 }
 
 export async function deleteAccommodation(id: string): Promise<Resultado<true>> {
-  return genericDeleteEntity(ENTITY_CONFIGS.accommodation, id);
+  return genericDeleteEntity(ENTIDADES.accommodation, id);
 }
 
 // ─── EVENTS ───────────────────────────────────────────────────────────────────
@@ -276,11 +183,11 @@ export async function getEvents() {
 }
 
 export async function saveEvent(data: Partial<CumpeoEvent>): Promise<Resultado<CumpeoEvent>> {
-  return genericSaveEntity<CumpeoEvent>(ENTITY_CONFIGS.event, EventoSchema, data);
+  return genericSaveEntity<CumpeoEvent>(ENTIDADES.event, data);
 }
 
 export async function deleteEvent(id: string): Promise<Resultado<true>> {
-  return genericDeleteEntity(ENTITY_CONFIGS.event, id);
+  return genericDeleteEntity(ENTIDADES.event, id);
 }
 
 // ─── ORDEN DE LOS CATASTROS EN LA PORTADA ─────────────────────────────────────
@@ -314,7 +221,7 @@ export async function updateEntityOrder(
   // Ids repetidos dejarian dos registros con la misma posicion.
   const ids = Array.from(new Set(validado.data.filter(Boolean)));
 
-  const modelos: Record<OrderableEntity, EntityCrudConfig['model']> = {
+  const modelos: Record<OrderableEntity, DescriptorEntidad['modelo']> = {
     destinos: 'destination',
     restaurantes: 'restaurant',
     alojamientos: 'accommodation',

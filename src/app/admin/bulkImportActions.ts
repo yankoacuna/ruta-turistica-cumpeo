@@ -4,10 +4,44 @@ import { prisma } from '@/lib/prisma';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
 import { sesionConRol } from './authActions';
 import { Resultado, exito, fallo } from '@/lib/resultado';
+import { ENTIDADES, TipoEntidad, buildFieldsData } from '@/lib/entidades';
 
+type BulkEntityType = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';
+
+const TIPO_A_MODELO: Record<BulkEntityType, TipoEntidad> = {
+  destinos: 'destination',
+  restaurantes: 'restaurant',
+  alojamientos: 'accommodation',
+  eventos: 'event',
+};
+
+/** Tamaño de lote para las transacciones: ni una por fila (miles de viajes a
+ * la base) ni todo el archivo junto (una transacción larga en un hosting
+ * compartido puede superar el tiempo máximo que MySQL le permite). */
+const TAMANO_LOTE = 100;
+
+function enLotes<T>(items: T[], tamano: number): T[][] {
+  const lotes: T[][] = [];
+  for (let i = 0; i < items.length; i += tamano) lotes.push(items.slice(i, i + tamano));
+  return lotes;
+}
+
+/**
+ * Carga masiva desde el asistente de Excel/JSON del panel.
+ *
+ * Cada fila ya llega parseada por `bulkValidator.ts` (que corre en el
+ * navegador antes de esto: reconoce columnas del Excel, convierte tipos y
+ * resuelve el id/slug de cada fila). Acá se vuelve a validar con el mismo
+ * esquema Zod que usa el guardado individual —el navegador no es de
+ * confianza aunque ya haya filtrado— y se escribe en lotes transaccionales:
+ * o queda el lote completo, o no queda nada de él. Antes esto hacía un
+ * `await` por fila sin transacción, así que un archivo de 200 filas eran
+ * 400+ viajes secuenciales a MySQL, y una falla a mitad de camino dejaba la
+ * importación a medio aplicar sin forma de deshacerla.
+ */
 export async function bulkImportEntitiesAction(
-  entityType: 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos',
-  items: any[],
+  entityType: BulkEntityType,
+  items: unknown[],
   mode: 'upsert' | 'create_only' = 'upsert'
 ): Promise<
   Resultado<{
@@ -20,204 +54,78 @@ export async function bulkImportEntitiesAction(
   const sesion = await sesionConRol(['ADMIN', 'EDITOR']);
   if (!sesion.ok) return sesion;
 
-  if (!Array.isArray(items)) {
+  if (!Array.isArray(items) || items.length === 0) {
     return fallo('VALIDACION', 'No recibimos registros para importar.');
   }
 
-  let createdCount = 0;
-  let updatedCount = 0;
+  const modelo = TIPO_A_MODELO[entityType];
+  const descriptor = modelo ? ENTIDADES[modelo] : undefined;
+  if (!descriptor) {
+    return fallo('VALIDACION', `Catastro desconocido: ${entityType}`);
+  }
+
+  // Una fila invalida se descarta sin abortar el resto del archivo: es el
+  // mismo criterio que ya aplicaba el asistente al filtrar antes de mandar.
+  const filas: Array<{ id: string; slug?: string; datos: Record<string, any> }> = [];
   let skippedCount = 0;
 
   for (const item of items) {
-    if (entityType === 'destinos') {
-      const existingById = item.id ? await prisma.destination.findUnique({ where: { id: item.id } }) : null;
-      const existingBySlug = item.slug ? await prisma.destination.findUnique({ where: { slug: item.slug } }) : null;
-      const existing = existingById || existingBySlug;
+    const validado = descriptor.esquema.safeParse(item);
+    const id = validado.success ? (validado.data as any).id : undefined;
+    if (!validado.success || !id) {
+      skippedCount++;
+      continue;
+    }
+    const limpio = validado.data as Record<string, any>;
+    // El slug no vive en el esquema de guardado individual (ahí lo deriva el
+    // servidor del nombre), pero la carga masiva sí lo trae ya resuelto desde
+    // el Excel/JSON; se preserva tal cual en vez de recalcularlo, para no
+    // desacordar el id que ya vio `bulkValidator.ts` del id que se escribe acá.
+    const slug = descriptor.hasSlug && typeof (item as any)?.slug === 'string' ? (item as any).slug : undefined;
+    filas.push({ id, slug, datos: buildFieldsData(limpio, descriptor.campos) });
+  }
 
-      if (existing) {
-        if (mode === 'create_only') {
-          skippedCount++;
-          continue;
-        }
-        await prisma.destination.update({
-          where: { id: existing.id },
-          data: {
-            nombre: item.nombre,
-            categoria: item.categoria,
-            descripcionCorta: item.descripcionCorta,
-            descripcionLarga: item.descripcionLarga || item.descripcionCorta,
-            historia: item.historia || null,
-            coordenadas: item.coordenadas,
-            direccion: item.direccion || null,
-            horario: item.horario || null,
-            duracionVisita: item.duracionVisita || null,
-            comoLlegar: item.comoLlegar || null,
-            tags: item.tags || [],
-            destacado: Boolean(item.destacado),
-            activo: item.activo !== false,
-            ...(item.imagenPrincipal ? { imagenPrincipal: item.imagenPrincipal } : {}),
-          },
-        });
-        updatedCount++;
-      } else {
-        await prisma.destination.create({
-          data: {
-            id: item.id,
-            slug: item.slug || item.id,
-            nombre: item.nombre,
-            categoria: item.categoria,
-            descripcionCorta: item.descripcionCorta,
-            descripcionLarga: item.descripcionLarga || item.descripcionCorta,
-            historia: item.historia || null,
-            coordenadas: item.coordenadas,
-            direccion: item.direccion || null,
-            horario: item.horario || null,
-            duracionVisita: item.duracionVisita || null,
-            comoLlegar: item.comoLlegar || null,
-            tags: item.tags || [],
-            destacado: Boolean(item.destacado),
-            activo: item.activo !== false,
-            imagenPrincipal: item.imagenPrincipal || null,
-          },
-        });
-        createdCount++;
-      }
-    } else if (entityType === 'restaurantes') {
-      const existing = item.id ? await prisma.restaurant.findUnique({ where: { id: item.id } }) : null;
+  if (filas.length === 0) {
+    return fallo('VALIDACION', 'Ningún registro pasó la validación.');
+  }
 
-      if (existing) {
-        if (mode === 'create_only') {
-          skippedCount++;
-          continue;
-        }
-        await prisma.restaurant.update({
-          where: { id: item.id },
-          data: {
-            nombre: item.nombre,
-            tipo: item.tipo || null,
-            propietario: item.propietario || null,
-            descripcion: item.descripcion,
-            especialidad: item.especialidad || null,
-            coordenadas: item.coordenadas,
-            direccion: item.direccion || null,
-            telefono: item.telefono || null,
-            whatsapp: item.whatsapp || null,
-            mediosPago: item.mediosPago || [],
-            tags: item.tags || [],
-            activo: item.activo !== false,
-            ...(item.imagenPrincipal ? { imagenPrincipal: item.imagenPrincipal } : {}),
-          },
-        });
-        updatedCount++;
-      } else {
-        await prisma.restaurant.create({
-          data: {
-            id: item.id,
-            nombre: item.nombre,
-            tipo: item.tipo || null,
-            propietario: item.propietario || null,
-            descripcion: item.descripcion,
-            especialidad: item.especialidad || null,
-            coordenadas: item.coordenadas,
-            direccion: item.direccion || null,
-            telefono: item.telefono || null,
-            whatsapp: item.whatsapp || null,
-            mediosPago: item.mediosPago || [],
-            tags: item.tags || [],
-            activo: item.activo !== false,
-            imagenPrincipal: item.imagenPrincipal || null,
-          },
-        });
-        createdCount++;
-      }
-    } else if (entityType === 'alojamientos') {
-      const existing = item.id ? await prisma.accommodation.findUnique({ where: { id: item.id } }) : null;
+  const ids = filas.map((f) => f.id);
+  const existentesRaw: Array<{ id: string }> = await (prisma[modelo] as any).findMany({
+    where: { id: { in: ids } },
+    select: { id: true },
+  });
+  const existentes = new Set(existentesRaw.map((r) => r.id));
 
-      if (existing) {
-        if (mode === 'create_only') {
-          skippedCount++;
-          continue;
-        }
-        await prisma.accommodation.update({
-          where: { id: item.id },
-          data: {
-            nombre: item.nombre,
-            tipo: item.tipo || null,
-            propietario: item.propietario || null,
-            descripcion: item.descripcion,
-            coordenadas: item.coordenadas,
-            direccion: item.direccion || null,
-            telefono: item.telefono || null,
-            whatsapp: item.whatsapp || null,
-            servicios: item.servicios || [],
-            activo: item.activo !== false,
-            ...(item.imagenPrincipal ? { imagenPrincipal: item.imagenPrincipal } : {}),
-          },
-        });
-        updatedCount++;
-      } else {
-        await prisma.accommodation.create({
-          data: {
-            id: item.id,
-            nombre: item.nombre,
-            tipo: item.tipo || null,
-            propietario: item.propietario || null,
-            descripcion: item.descripcion,
-            coordenadas: item.coordenadas,
-            direccion: item.direccion || null,
-            telefono: item.telefono || null,
-            whatsapp: item.whatsapp || null,
-            servicios: item.servicios || [],
-            activo: item.activo !== false,
-            imagenPrincipal: item.imagenPrincipal || null,
-          },
-        });
-        createdCount++;
-      }
-    } else if (entityType === 'eventos') {
-      const existing = item.id ? await prisma.event.findUnique({ where: { id: item.id } }) : null;
+  let createdCount = 0;
+  let updatedCount = 0;
 
-      if (existing) {
-        if (mode === 'create_only') {
+  for (const lote of enLotes(filas, TAMANO_LOTE)) {
+    const operaciones = lote
+      .filter((fila) => {
+        if (existentes.has(fila.id) && mode === 'create_only') {
           skippedCount++;
-          continue;
+          return false;
         }
-        await prisma.event.update({
-          where: { id: item.id },
-          data: {
-            nombre: item.nombre,
-            tipo: item.tipo,
-            descripcion: item.descripcion,
-            fecha: item.fecha || null,
-            recurrente: Boolean(item.recurrente),
-            coordenadas: item.coordenadas || null,
-            direccion: item.direccion || null,
-            tags: item.tags || [],
-            destacado: Boolean(item.destacado),
-            activo: item.activo !== false,
-            ...(item.imagenPrincipal ? { imagenPrincipal: item.imagenPrincipal } : {}),
-          },
-        });
-        updatedCount++;
-      } else {
-        await prisma.event.create({
-          data: {
-            id: item.id,
-            nombre: item.nombre,
-            tipo: item.tipo,
-            descripcion: item.descripcion,
-            fecha: item.fecha || null,
-            recurrente: Boolean(item.recurrente),
-            coordenadas: item.coordenadas || null,
-            direccion: item.direccion || null,
-            tags: item.tags || [],
-            destacado: Boolean(item.destacado),
-            activo: item.activo !== false,
-            imagenPrincipal: item.imagenPrincipal || null,
-          },
-        });
-        createdCount++;
-      }
+        return true;
+      })
+      .map((fila) => {
+        const esNuevo = !existentes.has(fila.id);
+        if (esNuevo) createdCount++;
+        else updatedCount++;
+
+        return esNuevo
+          ? (prisma[modelo] as any).create({
+              data: {
+                id: fila.id,
+                ...(descriptor.hasSlug ? { slug: fila.slug || fila.id } : {}),
+                ...fila.datos,
+              },
+            })
+          : (prisma[modelo] as any).update({ where: { id: fila.id }, data: fila.datos });
+      });
+
+    if (operaciones.length > 0) {
+      await prisma.$transaction(operaciones);
     }
   }
 

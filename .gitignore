@@ -56,8 +56,9 @@ public/uploads/*
 # Documentación de entrega: se maneja fuera del repo
 docs/
 
-# Documentos de auditoria: material de trabajo interno, no parte del entregable
+# Documentos de auditoria y estado de trabajo: material interno, no parte del entregable
 AUDITORIA_*.md
+ESTADO_PROYECTO.md
 
 # Credenciales del hosting: nunca al repo ni al servidor
 .cpanel.env
