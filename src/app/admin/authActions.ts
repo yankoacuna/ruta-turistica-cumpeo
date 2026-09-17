@@ -15,6 +15,7 @@ import {
 
 import crypto from 'crypto';
 import { cookies, headers } from 'next/headers';
+import { cache } from 'react';
 
 // Freno de fuerza bruta al login: mismo patrón que ya usan los formularios
 // públicos (/api/solicitudes, /api/solicitudes/foto) contra su propio abuso,
@@ -94,7 +95,8 @@ export async function emitirCookieSesion(user: AdminSessionUser, tokenVersion: n
   });
 }
 
-export async function getAdminSession(): Promise<AdminSessionUser | null> {
+/** Deduplicada con cache(): una carga de /admin la llama varias veces en paralelo. */
+const leerSesionDesdeCookie = cache(async (): Promise<AdminSessionUser | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
@@ -135,6 +137,10 @@ export async function getAdminSession(): Promise<AdminSessionUser | null> {
     console.error('Error fetching admin session user from DB:', err);
     return null;
   }
+});
+
+export async function getAdminSession(): Promise<AdminSessionUser | null> {
+  return leerSesionDesdeCookie();
 }
 
 /**

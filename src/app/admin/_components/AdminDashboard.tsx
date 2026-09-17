@@ -289,7 +289,7 @@ export function AdminDashboard({
       {/* KPI Cards Grid */}
       <div
         id="tour-stat-cards"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5"
+        className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-3.5 items-stretch"
       >
         <StatCard
           label="Visitantes"

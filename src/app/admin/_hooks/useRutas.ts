@@ -1,6 +1,6 @@
-import { useState, useTransition } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import { TourRoute } from '@/lib/types';
-import { saveTourRoute, deleteTourRoute, updateTourRouteStops } from '../actions';
+import { saveTourRoute, deleteTourRoute, updateTourRouteStops, getAdminTourRoutes } from '../actions';
 import { HookOptions } from '../_types';
 import { ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 
@@ -25,11 +25,20 @@ const emptyRuta = (): Partial<TourRoute> => ({
 /** El mensaje real de una excepción de server action no llega al navegador en producción. */
 const ERROR_INESPERADO = 'No pudimos completar la acción. Vuelve a intentarlo en unos segundos.';
 
-export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAuthError }: HookOptions) {
+export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAuthError, isAuthenticated }: HookOptions) {
   const [rutas, setRutas] = useState<TourRoute[]>(initial);
   const [editing, setEditing] = useState<Partial<TourRoute> | null>(null);
   const [erroresCampo, setErroresCampo] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
+
+  const prevAuth = useRef(isAuthenticated);
+  useEffect(() => {
+    const justLoggedIn = isAuthenticated && !prevAuth.current;
+    prevAuth.current = isAuthenticated;
+    if (justLoggedIn) {
+      getAdminTourRoutes().then(setRutas).catch(console.error);
+    }
+  }, [isAuthenticated]);
 
   const openNew = () => {
     setErroresCampo({});
@@ -118,6 +127,7 @@ export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAut
 
   return {
     rutas,
+    setRutas,
     editing,
     setEditing,
     isPending,

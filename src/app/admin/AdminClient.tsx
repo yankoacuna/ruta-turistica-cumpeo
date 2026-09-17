@@ -190,13 +190,14 @@ export default function AdminClient({
     confirmAction,
     onAuthError: handleAuthError,
     onSaved: cerrarSolicitudSiCorresponde,
+    isAuthenticated,
   };
 
   const destinos = useDestinos(initialDestinos, opcionesFicha);
   const restaurantes = useRestaurantes(initialRestaurantes, opcionesFicha);
   const alojamientos = useAlojamientos(initialAlojamientos, opcionesFicha);
   const eventos = useEventos(initialEventos, opcionesFicha);
-  const rutas = useRutas(initialRutas, { showToast, confirmAction, onAuthError: handleAuthError });
+  const rutas = useRutas(initialRutas, { showToast, confirmAction, onAuthError: handleAuthError, isAuthenticated });
 
   // Contador de solicitudes sin revisar. Se pide una vez al entrar: no cambia
   // solo, y la bandeja lo refresca cuando el usuario actua sobre ella.

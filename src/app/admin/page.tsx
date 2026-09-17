@@ -49,17 +49,32 @@ export default async function AdminPage() {
   let initialNotificaciones: NotificacionesConfigRecord | null = null;
 
   if (session) {
-    try {
-      [destinos, restaurantes, alojamientos, eventos, rutas] = await Promise.all([
-        getAdminDestinations(),
-        getAdminRestaurants(),
-        getAdminAccommodations(),
-        getEvents(),
-        getAdminTourRoutes(),
-      ]);
-    } catch (e) {
-      console.error('Error fetching admin catalog data:', e);
-    }
+    // allSettled: que una lista falle no debe vaciar también a las demás.
+    const [
+      destinosRes,
+      restaurantesRes,
+      alojamientosRes,
+      eventosRes,
+      rutasRes,
+    ] = await Promise.allSettled([
+      getAdminDestinations(),
+      getAdminRestaurants(),
+      getAdminAccommodations(),
+      getEvents(),
+      getAdminTourRoutes(),
+    ]);
+
+    const leer = <T,>(etiqueta: string, res: PromiseSettledResult<T[]>): T[] => {
+      if (res.status === 'fulfilled') return res.value;
+      console.error(`Error fetching admin ${etiqueta}:`, res.reason);
+      return [];
+    };
+
+    destinos = leer('destinos', destinosRes);
+    restaurantes = leer('restaurantes', restaurantesRes);
+    alojamientos = leer('alojamientos', alojamientosRes);
+    eventos = leer('eventos', eventosRes);
+    rutas = leer('rutas', rutasRes);
 
     if (session.role === 'ADMIN') {
       try {

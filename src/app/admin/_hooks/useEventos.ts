@@ -1,5 +1,5 @@
 import { CumpeoEvent, Coordinates } from '@/lib/types';
-import { saveEvent, deleteEvent } from '../actions';
+import { saveEvent, deleteEvent, getEvents } from '../actions';
 import { HookOptions } from '../_types';
 import { CENTRO_CUMPEO } from '@/lib/constants';
 import { useFichaCrud } from './useFichaCrud';
@@ -28,6 +28,7 @@ export function useEventos(initial: CumpeoEvent[], opciones: HookOptions) {
       nueva: eventoVacio,
       guardar: saveEvent,
       eliminar: deleteEvent,
+      listar: getEvents,
       etiqueta: 'evento',
       desdeFila: (fila) =>
         ({

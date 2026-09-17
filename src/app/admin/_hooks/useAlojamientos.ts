@@ -1,5 +1,5 @@
 import { Accommodation, Coordinates, ContactoInfo } from '@/lib/types';
-import { saveAccommodation, deleteAccommodation } from '../actions';
+import { saveAccommodation, deleteAccommodation, getAdminAccommodations } from '../actions';
 import { HookOptions } from '../_types';
 import { CENTRO_CUMPEO } from '@/lib/constants';
 import { useFichaCrud } from './useFichaCrud';
@@ -23,6 +23,7 @@ export function useAlojamientos(initial: Accommodation[], opciones: HookOptions)
       nueva: alojamientoVacio,
       guardar: saveAccommodation,
       eliminar: deleteAccommodation,
+      listar: getAdminAccommodations,
       etiqueta: 'alojamiento',
       desdeFila: (fila) =>
         ({

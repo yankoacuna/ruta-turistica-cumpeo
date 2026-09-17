@@ -34,6 +34,8 @@ export interface HookOptions {
   confirmAction: ConfirmFn;
   onAuthError?: () => void;
   password?: string;
+  /** Los hooks del catastro recargan sus datos cuando pasa a true. */
+  isAuthenticated?: boolean;
   /**
    * Se llama tras guardar con exito una ficha. Lo usa el panel para cerrar el
    * ciclo de una solicitud: la ficha creada a partir de ella queda enlazada y

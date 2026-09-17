@@ -36,8 +36,8 @@ export function SessionExpiredModal({
       } else {
         setError(res.error || 'Credenciales incorrectas');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al validar credenciales');
+    } catch {
+      setError('No pudimos validar tus credenciales. Recarga la página e intenta de nuevo.');
     } finally {
       setIsPending(false);
     }

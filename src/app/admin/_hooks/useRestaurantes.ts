@@ -1,5 +1,5 @@
 import { Restaurant, Coordinates, Horario, ContactoInfo } from '@/lib/types';
-import { saveRestaurant, deleteRestaurant } from '../actions';
+import { saveRestaurant, deleteRestaurant, getAdminRestaurants } from '../actions';
 import { HookOptions } from '../_types';
 import { CENTRO_CUMPEO } from '@/lib/constants';
 import { useFichaCrud } from './useFichaCrud';
@@ -25,6 +25,7 @@ export function useRestaurantes(initial: Restaurant[], opciones: HookOptions) {
       nueva: restauranteVacio,
       guardar: saveRestaurant,
       eliminar: deleteRestaurant,
+      listar: getAdminRestaurants,
       etiqueta: 'restaurante',
       desdeFila: (fila) =>
         ({

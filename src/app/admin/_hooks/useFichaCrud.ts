@@ -1,4 +1,4 @@
-import { useState, useTransition } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import { HookOptions } from '../_types';
 import { Resultado, ResultadoError, esProblemaDeSesion } from '@/lib/resultado';
 
@@ -18,6 +18,8 @@ export interface FichaCrudConfig<T> {
   guardar: (data: Partial<T>) => Promise<Resultado<T>>;
   /** Server action que elimina por id. */
   eliminar: (id: string) => Promise<Resultado<true>>;
+  /** Server action que lista todas las fichas. Auto-recarga tras login. */
+  listar?: () => Promise<T[]>;
   /** Cómo se nombra el tipo en los avisos: "destino", "restaurante"... */
   etiqueta: string;
   /**
@@ -53,12 +55,21 @@ const ERROR_INESPERADO = 'No pudimos completar la acción. Vuelve a intentarlo e
 export function useFichaCrud<T extends { id: string; nombre?: string }>(
   inicial: T[],
   config: FichaCrudConfig<T>,
-  { showToast, confirmAction, onAuthError, onSaved }: HookOptions
+  { showToast, confirmAction, onAuthError, onSaved, isAuthenticated }: HookOptions
 ): FichaCrud<T> {
   const [items, setItems] = useState<T[]>(inicial);
   const [editing, setEditing] = useState<Partial<T> | null>(null);
   const [erroresCampo, setErroresCampo] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
+
+  const prevAuth = useRef(isAuthenticated);
+  useEffect(() => {
+    const justLoggedIn = isAuthenticated && !prevAuth.current;
+    prevAuth.current = isAuthenticated;
+    if (justLoggedIn && config.listar) {
+      config.listar().then(setItems).catch(console.error);
+    }
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openNew = () => {
     setErroresCampo({});
