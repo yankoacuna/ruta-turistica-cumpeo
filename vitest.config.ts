@@ -20,5 +20,15 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     setupFiles: [path.resolve(raiz, 'vitest.setup.ts')],
+    /**
+     * Todo en un único proceso. Por defecto vitest levanta un worker por
+     * archivo, y en el hosting compartido esos procesos se cortan en seco: la
+     * corrida muere después del banner, sin mensaje ni código de error. Con
+     * cuatro archivos de tests puros la paralelización no aporta nada.
+     */
+    pool: 'forks',
+    poolOptions: {
+      forks: { singleFork: true },
+    },
   },
 });
