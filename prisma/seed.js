@@ -37,7 +37,7 @@ async function main() {
   try {
     const rows = readSeedData('destinations');
     for (const d of rows) {
-      const { id, createdAt, updatedAt, ...data } = d;
+      const { id, createdAt: _createdAt, updatedAt: _updatedAt, ...data } = d;
       await prisma.destination.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
     console.log(`✅ ${rows.length} Destinations seeded`);
@@ -49,7 +49,7 @@ async function main() {
   try {
     const rows = readSeedData('restaurants');
     for (const r of rows) {
-      const { id, createdAt, updatedAt, ...data } = r;
+      const { id, createdAt: _createdAt, updatedAt: _updatedAt, ...data } = r;
       await prisma.restaurant.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
     console.log(`✅ ${rows.length} Restaurants seeded`);
@@ -61,7 +61,7 @@ async function main() {
   try {
     const rows = readSeedData('accommodations');
     for (const a of rows) {
-      const { id, createdAt, updatedAt, ...data } = a;
+      const { id, createdAt: _createdAt, updatedAt: _updatedAt, ...data } = a;
       await prisma.accommodation.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
     console.log(`✅ ${rows.length} Accommodations seeded`);
@@ -73,7 +73,7 @@ async function main() {
   try {
     const rows = readSeedData('events');
     for (const e of rows) {
-      const { id, createdAt, updatedAt, ...data } = e;
+      const { id, createdAt: _createdAt, updatedAt: _updatedAt, ...data } = e;
       await prisma.event.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
     console.log(`✅ ${rows.length} Events seeded`);
@@ -97,7 +97,7 @@ async function main() {
   try {
     const rows = readSeedData('tourRoutes');
     for (const t of rows) {
-      const { id, createdAt, updatedAt, ...data } = t;
+      const { id, createdAt: _createdAt, updatedAt: _updatedAt, ...data } = t;
       await prisma.tourRoute.upsert({ where: { id }, update: data, create: { id, ...data } });
     }
     console.log(`✅ ${rows.length} Tour Routes seeded`);

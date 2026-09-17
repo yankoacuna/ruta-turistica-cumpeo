@@ -1,11 +1,13 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
 import { sesionConRol } from './authActions';
 import { Resultado, exito, fallo } from '@/lib/resultado';
 import { ENTIDADES, TipoEntidad } from '@/lib/entidades';
 import { RutaSchema, ContactoEmergenciaSchema, ConfigSchema } from '@/lib/esquemas';
+import { ThemeSaveInput } from '@/lib/types';
 import { saveSiteTexts } from './siteTextActions';
 import { saveTheme } from './themeActions';
 import { saveNotificaciones } from './notificacionesActions';
@@ -86,8 +88,8 @@ function enLotes<T>(items: T[], tamano: number): T[][] {
 function validarColeccion(
   nombre: string,
   filas: unknown,
-  esquema: z.ZodType<any>
-): { ok: true; filas: Record<string, any>[] } | { ok: false; error: string } {
+  esquema: z.ZodType<unknown>
+): { ok: true; filas: Record<string, unknown>[] } | { ok: false; error: string } {
   if (filas === undefined) return { ok: true, filas: [] };
   if (!Array.isArray(filas)) {
     return { ok: false, error: `"${nombre}" debería ser una lista y no lo es.` };
@@ -97,20 +99,33 @@ function validarColeccion(
   }
   for (const fila of filas) {
     const validado = esquema.safeParse(fila);
-    if (!validado.success || !(fila as any)?.id) {
+    const id = (fila as Record<string, unknown> | null)?.id;
+    if (!validado.success || !id) {
       return { ok: false, error: `Hay una fila inválida en "${nombre}"; no se aplicó ningún cambio.` };
     }
   }
   // Se restaura la fila tal como llegó, no la versión "limpia" de Zod: acá
   // solo se usa el esquema como filtro de seguridad contra un archivo
   // corrupto o ajeno, no para reformatear un respaldo legítimo.
-  return { ok: true, filas: filas as Record<string, any>[] };
+  return { ok: true, filas: filas as Record<string, unknown>[] };
 }
 
-async function restaurarColeccion(modelo: TipoEntidad | 'tourRoute' | 'emergencyContact', filas: Record<string, any>[]) {
+/**
+ * Acceso dinámico al delegado de Prisma de una colección restaurable, incluidas
+ * dos (tourRoute, emergencyContact) que no forman parte de `DescriptorEntidad`.
+ * Mismo límite de tipado que `modeloDe` en `entityActions.ts`: Prisma no expone
+ * un tipo común entre delegados con `where`/`data` distintos entre sí.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function delegadoDe(modelo: TipoEntidad | 'tourRoute' | 'emergencyContact'): any {
+  return prisma[modelo];
+}
+
+async function restaurarColeccion(modelo: TipoEntidad | 'tourRoute' | 'emergencyContact', filas: Record<string, unknown>[]) {
+  const delegado = delegadoDe(modelo);
   for (const lote of enLotes(filas, TAMANO_LOTE)) {
     await prisma.$transaction(
-      lote.map((fila) => (prisma[modelo] as any).upsert({ where: { id: fila.id }, update: { ...fila }, create: { ...fila } }))
+      lote.map((fila) => delegado.upsert({ where: { id: fila.id }, update: { ...fila }, create: { ...fila } }))
     );
   }
 }
@@ -126,14 +141,15 @@ async function restaurarColeccion(modelo: TipoEntidad | 'tourRoute' | 'emergency
  * inválida en cualquier colección rechaza el archivo entero, sin tocar la
  * base— y recién después se escribe, en lotes transaccionales.
  */
-export async function restoreDatabaseBackup(backupData: any): Promise<Resultado<true>> {
+export async function restoreDatabaseBackup(backupData: unknown): Promise<Resultado<true>> {
   const sesion = await sesionConRol(['ADMIN']);
   if (!sesion.ok) return sesion;
 
-  if (!backupData?.data || typeof backupData.data !== 'object') {
+  const payload = backupData as { data?: Record<string, unknown> } | null | undefined;
+  if (!payload?.data || typeof payload.data !== 'object') {
     return fallo('VALIDACION', 'El archivo no tiene el formato de una copia de seguridad.');
   }
-  const d = backupData.data;
+  const d = payload.data;
 
   // Fase 1: validar todo, sin escribir nada.
   const colecciones = [
@@ -151,7 +167,7 @@ export async function restoreDatabaseBackup(backupData: any): Promise<Resultado<
     }
   }
   const [destinations, restaurants, accommodations, events, tourRoutes, emergencyContacts] = colecciones.map(
-    (r) => (r as { ok: true; filas: Record<string, any>[] }).filas
+    (r) => (r as { ok: true; filas: Record<string, unknown>[] }).filas
   );
 
   if (d.config !== undefined && d.config !== null) {
@@ -170,31 +186,36 @@ export async function restoreDatabaseBackup(backupData: any): Promise<Resultado<
   await restaurarColeccion('emergencyContact', emergencyContacts);
 
   if (d.config) {
-    const { id: _id, ...datos } = d.config;
+    const { id: _id, ...datos } = d.config as Record<string, unknown>;
     await prisma.config.upsert({
       where: { id: 'default' },
-      update: datos,
-      create: { id: 'default', ...datos },
+      update: datos as Prisma.ConfigUpdateInput,
+      create: { id: 'default', ...datos } as Prisma.ConfigCreateInput,
     });
   }
 
   // Contenido editable: cada uno reusa su propia acción, que ya valida y
   // revalida lo suyo (textos conocidos, colores hexadecimales, correos).
   if (Array.isArray(d.siteTexts)) {
-    const entries = d.siteTexts
-      .filter((t: any) => typeof t?.key === 'string' && typeof t?.value === 'string')
-      .map((t: any) => ({ key: t.key, value: t.value }));
+    const entries = (d.siteTexts as unknown[])
+      .filter(
+        (t): t is { key: string; value: string } =>
+          typeof (t as Record<string, unknown> | null)?.key === 'string' &&
+          typeof (t as Record<string, unknown> | null)?.value === 'string'
+      )
+      .map((t) => ({ key: t.key, value: t.value }));
     if (entries.length > 0) {
       const res = await saveSiteTexts(entries);
       if (!res.ok) return res;
     }
   }
   if (d.theme) {
-    const res = await saveTheme(d.theme);
+    const res = await saveTheme(d.theme as ThemeSaveInput);
     if (!res.ok) return res;
   }
-  if (d.notificaciones?.emails) {
-    const res = await saveNotificaciones(d.notificaciones.emails);
+  const notificaciones = d.notificaciones as { emails?: unknown } | undefined;
+  if (Array.isArray(notificaciones?.emails)) {
+    const res = await saveNotificaciones(notificaciones.emails as string[]);
     if (!res.ok) return res;
   }
 

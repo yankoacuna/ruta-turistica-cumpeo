@@ -36,7 +36,7 @@ function cacheContenido<A extends unknown[], R>(
 
 export const getConfig = cacheContenido('config', async (): Promise<AppConfig> => {
   const config = await prisma.config.findUnique({ where: { id: 'default' } });
-  if (config) return { categorias: config.categorias as any };
+  if (config) return { categorias: config.categorias as unknown as AppConfig['categorias'] };
   return { categorias: [] };
 });
 
@@ -101,7 +101,7 @@ export const getAccommodations = cacheContenido('accommodations', async (): Prom
   return data.map((a) => ({
     ...a,
     coordenadas: a.coordenadas as unknown as Coordinates,
-    contacto: a.contacto as any,
+    contacto: a.contacto as unknown as Accommodation['contacto'],
   })) as Accommodation[];
 });
 
@@ -110,8 +110,8 @@ export const getRestaurants = cacheContenido('restaurants', async (): Promise<Re
   return data.map((r) => ({
     ...r,
     coordenadas: r.coordenadas as unknown as Coordinates,
-    horario: r.horario as any,
-    contacto: r.contacto as any,
+    horario: r.horario as unknown as Restaurant['horario'],
+    contacto: r.contacto as unknown as Restaurant['contacto'],
   })) as Restaurant[];
 });
 

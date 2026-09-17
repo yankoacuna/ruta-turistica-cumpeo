@@ -132,14 +132,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, ignored: 'bot' });
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
+    const bodyCrudo = await req.json().catch(() => null);
+    if (!bodyCrudo || typeof bodyCrudo !== 'object') {
       return NextResponse.json({ ok: true, ignored: 'payload' });
     }
+    const body = bodyCrudo as Record<string, unknown>;
 
-    const path = recortar((body as any).path, MAX_PATH);
-    const visitorId = recortar((body as any).visitorId, MAX_ID);
-    const sessionId = recortar((body as any).sessionId, MAX_ID);
+    const path = recortar(body.path, MAX_PATH);
+    const visitorId = recortar(body.visitorId, MAX_ID);
+    const sessionId = recortar(body.sessionId, MAX_ID);
 
     // El panel nunca debe contarse a sí mismo.
     if (!path || !path.startsWith('/') || path.startsWith('/admin') || path.startsWith('/api')) {
@@ -157,11 +158,11 @@ export async function POST(req: NextRequest) {
     await prisma.pageView.create({
       data: {
         path,
-        titulo: recortar((body as any).titulo, MAX_TITULO),
+        titulo: recortar(body.titulo, MAX_TITULO),
         seccion: seccionDesdePath(path),
         visitorId,
         sessionId,
-        referrer: normalizarReferrer(recortar((body as any).referrer, 500), req.headers.get('host')),
+        referrer: normalizarReferrer(recortar(body.referrer, 500), req.headers.get('host')),
         device: detectarDispositivo(userAgent),
         pais: geo.pais,
         region: geo.region,

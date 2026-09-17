@@ -15,7 +15,7 @@ export interface FichaCrudConfig<T> {
   /** Ficha en blanco con la que se abre el formulario de "nuevo". */
   nueva: () => Partial<T>;
   /** Server action que crea o actualiza. */
-  guardar: (data: Partial<T>) => Promise<Resultado<any>>;
+  guardar: (data: Partial<T>) => Promise<Resultado<T>>;
   /** Server action que elimina por id. */
   eliminar: (id: string) => Promise<Resultado<true>>;
   /** Cómo se nombra el tipo en los avisos: "destino", "restaurante"... */
@@ -25,7 +25,7 @@ export interface FichaCrudConfig<T> {
    * (coordenadas, horario, contacto, galería, tags) llegan como `JsonValue` y
    * cada tipo sabe cuáles son las suyas.
    */
-  desdeFila?: (fila: any) => T;
+  desdeFila?: (fila: Record<string, unknown>) => T;
 }
 
 export interface FichaCrud<T> {
@@ -94,7 +94,9 @@ export function useFichaCrud<T extends { id: string; nombre?: string }>(
           return;
         }
 
-        const guardado = (config.desdeFila ? config.desdeFila(res.data) : (res.data as T));
+        const guardado = config.desdeFila
+          ? config.desdeFila(res.data as unknown as Record<string, unknown>)
+          : res.data;
         setItems((prev) => {
           const existe = prev.some((i) => i.id === guardado.id);
           return existe

@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { CENTRO_CUMPEO } from './constants';
 import { slugify } from './slug';
+import { Destination, Restaurant, Accommodation, CumpeoEvent } from './types';
 
 export type BulkEntityType = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';
 
@@ -10,12 +11,12 @@ export interface ValidationIssue {
   severity: 'ERROR' | 'WARNING';
 }
 
-export interface ParsedBulkItem<T = any> {
+export interface ParsedBulkItem<T = Record<string, unknown>> {
   rowNumber: number;
   status: 'VALID' | 'WARNING' | 'ERROR';
   issues: ValidationIssue[];
   data: T;
-  raw: Record<string, any>;
+  raw: Record<string, unknown>;
   willUpdate?: boolean;
 }
 
@@ -47,7 +48,7 @@ function normalizeKey(key: string): string {
 /**
  * Normaliza valores booleanos desde textos como 'SI', 'NO', 'TRUE', '1', etc.
  */
-function parseBoolean(val: any, defaultVal = false): boolean {
+function parseBoolean(val: unknown, defaultVal = false): boolean {
   if (val === undefined || val === null || val === '') return defaultVal;
   if (typeof val === 'boolean') return val;
   const str = String(val).trim().toUpperCase();
@@ -59,7 +60,7 @@ function parseBoolean(val: any, defaultVal = false): boolean {
 /**
  * Normaliza listas separadas por comas, barras o punto y coma
  */
-function parseList(val: any): string[] {
+function parseList(val: unknown): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val.map((v) => String(v).trim()).filter(Boolean);
   return String(val)
@@ -71,13 +72,13 @@ function parseList(val: any): string[] {
 /**
  * Extrae y valida coordenadas lat/lng desde columnas sueltas o formatos combinados
  */
-function parseCoordinates(row: Record<string, any>): {
+function parseCoordinates(row: Record<string, unknown>): {
   coords: { lat: number; lng: number };
   isDefault: boolean;
   hasError: boolean;
 } {
-  let latVal: any = undefined;
-  let lngVal: any = undefined;
+  let latVal: unknown;
+  let lngVal: unknown;
 
   for (const [k, v] of Object.entries(row)) {
     const nk = normalizeKey(k);
@@ -85,8 +86,8 @@ function parseCoordinates(row: Record<string, any>): {
     if (nk === 'lng' || nk === 'lon' || nk === 'longitud' || nk === 'longitude' || nk === 'coordenadalo') lngVal = v;
     if (nk === 'coordenadas' || nk === 'coords') {
       if (typeof v === 'object' && v !== null && 'lat' in v && 'lng' in v) {
-        latVal = v.lat;
-        lngVal = v.lng;
+        latVal = (v as Record<string, unknown>).lat;
+        lngVal = (v as Record<string, unknown>).lng;
       } else if (typeof v === 'string') {
         const parts = v.split(/[,;\s]+/).map((p) => p.trim());
         if (parts.length >= 2) {
@@ -114,7 +115,7 @@ function parseCoordinates(row: Record<string, any>): {
 /**
  * Busca el valor de una columna admitiendo múltiples nombres alternativos
  */
-function getColValue(row: Record<string, any>, possibleKeys: string[]): any {
+function getColValue(row: Record<string, unknown>, possibleKeys: string[]): unknown {
   const normKeys = possibleKeys.map(normalizeKey);
   for (const [k, v] of Object.entries(row)) {
     const nk = normalizeKey(k);
@@ -128,7 +129,7 @@ function getColValue(row: Record<string, any>, possibleKeys: string[]): any {
 // ─── VALIDACIÓN POR ENTIDAD ───────────────────────────────────────────────────
 
 export function validateDestinationRow(
-  row: Record<string, any>,
+  row: Record<string, unknown>,
   rowNumber: number,
   existingSlugs: Set<string>,
   existingIds: Set<string>
@@ -234,7 +235,7 @@ export function validateDestinationRow(
 }
 
 export function validateRestaurantRow(
-  row: Record<string, any>,
+  row: Record<string, unknown>,
   rowNumber: number,
   existingIds: Set<string>
 ): ParsedBulkItem {
@@ -309,7 +310,7 @@ export function validateRestaurantRow(
 }
 
 export function validateAccommodationRow(
-  row: Record<string, any>,
+  row: Record<string, unknown>,
   rowNumber: number,
   existingIds: Set<string>
 ): ParsedBulkItem {
@@ -380,7 +381,7 @@ export function validateAccommodationRow(
 }
 
 export function validateEventRow(
-  row: Record<string, any>,
+  row: Record<string, unknown>,
   rowNumber: number,
   existingIds: Set<string>
 ): ParsedBulkItem {
@@ -444,7 +445,7 @@ export function validateEventRow(
 
 // ─── PARSEO Y AUDITORÍA DE ARCHIVOS ──────────────────────────────────────────
 
-export async function parseUploadedFile(file: File): Promise<Record<string, any>[]> {
+export async function parseUploadedFile(file: File): Promise<Record<string, unknown>[]> {
   const extension = file.name.split('.').pop()?.toLowerCase();
 
   if (extension === 'json') {
@@ -469,7 +470,7 @@ export async function parseUploadedFile(file: File): Promise<Record<string, any>
   }
 
   const sheet = workbook.Sheets[firstSheetName];
-  const jsonRows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, {
+  const jsonRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
     defval: '',
     raw: false, // Convierte todo a strings para un formateo uniforme
   });
@@ -483,7 +484,7 @@ export async function parseUploadedFile(file: File): Promise<Record<string, any>
 
 export function validateBulkDataset(
   entityType: BulkEntityType,
-  rawRows: Record<string, any>[],
+  rawRows: Record<string, unknown>[],
   existingItems: { id: string; slug?: string }[] = []
 ): { items: ParsedBulkItem[]; summary: ValidationSummary } {
   const existingIds = new Set(existingItems.map((i) => i.id));
@@ -535,7 +536,7 @@ export const TEMPLATE_SCHEMAS: Record<
   BulkEntityType,
   {
     headers: string[];
-    sampleRows: Record<string, any>[];
+    sampleRows: Record<string, unknown>[];
     filename: string;
     label: string;
   }
@@ -773,14 +774,17 @@ export function downloadEntityTemplate(entityType: BulkEntityType, format: 'xlsx
 /**
  * Exporta los datos actuales de una entidad directamente a formato Excel (.xlsx) estilizado
  */
-export function exportDatasetToXLSX(entityType: BulkEntityType, items: any[]) {
+export function exportDatasetToXLSX(
+  entityType: BulkEntityType,
+  items: (Destination | Restaurant | Accommodation | CumpeoEvent)[]
+) {
   const dateStr = new Date().toISOString().split('T')[0];
   const filename = `cumpeo-${entityType}-${dateStr}.xlsx`;
 
-  let exportRows: Record<string, any>[] = [];
+  let exportRows: Record<string, unknown>[] = [];
 
   if (entityType === 'destinos') {
-    exportRows = items.map((d) => ({
+    exportRows = (items as Destination[]).map((d) => ({
       ID: d.id,
       Slug: d.slug,
       Nombre: d.nombre,
@@ -799,7 +803,7 @@ export function exportDatasetToXLSX(entityType: BulkEntityType, items: any[]) {
       Imagen_Principal: d.imagenPrincipal || '',
     }));
   } else if (entityType === 'restaurantes') {
-    exportRows = items.map((r) => ({
+    exportRows = (items as Restaurant[]).map((r) => ({
       ID: r.id,
       Nombre: r.nombre,
       Tipo: r.tipo || '',
@@ -817,7 +821,7 @@ export function exportDatasetToXLSX(entityType: BulkEntityType, items: any[]) {
       Imagen_Principal: r.imagenPrincipal || '',
     }));
   } else if (entityType === 'alojamientos') {
-    exportRows = items.map((a) => ({
+    exportRows = (items as Accommodation[]).map((a) => ({
       ID: a.id,
       Nombre: a.nombre,
       Tipo: a.tipo || '',
@@ -833,7 +837,7 @@ export function exportDatasetToXLSX(entityType: BulkEntityType, items: any[]) {
       Imagen_Principal: a.imagenPrincipal || '',
     }));
   } else if (entityType === 'eventos') {
-    exportRows = items.map((e) => ({
+    exportRows = (items as CumpeoEvent[]).map((e) => ({
       ID: e.id,
       Nombre: e.nombre,
       Tipo: e.tipo || '',

@@ -83,8 +83,9 @@ function AutoCalcTrasladoButton({
       const seconds = legs.reduce((sum, leg) => sum + (leg.duration?.value || 0), 0);
       onResult({ km: Math.round((meters / 1000) * 10) / 10, minutos: Math.round(seconds / 60) });
       showToast('Distancia y tiempo de traslado calculados', 'success');
-    } catch (err: any) {
-      showToast(`No se pudo calcular la ruta: ${err?.message || 'error desconocido'}`, 'error');
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'error desconocido';
+      showToast(`No se pudo calcular la ruta: ${mensaje}`, 'error');
     } finally {
       setLoading(false);
     }

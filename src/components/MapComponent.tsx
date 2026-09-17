@@ -122,6 +122,9 @@ const DirectionsRendererComponent = ({
     return () => {
       renderer.setMap(null);
     };
+    // strokeColor no va en las dependencias: el efecto siguiente lo actualiza
+    // en caliente sobre el mismo renderer, sin recrearlo por cada cambio de color.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routesLibrary, map]);
 
   useEffect(() => {

@@ -3,6 +3,12 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { getAllPOIs, getTourRoutes, formatImgUrl, getResolvedSiteTexts } from '@/lib/data';
 import { Editable } from '@/components/site-text';
+import { POI, RouteMilestone, RouteTip } from '@/lib/types';
+
+/** `descripcion` no lo tiene Destination (usa descripcionCorta/Larga); sí los otros tres tipos. */
+function descripcionDe(original: POI['_original']): string | undefined {
+  return original && 'descripcion' in original ? original.descripcion : undefined;
+}
 import {
   Map as MapIcon,
   MapPin,
@@ -62,8 +68,8 @@ export default async function RutaPage(props: RutaPageProps) {
         nombre: poi.nombre,
         categoria: poi.categoria,
         tipo: poi.tipo,
-        descripcion: poi.descripcionCorta || (poi._original as any)?.descripcion || '',
-        direccion: (poi._original as any)?.direccion || 'Cumpeo, Río Claro',
+        descripcion: poi.descripcionCorta || descripcionDe(poi._original) || '',
+        direccion: poi._original?.direccion || 'Cumpeo, Río Claro',
         imagen: formatImgUrl(poi.imagenPrincipal),
         coordenadas: poi.coordenadas,
       };
@@ -243,7 +249,7 @@ export default async function RutaPage(props: RutaPageProps) {
             {/* Hitos clave dinámicos desde la base de datos */}
             {currentRoute.hitos && Array.isArray(currentRoute.hitos) && currentRoute.hitos.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
-                {currentRoute.hitos.map((hito: any, idx: number) => (
+                {currentRoute.hitos.map((hito: RouteMilestone, idx: number) => (
                   <div key={idx} className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-sol/30 text-[#B47900] font-black text-sm flex items-center justify-center shrink-0">
                       {hito.numero || idx + 1}
@@ -382,7 +388,7 @@ export default async function RutaPage(props: RutaPageProps) {
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs sm:text-sm text-text-secondary">
-              {currentRoute.consejos.map((tip: any, idx: number) => (
+              {currentRoute.consejos.map((tip: RouteTip, idx: number) => (
                 <div key={idx} className="p-4 rounded-2xl bg-white border border-border">
                   <div className="font-bold text-text-primary mb-1 flex items-center gap-1.5">
                     <Sparkles size={14} className="text-sol shrink-0" />

@@ -778,6 +778,9 @@ export function LocationMapPickerModal({
       }
     }
     return DEFAULT_CUMPEO_COORDS;
+    // Depende de lat/lng sueltos y no del objeto initialCoordinates para no
+    // recalcular cuando el padre pasa un objeto nuevo con los mismos valores.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCoordinates?.lat, initialCoordinates?.lng]);
 
   if (!isOpen || !mounted) return null;

@@ -11,6 +11,7 @@
  * ADMIN o EDITOR; borrar, solo ADMIN, porque es lo único irreversible.
  */
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { SolicitudRecord, SolicitudEstado, SolicitudTipo, Coordinates, Horario } from '@/lib/types';
 import { sesionConRol } from './authActions';
@@ -29,7 +30,7 @@ const ROLES_CONTEO = ['ADMIN', 'EDITOR', 'LECTOR'] as const;
 const ROLES_GESTION = ['ADMIN', 'EDITOR'] as const;
 
 /** Fila de la base a la forma que usa el panel. */
-function aRegistro(fila: Record<string, any>): SolicitudRecord {
+function aRegistro(fila: Record<string, unknown>): SolicitudRecord {
   return {
     ...fila,
     tipo: fila.tipo as SolicitudTipo,
@@ -94,8 +95,8 @@ export async function cambiarEstadoSolicitud(
       },
     });
     return exito(aRegistro(actualizada));
-  } catch (error: any) {
-    if (error?.code === 'P2025') {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return fallo('NO_ENCONTRADO', 'Esa solicitud ya no existe.');
     }
     throw error;
@@ -129,8 +130,8 @@ export async function marcarSolicitudPublicada(
       },
     });
     return exito(aRegistro(actualizada));
-  } catch (error: any) {
-    if (error?.code === 'P2025') {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return fallo('NO_ENCONTRADO', 'Esa solicitud ya no existe.');
     }
     throw error;
@@ -144,8 +145,8 @@ export async function eliminarSolicitud(id: string): Promise<Resultado<true>> {
 
   try {
     await prisma.solicitud.delete({ where: { id } });
-  } catch (error: any) {
-    if (error?.code === 'P2025') {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return fallo('NO_ENCONTRADO', 'Esa solicitud ya no existe.');
     }
     throw error;

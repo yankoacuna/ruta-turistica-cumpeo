@@ -63,15 +63,8 @@ export function useRutas(initial: TourRoute[], { showToast, confirmAction, onAut
 
         const saved = res.data;
         setRutas((prev) => {
-          const updated = {
-            ...saved,
-            poiIds: saved.poiIds as string[],
-            hitos: saved.hitos as any,
-            consejos: saved.consejos as any,
-            tiemposParada: saved.tiemposParada as any,
-          } as TourRoute;
           const existe = prev.some((r) => r.id === saved.id);
-          return existe ? prev.map((r) => (r.id === saved.id ? updated : r)) : [...prev, updated];
+          return existe ? prev.map((r) => (r.id === saved.id ? saved : r)) : [...prev, saved];
         });
         showToast(`Ruta "${saved.nombre}" guardada con éxito`, 'success');
         close();

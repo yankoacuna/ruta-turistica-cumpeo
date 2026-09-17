@@ -1,5 +1,6 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { AdminUser } from '@/lib/types';
 import { hashPassword, verifyPassword, generateTemporaryPassword } from '@/lib/auth';
@@ -134,8 +135,8 @@ export async function updateAdminUser(
       select: CAMPOS_PUBLICOS,
     });
     return exito({ user: user as unknown as AdminUser, temporaryPassword });
-  } catch (error: any) {
-    if (error?.code === 'P2025') {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return fallo('NO_ENCONTRADO', 'Ese usuario ya no existe.');
     }
     throw error;

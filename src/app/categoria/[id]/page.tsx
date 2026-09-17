@@ -30,7 +30,7 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params;
   const config = await getConfig();
-  const cat = config.categorias?.find((c: any) => c.id === params.id);
+  const cat = config.categorias?.find((c) => c.id === params.id);
   if (!cat) return { title: 'Categoría no encontrada' };
   return {
     title: `${cat.nombre} en Cumpeo — Turismo Cumpeo`,
@@ -41,7 +41,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 export default async function CategoryPage(props: PageProps) {
   const params = await props.params;
   const config = await getConfig();
-  const category = config.categorias?.find((c: any) => c.id === params.id);
+  const category = config.categorias?.find((c) => c.id === params.id);
   if (!category) notFound();
 
   const allPOIs = await getAllPOIs();

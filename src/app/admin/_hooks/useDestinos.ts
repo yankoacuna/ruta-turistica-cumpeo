@@ -1,4 +1,4 @@
-import { Destination } from '@/lib/types';
+import { Destination, Coordinates } from '@/lib/types';
 import { saveDestination, deleteDestination } from '../actions';
 import { HookOptions } from '../_types';
 import { CENTRO_CUMPEO } from '@/lib/constants';
@@ -31,7 +31,7 @@ export function useDestinos(initial: Destination[], opciones: HookOptions) {
       guardar: saveDestination,
       eliminar: deleteDestination,
       etiqueta: 'destino',
-      desdeFila: (fila) => ({ ...fila, coordenadas: fila.coordenadas as any }) as Destination,
+      desdeFila: (fila) => ({ ...fila, coordenadas: fila.coordenadas as unknown as Coordinates }) as unknown as Destination,
     },
     opciones
   );

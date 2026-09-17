@@ -71,23 +71,26 @@ export function ImageUploadField({
         onChange(data.url);
         setState("success");
         setIsEditingUrl(false);
-      } catch (err: any) {
-        setErrorMsg(err.message || "Error desconocido al procesar imagen");
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : "Error desconocido al procesar imagen");
         setState("error");
       }
     },
     [onChange]
   );
 
-  const handleFile = (file: File | undefined | null) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setErrorMsg("Solo se aceptan archivos de imagen (JPG, PNG, WebP, GIF, AVIF)");
-      setState("error");
-      return;
-    }
-    upload(file);
-  };
+  const handleFile = useCallback(
+    (file: File | undefined | null) => {
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        setErrorMsg("Solo se aceptan archivos de imagen (JPG, PNG, WebP, GIF, AVIF)");
+        setState("error");
+        return;
+      }
+      upload(file);
+    },
+    [upload]
+  );
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -121,7 +124,7 @@ export function ImageUploadField({
               return;
             }
           }
-        } catch (readErr: any) {
+        } catch (readErr) {
           console.warn("navigator.clipboard.read falló o requiere permisos:", readErr);
         }
       }
@@ -147,13 +150,13 @@ export function ImageUploadField({
       throw new Error(
         "No se detectó ninguna imagen en el portapapeles. Copia una imagen o captura de pantalla (Ctrl+C o clic derecho 'Copiar imagen') y vuelve a intentarlo."
       );
-    } catch (err: any) {
-      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+    } catch (err) {
+      if (err instanceof Error && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")) {
         setErrorMsg(
           "Permiso denegado por el navegador para leer el portapapeles. También puedes hacer clic aquí y presionar Ctrl+V."
         );
       } else {
-        setErrorMsg(err.message || "No se pudo leer del portapapeles. Prueba presionando Ctrl+V.");
+        setErrorMsg(err instanceof Error ? err.message : "No se pudo leer del portapapeles. Prueba presionando Ctrl+V.");
       }
       setState("error");
     }
@@ -197,7 +200,7 @@ export function ImageUploadField({
         setIsEditingUrl(false);
       }
     },
-    [onChange]
+    [onChange, handleFile]
   );
 
   const handleRemove = async () => {

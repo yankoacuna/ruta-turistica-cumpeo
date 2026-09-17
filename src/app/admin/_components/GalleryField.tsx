@@ -38,8 +38,8 @@ export function GalleryField({ images = [], onChange }: GalleryFieldProps) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error al subir");
         if (!images.includes(data.url)) onChange([...images, data.url]);
-      } catch (err: any) {
-        setError(err.message || "Error al subir imagen");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al subir imagen");
       } finally {
         setUploading(false);
       }
@@ -79,7 +79,7 @@ export function GalleryField({ images = [], onChange }: GalleryFieldProps) {
               return;
             }
           }
-        } catch (readErr: any) {
+        } catch (readErr) {
           console.warn("navigator.clipboard.read falló en galería:", readErr);
         }
       }
@@ -103,11 +103,11 @@ export function GalleryField({ images = [], onChange }: GalleryFieldProps) {
       throw new Error(
         "No se detectó ninguna imagen en el portapapeles. Copia una imagen o captura de pantalla (Ctrl+C o clic derecho 'Copiar imagen') y vuelve a intentarlo."
       );
-    } catch (err: any) {
-      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+    } catch (err) {
+      if (err instanceof Error && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")) {
         setError("Permiso denegado por el navegador. Puedes hacer clic aquí y presionar Ctrl+V.");
       } else {
-        setError(err.message || "No se pudo leer del portapapeles. Prueba presionando Ctrl+V.");
+        setError(err instanceof Error ? err.message : "No se pudo leer del portapapeles. Prueba presionando Ctrl+V.");
       }
     } finally {
       setUploading(false);

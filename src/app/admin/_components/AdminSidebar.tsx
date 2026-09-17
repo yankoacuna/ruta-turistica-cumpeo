@@ -27,8 +27,18 @@ import {
   Mail,
   ChevronLeft,
   ChevronRight,
+  type LucideIcon,
 } from 'lucide-react';
 import { AdminSection, AdminSessionUser } from '../_types';
+
+interface NavItem {
+  id: AdminSection;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+  color?: string;
+  highlight?: boolean;
+}
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -88,7 +98,7 @@ export function AdminSidebar({
 
   const role = currentUser?.role || 'ADMIN';
 
-  const toolItems = [
+  const toolItems: NavItem[] = [
     {
       id: 'qrcodes' as AdminSection,
       label: 'Generador de QR',
@@ -125,7 +135,7 @@ export function AdminSidebar({
       : []),
   ];
 
-  const navGroups = [
+  const navGroups: { title: string; items: NavItem[] }[] = [
     {
       title: 'VISIÓN GENERAL',
       items: [
@@ -374,7 +384,7 @@ export function AdminSidebar({
                           className={
                             isActive
                               ? 'text-white'
-                              : (item as any).color || 'text-text-muted'
+                              : item.color || 'text-text-muted'
                           }
                         />
                         {item.count !== undefined && item.count > 0 && (
@@ -404,7 +414,7 @@ export function AdminSidebar({
                         className={
                           isActive
                             ? 'text-white'
-                            : (item as any).color || 'text-text-muted'
+                            : item.color || 'text-text-muted'
                         }
                       />
                       <span className="truncate">{item.label}</span>

@@ -19,6 +19,23 @@ import { useToast } from '@/components/Toast';
 import { UserRole } from '@/lib/types';
 import { BulkImportWizard } from './BulkImportWizard';
 
+/** Forma esperada de un archivo de respaldo, solo para el panel de diagnóstico previo a restaurar. */
+interface BackupPreview {
+  version?: string;
+  exportDate?: string;
+  data?: {
+    destinations?: unknown[];
+    restaurants?: unknown[];
+    accommodations?: unknown[];
+    events?: unknown[];
+    tourRoutes?: unknown[];
+    emergencyContacts?: unknown[];
+    siteTexts?: unknown[];
+    theme?: unknown;
+    notificaciones?: unknown;
+  };
+}
+
 interface BackupManagerProps {
   destinos: Destination[];
   restaurantes: Restaurant[];
@@ -49,7 +66,8 @@ export function BackupManager({
   const [restoreStatus, setRestoreStatus] = useState<string | null>(null);
 
   // Modal y diagnóstico de respaldo técnico previo a restaurar
-  const [pendingBackupData, setPendingBackupData] = useState<any | null>(null);
+  const [pendingBackupData, setPendingBackupData] = useState<unknown>(null);
+  const preview = (pendingBackupData ?? {}) as BackupPreview;
   const [confirmKeyword, setConfirmKeyword] = useState('');
   const [showRestoreModal, setShowRestoreModal] = useState(false);
 
@@ -77,8 +95,9 @@ export function BackupManager({
       URL.revokeObjectURL(url);
 
       showToast('Exportación del catastro descargada correctamente', 'success');
-    } catch (err: any) {
-      showToast(`Error al exportar el catastro: ${err.message}`, 'error');
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'error desconocido';
+      showToast(`Error al exportar el catastro: ${mensaje}`, 'error');
     } finally {
       setIsExporting(false);
     }
@@ -101,8 +120,9 @@ export function BackupManager({
         setPendingBackupData(json);
         setConfirmKeyword('');
         setShowRestoreModal(true);
-      } catch (err: any) {
-        showToast(`Error al leer archivo: ${err.message}`, 'error');
+      } catch (err) {
+        const mensaje = err instanceof Error ? err.message : 'error desconocido';
+        showToast(`Error al leer archivo: ${mensaje}`, 'error');
       }
     };
     reader.readAsText(file);
@@ -303,7 +323,7 @@ export function BackupManager({
       )}
 
       {/* ── Modal de Confirmación y Diagnóstico de Respaldo Técnico ─────────── */}
-      {showRestoreModal && pendingBackupData && (
+      {showRestoreModal && Boolean(pendingBackupData) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center gap-3">
@@ -323,13 +343,13 @@ export function BackupManager({
             <div className="bg-surface-soft p-4 rounded-xl border border-border space-y-2.5 text-xs">
               <div className="flex justify-between items-center pb-2 border-b border-border">
                 <span className="text-text-muted">Versión del Snapshot:</span>
-                <span className="font-mono font-bold text-text-primary">v{pendingBackupData.version || '1.0'}</span>
+                <span className="font-mono font-bold text-text-primary">v{preview.version || '1.0'}</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-border">
                 <span className="text-text-muted">Fecha de Creación:</span>
                 <span className="font-mono text-text-primary">
-                  {pendingBackupData.exportDate
-                    ? new Date(pendingBackupData.exportDate).toLocaleString('es-CL')
+                  {preview.exportDate
+                    ? new Date(preview.exportDate).toLocaleString('es-CL')
                     : 'Desconocida'}
                 </span>
               </div>
@@ -339,39 +359,39 @@ export function BackupManager({
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Destinos:</span>
-                    <strong>{pendingBackupData.data?.destinations?.length || 0}</strong>
+                    <strong>{preview.data?.destinations?.length || 0}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Restaurantes:</span>
-                    <strong>{pendingBackupData.data?.restaurants?.length || 0}</strong>
+                    <strong>{preview.data?.restaurants?.length || 0}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Alojamientos:</span>
-                    <strong>{pendingBackupData.data?.accommodations?.length || 0}</strong>
+                    <strong>{preview.data?.accommodations?.length || 0}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Eventos:</span>
-                    <strong>{pendingBackupData.data?.events?.length || 0}</strong>
+                    <strong>{preview.data?.events?.length || 0}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Rutas Turísticas:</span>
-                    <strong>{pendingBackupData.data?.tourRoutes?.length || 0}</strong>
+                    <strong>{preview.data?.tourRoutes?.length || 0}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Emergencias:</span>
-                    <strong>{pendingBackupData.data?.emergencyContacts?.length || 0}</strong>
+                    <strong>{preview.data?.emergencyContacts?.length || 0}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Textos del sitio:</span>
-                    <strong>{pendingBackupData.data?.siteTexts?.length || 0}</strong>
+                    <strong>{preview.data?.siteTexts?.length || 0}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Apariencia:</span>
-                    <strong>{pendingBackupData.data?.theme ? 'Sí' : '—'}</strong>
+                    <strong>{preview.data?.theme ? 'Sí' : '—'}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white border border-border flex justify-between">
                     <span>Notificaciones:</span>
-                    <strong>{pendingBackupData.data?.notificaciones ? 'Sí' : '—'}</strong>
+                    <strong>{preview.data?.notificaciones ? 'Sí' : '—'}</strong>
                   </div>
                 </div>
               </div>

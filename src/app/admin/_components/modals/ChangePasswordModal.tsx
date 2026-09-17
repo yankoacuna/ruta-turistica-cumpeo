@@ -46,8 +46,8 @@ export function ChangePasswordModal({ onClose }: ChangePasswordModalProps) {
       } else {
         setError(res.mensaje);
       }
-    } catch (err: any) {
-      setError(err.message || 'Error de conexión');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error de conexión');
     } finally {
       setIsPending(false);
     }

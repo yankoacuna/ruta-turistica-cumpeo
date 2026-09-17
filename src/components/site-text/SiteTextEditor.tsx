@@ -41,8 +41,8 @@ function ImagenEditor({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al subir la imagen');
       onCambiar(data.url);
-    } catch (err: any) {
-      setError(err?.message || 'Error desconocido al subir la imagen');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido al subir la imagen');
     } finally {
       setSubiendo(false);
     }

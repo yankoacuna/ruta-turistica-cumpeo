@@ -1,4 +1,4 @@
-import { Accommodation } from '@/lib/types';
+import { Accommodation, Coordinates, ContactoInfo } from '@/lib/types';
 import { saveAccommodation, deleteAccommodation } from '../actions';
 import { HookOptions } from '../_types';
 import { CENTRO_CUMPEO } from '@/lib/constants';
@@ -27,9 +27,9 @@ export function useAlojamientos(initial: Accommodation[], opciones: HookOptions)
       desdeFila: (fila) =>
         ({
           ...fila,
-          coordenadas: fila.coordenadas as any,
-          contacto: fila.contacto as any,
-        }) as Accommodation,
+          coordenadas: fila.coordenadas as unknown as Coordinates,
+          contacto: fila.contacto as unknown as ContactoInfo,
+        }) as unknown as Accommodation,
     },
     opciones
   );

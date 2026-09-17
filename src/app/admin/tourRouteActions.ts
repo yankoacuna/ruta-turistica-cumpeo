@@ -103,8 +103,8 @@ export async function deleteTourRoute(id: string): Promise<Resultado<true>> {
 
   try {
     await prisma.tourRoute.delete({ where: { id } });
-  } catch (error: any) {
-    if (error?.code === 'P2025') {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return fallo('NO_ENCONTRADO', 'Esa ruta ya no existe: alguien la eliminó antes.');
     }
     throw error;
@@ -131,8 +131,8 @@ export async function updateTourRouteStops(
       where: { id: routeId },
       data: { poiIds: validado.data },
     });
-  } catch (error: any) {
-    if (error?.code === 'P2025') {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return fallo('NO_ENCONTRADO', 'Esa ruta ya no existe. Recarga la página.');
     }
     throw error;

@@ -1,4 +1,4 @@
-import { CumpeoEvent } from '@/lib/types';
+import { CumpeoEvent, Coordinates } from '@/lib/types';
 import { saveEvent, deleteEvent } from '../actions';
 import { HookOptions } from '../_types';
 import { CENTRO_CUMPEO } from '@/lib/constants';
@@ -32,10 +32,10 @@ export function useEventos(initial: CumpeoEvent[], opciones: HookOptions) {
       desdeFila: (fila) =>
         ({
           ...fila,
-          coordenadas: fila.coordenadas as any,
+          coordenadas: fila.coordenadas as unknown as Coordinates,
           galeria: fila.galeria as string[],
           tags: fila.tags as string[],
-        }) as CumpeoEvent,
+        }) as unknown as CumpeoEvent,
     },
     opciones
   );

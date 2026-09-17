@@ -38,6 +38,17 @@ interface MapaClientProps {
   initialTourRoutes: TourRoute[];
 }
 
+/** Campos que no comparten los cuatro tipos de `POI['_original']`: solo existen en algunos. */
+function slugDe(original: POI['_original']): string | undefined {
+  return original && 'slug' in original ? original.slug : undefined;
+}
+function horarioDe(original: POI['_original']): unknown {
+  return original && 'horario' in original ? original.horario : undefined;
+}
+function telefonoDe(original: POI['_original']): string | undefined {
+  return original && 'contacto' in original ? original.contacto?.telefono : undefined;
+}
+
 /**
  * Badge "Abierto/Cerrado" en pildora, para la ficha del POI seleccionado.
  * Se extrae a un componente propio porque useOpeningStatus() es un hook: no
@@ -180,7 +191,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
   };
 
   const handleSharePoi = (poi: POI) => {
-    const slug = (poi._original as any)?.slug || poi.id;
+    const slug = slugDe(poi._original) || poi.id;
     const url = typeof window !== 'undefined' ? `${window.location.origin}/destino/${slug}` : '';
     const shareText = `¡Mira este lugar en Cumpeo, el pueblo de Condorito! ${poi.nombre}: ${url}`;
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
@@ -372,7 +383,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.65rem] font-extrabold uppercase tracking-wider whitespace-nowrap bg-[#FFE0E2] text-[#C1121F] border border-[#FFA8AE]">
                     {selectedPoi.categoria}
                   </span>
-                  <OpeningBadgePill horario={(selectedPoi._original as any)?.horario} />
+                  <OpeningBadgePill horario={horarioDe(selectedPoi._original)} />
                 </div>
                 <button
                   onClick={() => setSelectedPoi(null)}
@@ -425,7 +436,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                 <div className="flex gap-2">
                   {selectedPoi.tipo === 'destino' && (
                     <Link
-                      href={`/destino/${(selectedPoi._original as any)?.slug || selectedPoi.id}`}
+                      href={`/destino/${slugDe(selectedPoi._original) || selectedPoi.id}`}
                       className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-rojo text-white hover:bg-rojo-dark transition-all no-underline shadow-sm"
                     >
                       <ExternalLink size={13} /> Ver Ficha
@@ -442,9 +453,9 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                   </button>
 
                   {/* Direct Phone Call if available */}
-                  {(selectedPoi._original as any)?.contacto?.telefono && (
+                  {telefonoDe(selectedPoi._original) && (
                     <a
-                      href={`tel:${(selectedPoi._original as any).contacto.telefono}`}
+                      href={`tel:${telefonoDe(selectedPoi._original)}`}
                       className="inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl text-xs font-bold bg-surface-soft border border-border text-text-primary hover:border-rojo transition-all no-underline"
                       title="Llamar al local"
                     >
@@ -544,7 +555,7 @@ export default function MapaClient({ initialPois, initialTourRoutes }: MapaClien
                         {poi.categoria}
                       </span>
                     </div>
-                    <OpeningBadgeCorner horario={(poi._original as any)?.horario} />
+                    <OpeningBadgeCorner horario={horarioDe(poi._original)} />
                   </div>
 
                   <div className="p-4 flex-1 flex flex-col justify-between">

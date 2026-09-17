@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Campo trampa: está oculto en el formulario, así que solo lo rellenan los
     // robots. Se responde ok para no enseñarles que fueron detectados.
-    if (cuerpo && typeof cuerpo === 'object' && (cuerpo as any).website) {
+    if (cuerpo && typeof cuerpo === 'object' && (cuerpo as Record<string, unknown>).website) {
       return NextResponse.json({ ok: true, id: 'ignorada' });
     }
 

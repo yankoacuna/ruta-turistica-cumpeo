@@ -24,7 +24,7 @@ export type FieldSpec = string | { key: string; coalesce: unknown };
 export interface DescriptorEntidad {
   modelo: TipoEntidad;
   /** Valida y sanea lo que llega desde el cliente (guardado individual o carga masiva). */
-  esquema: z.ZodType<any>;
+  esquema: z.ZodType<unknown>;
   /** Qué campos se escriben en Prisma a partir de los datos ya validados. */
   campos: FieldSpec[];
   /** Solo se aplican al crear un registro nuevo, y solo si el campo llega vacío. */
@@ -42,8 +42,8 @@ export function slugFromNombre(nombre?: string): string {
 }
 
 /** Arma los datos a persistir a partir de la lista de campos del descriptor. */
-export function buildFieldsData(data: Record<string, any>, campos: FieldSpec[]): Record<string, any> {
-  const out: Record<string, any> = {};
+export function buildFieldsData(data: Record<string, unknown>, campos: FieldSpec[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   for (const f of campos) {
     if (typeof f === 'string') out[f] = data[f];
     else out[f.key] = data[f.key] ?? f.coalesce;

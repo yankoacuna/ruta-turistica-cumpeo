@@ -97,7 +97,7 @@ export default async function AdminPage() {
       initialDestinos={destinos}
       initialRestaurantes={restaurantes}
       initialAlojamientos={alojamientos}
-      initialEventos={eventos as any}
+      initialEventos={eventos}
       initialRutas={rutas}
       allPois={allPois}
       initialSession={session}

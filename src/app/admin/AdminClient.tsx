@@ -244,10 +244,8 @@ export default function AdminClient({
           horario: s.horario || undefined,
           mediosPago: s.mediosPago || [],
           contacto,
-          telefono: s.telefono || '',
-          whatsapp: s.whatsapp || '',
           tags: [],
-        } as any);
+        });
         solicitudEnCurso.current = { id: s.id, seccion: 'restaurantes' };
         setActiveSection('restaurantes');
         break;
@@ -259,9 +257,7 @@ export default function AdminClient({
           descripcion: s.descripcion,
           servicios: s.servicios || [],
           contacto,
-          telefono: s.telefono || '',
-          whatsapp: s.whatsapp || '',
-        } as any);
+        });
         solicitudEnCurso.current = { id: s.id, seccion: 'alojamientos' };
         setActiveSection('alojamientos');
         break;
@@ -276,7 +272,7 @@ export default function AdminClient({
           descripcionLarga: s.descripcion,
           horario: s.horario || undefined,
           tags: [],
-        } as any);
+        });
         solicitudEnCurso.current = { id: s.id, seccion: 'destinos' };
         setActiveSection('destinos');
         break;
@@ -289,7 +285,7 @@ export default function AdminClient({
           descripcionLarga: s.descripcion,
           fecha: s.fecha || '',
           tags: [],
-        } as any);
+        });
         solicitudEnCurso.current = { id: s.id, seccion: 'eventos' };
         setActiveSection('eventos');
         break;
@@ -347,8 +343,8 @@ export default function AdminClient({
         showToast(res.error || 'Credenciales incorrectas', 'error');
         throw new Error(res.error || 'Credenciales incorrectas');
       }
-    } catch (err: any) {
-      showToast(err.message || 'Error al iniciar sesión', 'error');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al iniciar sesión', 'error');
       throw err;
     }
   };

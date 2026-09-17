@@ -10,6 +10,11 @@ import { dirname, join, normalize, sep } from "path";
  */
 const UPLOADS_DIR = process.env.UPLOADS_DIR || join(process.cwd(), "public", "uploads");
 
+/** true si el error de fs es "no existe" (ENOENT), el único que estas funciones toleran. */
+function esArchivoInexistente(error: unknown): boolean {
+  return error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT';
+}
+
 /** Evita que un relativePath con ".." escriba/borre fuera de UPLOADS_DIR. */
 function resolveSafePath(relativePath: string): string {
   const cleaned = relativePath.replace(/^\/+/, "");
@@ -37,8 +42,8 @@ export async function readUpload(segments: string[]): Promise<Buffer | null> {
   try {
     const fullPath = resolveSafePath(relativePath);
     return await readFile(fullPath);
-  } catch (error: any) {
-    if (error?.code === "ENOENT") return null;
+  } catch (error) {
+    if (esArchivoInexistente(error)) return null;
     throw error;
   }
 }
@@ -53,7 +58,7 @@ export async function deleteUpload(urlOrPath: string): Promise<void> {
   try {
     const fullPath = resolveSafePath(relativePath);
     await unlink(fullPath);
-  } catch (error: any) {
-    if (error?.code !== "ENOENT") throw error;
+  } catch (error) {
+    if (!esArchivoInexistente(error)) throw error;
   }
 }

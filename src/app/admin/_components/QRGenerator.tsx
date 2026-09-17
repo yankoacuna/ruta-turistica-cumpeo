@@ -171,8 +171,9 @@ export function QRGenerator({
       document.body.removeChild(a);
 
       showToast('Código QR descargado en alta resolución (2048px)', 'success');
-    } catch (err: any) {
-      showToast(`Error al exportar QR: ${err.message}`, 'error');
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'error desconocido';
+      showToast(`Error al exportar QR: ${mensaje}`, 'error');
     }
   };
 
@@ -205,8 +206,9 @@ export function QRGenerator({
       document.body.removeChild(a);
 
       showToast('Placa completa descargada en alta resolución', 'success');
-    } catch (err: any) {
-      showToast(`Error al exportar la placa: ${err.message}`, 'error');
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'error desconocido';
+      showToast(`Error al exportar la placa: ${mensaje}`, 'error');
     } finally {
       setExportandoPlaca(false);
     }
@@ -246,13 +248,15 @@ export function QRGenerator({
 
           <div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {[
-                { id: 'destino', label: 'Destinos' },
-                { id: 'restaurante', label: 'Restaurantes' },
-                { id: 'alojamiento', label: 'Alojamientos' },
-                { id: 'pagina', label: 'Página del Sitio' },
-                { id: 'custom', label: 'URL Personalizada' },
-              ].map((t) => (
+              {(
+                [
+                  { id: 'destino', label: 'Destinos' },
+                  { id: 'restaurante', label: 'Restaurantes' },
+                  { id: 'alojamiento', label: 'Alojamientos' },
+                  { id: 'pagina', label: 'Página del Sitio' },
+                  { id: 'custom', label: 'URL Personalizada' },
+                ] as const
+              ).map((t) => (
                 <button
                   key={t.id}
                   type="button"
@@ -262,7 +266,7 @@ export function QRGenerator({
                       : 'bg-surface-soft text-text-secondary border-border hover:border-rojo hover:text-rojo'
                   }`}
                   onClick={() => {
-                    setSelectedType(t.id as any);
+                    setSelectedType(t.id);
                     if (t.id === 'destino' && destinos[0]) setSelectedId(destinos[0].id);
                     if (t.id === 'restaurante' && restaurantes[0]) setSelectedId(restaurantes[0].id);
                     if (t.id === 'alojamiento' && alojamientos[0]) setSelectedId(alojamientos[0].id);

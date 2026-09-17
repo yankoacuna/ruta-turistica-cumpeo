@@ -40,6 +40,29 @@ interface BulkImportWizardProps {
   onSuccess?: () => void;
 }
 
+/** Primer valor de texto no vacío entre las claves dadas, de un `data`/`raw` de fila. */
+function campoTexto(datos: Record<string, unknown>, ...claves: string[]): string {
+  for (const clave of claves) {
+    const valor = datos[clave];
+    if (typeof valor === 'string' && valor) return valor;
+  }
+  return '';
+}
+
+/** Coordenadas de una fila, solo si `data.coordenadas` trae lat/lng numéricos. */
+function campoCoordenadas(datos: Record<string, unknown>): { lat: number; lng: number } | undefined {
+  const c = datos.coordenadas;
+  if (
+    c &&
+    typeof c === 'object' &&
+    typeof (c as Record<string, unknown>).lat === 'number' &&
+    typeof (c as Record<string, unknown>).lng === 'number'
+  ) {
+    return c as { lat: number; lng: number };
+  }
+  return undefined;
+}
+
 export function BulkImportWizard({
   destinos,
   restaurantes,
@@ -110,11 +133,12 @@ export function BulkImportWizard({
       } else {
         showToast(`¡Archivo analizado! ${newSummary.validRows} registros listos para importar.`, 'success');
       }
-    } catch (err: any) {
-      setParseError(err.message || 'Error al procesar el archivo');
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'Error al procesar el archivo';
+      setParseError(mensaje);
       setParsedItems([]);
       setSummary(null);
-      showToast(`Error al leer archivo: ${err.message}`, 'error');
+      showToast(`Error al leer archivo: ${mensaje}`, 'error');
     } finally {
       setIsParsing(false);
     }
@@ -137,7 +161,7 @@ export function BulkImportWizard({
 
   // Exportar catastro actual a Excel
   const handleExportCurrent = () => {
-    let dataset: any[] = [];
+    let dataset: (Destination | Restaurant | Accommodation | CumpeoEvent)[] = [];
     if (entityType === 'destinos') dataset = destinos;
     if (entityType === 'restaurantes') dataset = restaurantes;
     if (entityType === 'alojamientos') dataset = alojamientos;
@@ -192,8 +216,8 @@ export function BulkImportWizard({
       // Filtro por búsqueda de texto
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const nombre = (item.data.nombre || item.raw.nombre || '').toLowerCase();
-        const categoria = (item.data.categoria || item.data.tipo || '').toLowerCase();
+        const nombre = (campoTexto(item.data, 'nombre') || campoTexto(item.raw, 'nombre')).toLowerCase();
+        const categoria = campoTexto(item.data, 'categoria', 'tipo').toLowerCase();
         const issuesText = item.issues.map((i) => i.message).join(' ').toLowerCase();
         return nombre.includes(query) || categoria.includes(query) || issuesText.includes(query);
       }
@@ -529,13 +553,13 @@ export function BulkImportWizard({
                             )}
                           </td>
                           <td className="py-2.5 px-3 font-bold text-text-primary">
-                            {item.data.nombre || <span className="text-rojo italic">(Vacío)</span>}
+                            {campoTexto(item.data, 'nombre') || <span className="text-rojo italic">(Vacío)</span>}
                           </td>
                           <td className="py-2.5 px-3 text-text-secondary">
-                            {item.data.categoria || item.data.tipo || '-'}
+                            {campoTexto(item.data, 'categoria', 'tipo') || '-'}
                           </td>
                           <td className="py-2.5 px-3 text-text-secondary font-mono text-[11px]">
-                            {item.data.coordenadas?.lat?.toFixed(3)}, {item.data.coordenadas?.lng?.toFixed(3)}
+                            {campoCoordenadas(item.data)?.lat.toFixed(3)}, {campoCoordenadas(item.data)?.lng.toFixed(3)}
                           </td>
                           <td className="py-2.5 px-3">
                             {isError ? (

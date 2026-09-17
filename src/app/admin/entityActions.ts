@@ -1,5 +1,6 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { Destination, Restaurant, Accommodation, CumpeoEvent, OrderableEntity } from '@/lib/types';
 import { invalidarContenidoPublico } from '@/lib/revalidate';
@@ -7,6 +8,7 @@ import { requireRole, sesionConRol } from './authActions';
 import { Resultado, exito, fallo } from '@/lib/resultado';
 import { OrdenSchema, detallesDeZod } from '@/lib/esquemas';
 import { ENTIDADES, DescriptorEntidad, buildFieldsData, slugFromNombre } from '@/lib/entidades';
+import { modeloDe } from '@/lib/prismaModelo';
 
 /**
  * Próximo valor de `orden` para una ficha nueva: el mayor actual + 1.
@@ -14,7 +16,7 @@ import { ENTIDADES, DescriptorEntidad, buildFieldsData, slugFromNombre } from '@
  * por delante de todo lo que el municipio ya ordenó a mano.
  */
 async function nextOrden(model: DescriptorEntidad['modelo']): Promise<number> {
-  const agg = await (prisma[model] as any).aggregate({ _max: { orden: true } });
+  const agg = await modeloDe(model).aggregate({ _max: { orden: true } });
   return (agg._max.orden ?? -1) + 1;
 }
 
@@ -32,7 +34,7 @@ async function nextOrden(model: DescriptorEntidad['modelo']): Promise<number> {
  */
 async function genericGetAdminList(model: DescriptorEntidad['modelo']) {
   await requireRole(['ADMIN', 'EDITOR', 'LECTOR']);
-  return (prisma[model] as any).findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
+  return modeloDe(model).findMany({ orderBy: [{ orden: 'asc' }, { nombre: 'asc' }] });
 }
 
 /**
@@ -44,7 +46,7 @@ async function idDisponible(
   config: DescriptorEntidad,
   base: string
 ): Promise<string> {
-  const modelo = prisma[config.modelo] as any;
+  const modelo = modeloDe(config.modelo);
   for (let intento = 1; intento <= 50; intento++) {
     const candidato = intento === 1 ? base : `${base}-${intento}`;
     const ocupado = await modelo.findFirst({
@@ -73,7 +75,11 @@ async function genericSaveEntity<T>(
       detallesDeZod(validado.error)
     );
   }
-  const limpio = validado.data as Record<string, any>;
+  const limpio = validado.data as Record<string, unknown> & {
+    id?: string;
+    nombre?: string;
+    orden?: number;
+  };
 
   const base = slugFromNombre(limpio.nombre) || config.idFallback;
   // Editar conserva el id; crear busca uno libre. El slug de una ficha ya
@@ -83,7 +89,7 @@ async function genericSaveEntity<T>(
 
   const fieldsData = buildFieldsData(limpio, config.campos);
 
-  const createData: Record<string, any> = {
+  const createData: Record<string, unknown> = {
     id,
     ...(config.hasSlug ? { slug: id } : {}),
     ...fieldsData,
@@ -93,7 +99,7 @@ async function genericSaveEntity<T>(
     if (!createData[key]) createData[key] = fallback;
   }
 
-  const result = await (prisma[config.modelo] as any).upsert({
+  const result = await modeloDe(config.modelo).upsert({
     where: { id },
     update: fieldsData,
     create: createData,
@@ -114,10 +120,10 @@ async function genericDeleteEntity(
   if (!sesion.ok) return sesion;
 
   try {
-    await (prisma[config.modelo] as any).delete({ where: { id } });
-  } catch (error: any) {
+    await modeloDe(config.modelo).delete({ where: { id } });
+  } catch (error) {
     // Borrado concurrente desde dos pestañas: no es un error de sistema.
-    if (error?.code === PRISMA_NO_ENCONTRADO) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === PRISMA_NO_ENCONTRADO) {
       return fallo('NO_ENCONTRADO', 'Esa ficha ya no existe: alguien la eliminó antes.');
     }
     throw error;
@@ -178,7 +184,7 @@ export async function deleteAccommodation(id: string): Promise<Resultado<true>> 
 
 // ─── EVENTS ───────────────────────────────────────────────────────────────────
 
-export async function getEvents() {
+export async function getEvents(): Promise<CumpeoEvent[]> {
   return genericGetAdminList('event');
 }
 
@@ -233,14 +239,14 @@ export async function updateEntityOrder(
   }
 
   const updates = ids.map((id, index) =>
-    (prisma[modelo] as any).update({ where: { id }, data: { orden: index } })
+    modeloDe(modelo).update({ where: { id }, data: { orden: index } })
   );
 
   try {
     await prisma.$transaction(updates);
-  } catch (error: any) {
+  } catch (error) {
     // Basta que alguien haya borrado una ficha mientras otro reordenaba.
-    if (error?.code === PRISMA_NO_ENCONTRADO) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === PRISMA_NO_ENCONTRADO) {
       return fallo(
         'NO_ENCONTRADO',
         'Alguna de las fichas ya no existe. Recarga la página y vuelve a ordenar.'

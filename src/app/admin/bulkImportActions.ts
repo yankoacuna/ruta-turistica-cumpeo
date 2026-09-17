@@ -5,6 +5,7 @@ import { invalidarContenidoPublico } from '@/lib/revalidate';
 import { sesionConRol } from './authActions';
 import { Resultado, exito, fallo } from '@/lib/resultado';
 import { ENTIDADES, TipoEntidad, buildFieldsData } from '@/lib/entidades';
+import { modeloDe } from '@/lib/prismaModelo';
 
 type BulkEntityType = 'destinos' | 'restaurantes' | 'alojamientos' | 'eventos';
 
@@ -66,22 +67,27 @@ export async function bulkImportEntitiesAction(
 
   // Una fila invalida se descarta sin abortar el resto del archivo: es el
   // mismo criterio que ya aplicaba el asistente al filtrar antes de mandar.
-  const filas: Array<{ id: string; slug?: string; datos: Record<string, any> }> = [];
+  const filas: Array<{ id: string; slug?: string; datos: Record<string, unknown> }> = [];
   let skippedCount = 0;
 
   for (const item of items) {
     const validado = descriptor.esquema.safeParse(item);
-    const id = validado.success ? (validado.data as any).id : undefined;
-    if (!validado.success || !id) {
+    if (!validado.success) {
       skippedCount++;
       continue;
     }
-    const limpio = validado.data as Record<string, any>;
+    const limpio = validado.data as Record<string, unknown> & { id?: string };
+    const id = limpio.id;
+    if (!id) {
+      skippedCount++;
+      continue;
+    }
     // El slug no vive en el esquema de guardado individual (ahí lo deriva el
     // servidor del nombre), pero la carga masiva sí lo trae ya resuelto desde
     // el Excel/JSON; se preserva tal cual en vez de recalcularlo, para no
     // desacordar el id que ya vio `bulkValidator.ts` del id que se escribe acá.
-    const slug = descriptor.hasSlug && typeof (item as any)?.slug === 'string' ? (item as any).slug : undefined;
+    const slugCrudo = (item as Record<string, unknown> | null)?.slug;
+    const slug = descriptor.hasSlug && typeof slugCrudo === 'string' ? slugCrudo : undefined;
     filas.push({ id, slug, datos: buildFieldsData(limpio, descriptor.campos) });
   }
 
@@ -90,7 +96,7 @@ export async function bulkImportEntitiesAction(
   }
 
   const ids = filas.map((f) => f.id);
-  const existentesRaw: Array<{ id: string }> = await (prisma[modelo] as any).findMany({
+  const existentesRaw: Array<{ id: string }> = await modeloDe(modelo).findMany({
     where: { id: { in: ids } },
     select: { id: true },
   });
@@ -114,14 +120,14 @@ export async function bulkImportEntitiesAction(
         else updatedCount++;
 
         return esNuevo
-          ? (prisma[modelo] as any).create({
+          ? modeloDe(modelo).create({
               data: {
                 id: fila.id,
                 ...(descriptor.hasSlug ? { slug: fila.slug || fila.id } : {}),
                 ...fila.datos,
               },
             })
-          : (prisma[modelo] as any).update({ where: { id: fila.id }, data: fila.datos });
+          : modeloDe(modelo).update({ where: { id: fila.id }, data: fila.datos });
       });
 
     if (operaciones.length > 0) {

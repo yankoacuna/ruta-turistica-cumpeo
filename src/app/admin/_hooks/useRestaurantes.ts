@@ -1,4 +1,4 @@
-import { Restaurant } from '@/lib/types';
+import { Restaurant, Coordinates, Horario, ContactoInfo } from '@/lib/types';
 import { saveRestaurant, deleteRestaurant } from '../actions';
 import { HookOptions } from '../_types';
 import { CENTRO_CUMPEO } from '@/lib/constants';
@@ -29,10 +29,10 @@ export function useRestaurantes(initial: Restaurant[], opciones: HookOptions) {
       desdeFila: (fila) =>
         ({
           ...fila,
-          coordenadas: fila.coordenadas as any,
-          horario: fila.horario as any,
-          contacto: fila.contacto as any,
-        }) as Restaurant,
+          coordenadas: fila.coordenadas as unknown as Coordinates,
+          horario: fila.horario as unknown as Horario,
+          contacto: fila.contacto as unknown as ContactoInfo,
+        }) as unknown as Restaurant,
     },
     opciones
   );
