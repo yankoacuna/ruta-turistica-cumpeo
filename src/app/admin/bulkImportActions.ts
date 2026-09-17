@@ -35,10 +35,8 @@ function enLotes<T>(items: T[], tamano: number): T[][] {
  * resuelve el id/slug de cada fila). Acá se vuelve a validar con el mismo
  * esquema Zod que usa el guardado individual —el navegador no es de
  * confianza aunque ya haya filtrado— y se escribe en lotes transaccionales:
- * o queda el lote completo, o no queda nada de él. Antes esto hacía un
- * `await` por fila sin transacción, así que un archivo de 200 filas eran
- * 400+ viajes secuenciales a MySQL, y una falla a mitad de camino dejaba la
- * importación a medio aplicar sin forma de deshacerla.
+ * o queda el lote completo, o no queda nada de él. Los registros existentes se
+ * resuelven en una sola consulta, no una por fila.
  */
 export async function bulkImportEntitiesAction(
   entityType: BulkEntityType,

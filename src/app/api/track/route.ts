@@ -10,8 +10,6 @@ const MAX_TITULO = 200;
 const MAX_REFERRER = 120;
 const MAX_ID = 80;
 const MAX_PAIS = 2;
-const MAX_REGION = 10;
-const MAX_CIUDAD = 100;
 
 // Ventana y tope de eventos por dispositivo, para que un script no pueda
 // inflar las métricas ni llenar la tabla a punta de peticiones.
@@ -94,7 +92,7 @@ function recortar(valor: unknown, max: number): string | null {
  * IP real del visitante, tal como llega a esta app detrás del proxy del
  * hosting (cPanel/Passenger). Mismo criterio que ya usa el freno de fuerza
  * bruta del login (`authActions.ts`): x-forwarded-for antes que x-real-ip.
- * Esta IP solo se usa para el lookup de `leerGeo` más abajo; nunca se guarda.
+ * Esta IP solo se usa para el lookup de `leerPais` más abajo; nunca se guarda.
  */
 function ipDelPedido(req: NextRequest): string | null {
   const reenviada = req.headers.get('x-forwarded-for');
@@ -103,21 +101,19 @@ function ipDelPedido(req: NextRequest): string | null {
 }
 
 /**
- * País/región/ciudad resueltos contra la base de datos local de `geoip-lite`
- * (bundle offline, sin llamadas de red ni servicios de terceros: coherente
- * con que este hosting es autocontenido, ver documento técnico). La IP se usa
- * solo en memoria para este lookup y se descarta de inmediato: no se guarda
- * en ningún lado ni viaja fuera de este proceso.
+ * País del visitante, resuelto contra la base local de `geoip-lite` (bundle
+ * offline, sin llamadas de red ni servicios de terceros). Solo país: el bundle
+ * de despliegue incluye únicamente `geoip-country*.dat` (ver
+ * `outputFileTracingIncludes` en next.config.mjs), porque los datos de región
+ * y ciudad cuestan ~100 MB de RAM fija por proceso.
+ *
+ * La IP se usa solo en memoria para este lookup y se descarta de inmediato: no
+ * se guarda en ningún lado ni viaja fuera de este proceso.
  */
-function leerGeo(req: NextRequest): { pais: string | null; region: string | null; ciudad: string | null } {
+function leerPais(req: NextRequest): string | null {
   const ip = ipDelPedido(req);
   const datos = ip ? geoip.lookup(ip) : null;
-  if (!datos) return { pais: null, region: null, ciudad: null };
-  return {
-    pais: recortar(datos.country, MAX_PAIS),
-    region: recortar(datos.region, MAX_REGION),
-    ciudad: recortar(datos.city, MAX_CIUDAD),
-  };
+  return datos ? recortar(datos.country, MAX_PAIS) : null;
 }
 
 /**
@@ -153,8 +149,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, ignored: 'rate-limit' });
     }
 
-    const geo = leerGeo(req);
-
     await prisma.pageView.create({
       data: {
         path,
@@ -164,9 +158,7 @@ export async function POST(req: NextRequest) {
         sessionId,
         referrer: normalizarReferrer(recortar(body.referrer, 500), req.headers.get('host')),
         device: detectarDispositivo(userAgent),
-        pais: geo.pais,
-        region: geo.region,
-        ciudad: geo.ciudad,
+        pais: leerPais(req),
       },
     });
 

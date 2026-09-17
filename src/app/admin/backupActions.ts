@@ -133,13 +133,10 @@ async function restaurarColeccion(modelo: TipoEntidad | 'tourRoute' | 'emergency
 /**
  * Restaura un catastro exportado con `exportDatabaseBackup`.
  *
- * Antes esto tomaba el JSON del archivo y lo volcaba con `upsert` directo,
- * un `await` por fila, sin validar la forma ni envolver nada en una
- * transacción: un archivo con arrays enormes bloqueaba el proceso, y una
- * falla a mitad de camino dejaba la base a medio restaurar sin forma de
- * volver atrás. Ahora se valida **todo** el archivo primero —una sola fila
- * inválida en cualquier colección rechaza el archivo entero, sin tocar la
- * base— y recién después se escribe, en lotes transaccionales.
+ * Se valida el archivo completo antes de tocar la base: una sola fila
+ * inválida en cualquier colección lo rechaza entero. La escritura va en lotes
+ * transaccionales, de modo que una falla a mitad de camino no deja el catastro
+ * a medio restaurar.
  */
 export async function restoreDatabaseBackup(backupData: unknown): Promise<Resultado<true>> {
   const sesion = await sesionConRol(['ADMIN']);

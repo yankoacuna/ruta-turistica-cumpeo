@@ -5,16 +5,9 @@ import { DestinoSchema, RestauranteSchema, AlojamientoSchema, EventoSchema } fro
 /**
  * Forma de cada tipo de lugar del catastro, en un solo lugar.
  *
- * Antes esto vivía repartido: qué campos se persisten estaba en
- * `entityActions.ts`, cómo se validan en `esquemas.ts`, y la carga masiva
- * (`bulkImportActions.ts`) repetía su propio mapeo de campos por tipo, sin
- * relación con ninguno de los dos. Agregar un campo nuevo a una entidad
- * significaba acordarse de tocar los tres, y nada avisaba si alguno quedaba
- * desalineado con los demás.
- *
- * Ahora `entityActions.ts` y `bulkImportActions.ts` leen el mismo descriptor:
- * la validación (`esquema`) y la persistencia (`campos`) no se pueden
- * desalinear porque son la misma fuente.
+ * `entityActions.ts` y `bulkImportActions.ts` leen este mismo descriptor, así
+ * que la validación (`esquema`) y la persistencia (`campos`) no se pueden
+ * desalinear: son la misma fuente. Agregar un campo a una entidad se hace acá.
  */
 export type TipoEntidad = 'destination' | 'restaurant' | 'accommodation' | 'event';
 

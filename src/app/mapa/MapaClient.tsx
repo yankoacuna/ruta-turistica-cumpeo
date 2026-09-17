@@ -51,8 +51,8 @@ function telefonoDe(original: POI['_original']): string | undefined {
 
 /**
  * Badge "Abierto/Cerrado" en pildora, para la ficha del POI seleccionado.
- * Se extrae a un componente propio porque useOpeningStatus() es un hook: no
- * puede llamarse dentro de la IIFE que antes vivia inline en el JSX.
+ * Es un componente propio porque useOpeningStatus() es un hook y no puede
+ * llamarse dentro del JSX de la ficha.
  */
 function OpeningBadgePill({ horario }: { horario: unknown }) {
   const status = useOpeningStatus(horario as Parameters<typeof useOpeningStatus>[0]);
