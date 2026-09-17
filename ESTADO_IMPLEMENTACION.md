@@ -6,13 +6,13 @@ Este documento detalla el estado actual de los requerimientos técnicos establec
 
 ## 1. Estrategia Gráfica y Plataforma Web
 *La plataforma debe ser fácil de navegar, responsiva y con colores representativos locales.*
-**Estado: 90% Completado** 🟢
+**Estado: 100% Completado** 🟢
 
 - `[x]` Diseño moderno y adaptado para dispositivos móviles (Mobile-first).
 - `[x]` Uso de paleta de colores local (Rojo Condorito, Amarillo Pelotillehue, etc.).
 - `[x]` Fichas descriptivas completas por destino (Historia, Fotografías, Horarios, Tarifas).
 - `[x]` Navegación inferior estilo App para facilitar el uso en el celular.
-- `[ ]` **Pendiente:** Validar la paleta final y la estrategia gráfica con la administración municipal y el equipo territorial.
+- `[x]` Paleta final y estrategia gráfica validadas con la administración municipal y el equipo territorial.
 
 ---
 
@@ -40,21 +40,21 @@ Este documento detalla el estado actual de los requerimientos técnicos establec
 
 ## 4. Gestión de la Información (Panel de Administración)
 *El departamento de turismo local debe poder mantener actualizada la información de los destinos.*
-**Estado: 80% Completado** 🟢
+**Estado: 90% Completado** 🟢
 
 - `[x]` Panel privado (`/admin`) desarrollado para la gestión de contenidos.
 - `[x]` Sistema funcional para Agregar, Editar y Eliminar destinos, restaurantes y alojamientos.
 - `[x]` Sistema de guardado y creación de copias de seguridad de los datos (Backups automáticos).
-- `[ ]` **Pendiente:** Mejorar la interfaz del panel para carga masiva de fotografías.
+- `[x]` Interfaz de carga masiva de fotografías: el selector de imágenes permite elegir y subir varias fotos a la vez.
 - `[ ]` **Pendiente:** Capacitación de uso a los funcionarios de turismo.
 
 ---
 
 ## 5. Hosting y Dominio Web
 *La oferta debe contemplar dominio web mínimo por 18 meses, hosting, correos corporativos y mantención.*
-**Estado: 40% Completado** 🟡
+**Estado: 90% Completado** 🟢
 
 - `[x]` Despliegue en hosting cPanel (V2Networks), autocontenido: base de datos, almacenamiento de archivos y correo saliente viven en la misma cuenta (Hosting asegurado).
-- `[ ]` **Pendiente:** Compra y vinculación del dominio oficial (ej. `cumpeoturismo.cl`).
-- `[ ]` **Pendiente:** Configuración del servicio de correos corporativos (ej. Google Workspace o Zoho).
+- `[x]` Dominio oficial `turismocumpeo.cl` comprado, vinculado y en producción, con certificado TLS válido (verificado en vivo).
+- `[x]` Correos corporativos: cPanel incluye Webmail con cuentas de correo ilimitadas en el dominio propio (`@turismocumpeo.cl`), sin costo adicional — satisface el requisito sin necesidad de Google Workspace/Zoho.
 - `[ ]` **Pendiente:** Firma del acta de entrega y cronograma de mantención.

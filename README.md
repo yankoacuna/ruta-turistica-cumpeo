@@ -44,12 +44,18 @@ Ver **`docs/documento-tecnico.tex`** para el detalle completo de arquitectura, m
    npx prisma db push
    node prisma/seed.js   # opcional: carga datos de ejemplo/reales
    ```
+   Si `DATABASE_URL` apunta a la base de producción (cPanel), esa base solo acepta conexiones remotas desde IPs autorizadas en **cPanel → Bases de Datos → MySQL Remoto**. Un error de Prisma tipo *"Authentication failed"* sin haber tocado ninguna contraseña casi siempre significa que tu IP pública cambió y hay que volver a agregarla ahí (ver `docs/documento-tecnico.tex`, sección *Acceso remoto a la base de datos*).
 
 5. **Iniciar el servidor de desarrollo:**
    ```bash
    npm run dev
    ```
    Abre [http://localhost:3000](http://localhost:3000).
+
+6. **Correr los tests** (opcional, recomendado antes de subir cambios):
+   ```bash
+   npm test
+   ```
 
 ## 📂 Estructura del proyecto
 
